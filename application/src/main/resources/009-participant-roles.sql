@@ -1,0 +1,1 @@
+ALTER TABLE registrations ADD COLUMN role text NOT NULL DEFAULT 'DELEGATE';

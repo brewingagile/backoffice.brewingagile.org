@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html ng-app="labels">
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" href="reset.css" type="text/css">
+
+	<title>Name Tags</title>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-resource.min.js"></script>
+
+	<script src="index.js"></script>
+
+<style>
+	@page {
+		margin: 5mm 0mm 0mm 0mm;
+		/*margin-top: 5mm;*/
+		size: 210mm 297mm;
+	}
+/*@page */
+
+@media all {
+
+
+	html,body,div,span,body.ng-scope {
+		padding: 0;
+		font-family: Arial, Helvetica, sans-serif;
+		margin: none; 
+	}
+
+	body {
+	}
+	.label {
+		position: relative;
+		/*padding: 5mm 0mm 0mm 0mm;*/
+		margin: 5mm;
+		/*border-right: 1px solid black;*/
+		/*border-bottom: 1px solid black;*/
+		width: 88mm; /* 105 - 10 */
+		height: 128mm; /* 148 - 10 */
+		float: left;
+		/*border-left: 1px solid black;
+		border-bottom: 1px solid black;*/
+		overflow: hidden;
+/*		background-size: 60mm;
+		background-image: url(logo.png);
+		background-position: 43mm 30mm;
+		background-repeat:no-repeat;
+			*/
+/*		background-color: grey; */
+		page-break-inside: avoid;
+	}
+	.name {
+		text-transform: capitalize;
+		margin-top: 5mm;
+		font-size: 10mm;
+		font-weight: bold;
+		text-align: center;
+	}
+	.company {
+		text-transform: uppercase;
+		font-size:5mm;
+		font-family: "Courier New", Courier, monospace;
+		/*width: 50mm;*/
+		overflow: hidden;
+		text-align: center;
+	}
+	.twitter {
+		font-size: 5mm;
+		text-align: center;
+		margin-bottom: 5mm;
+	}
+	.logo {
+	}
+	.logo img {
+		width: 101mm;
+		position: relative;
+		left: -7mm;
+		bottom: -8mm;
+		z-index: -1;
+	}
+	.ticket {
+
+	}
+	.badge {
+		font-size: 7mm;
+		text-transform: uppercase;
+		text-align: center;
+		font-weight: bold;
+	}
+	.badge.speaker {
+		background-color: black;
+		color: white;
+	}
+	.badge.support {
+		background-color: black;
+		color: white;
+
+	}
+	.badge.organiser {
+		background-color: black;
+		color: white;
+
+	}
+	.statusbar {
+		position: absolute;
+		bottom: 0mm;
+		display: block;
+		width: 100%;
+	}
+
+	.toggle {
+		text-transform: uppercase;
+	}
+
+	.pagehack {
+		margin: 0px;
+		padding: 0px;
+		border: 1px solid white;
+		page-break-after: always;
+	}
+
+
+	/*
+	.registration:nth-child(even) {
+		page-break-after: always;
+	}
+	*/
+	
+}
+</style>
+</head>
+<body ng-controller="LabelsController">
+<div class="registration" ng-repeat="l in labels">
+	<div class="label" ng-repeat="d in [1,2]">
+		<div class="name">{{l.name}}</div>
+		<div class="twitter">{{l.twitter}}</div>
+		<div class="company">{{l.company}}</div>
+		<div class="statusbar">
+			<!--div class="ticket">
+				<span class="toggle" ng-show="l.workshop"><img src="1f477-Construction Worker.48.png"/></span>
+				<span class="toggle" ng-show="l.diet"><img src="1f489-Syringe.48.png"/></span>
+			</div-->
+			<div class="logo"><img src="logo.png"></div>
+			<div ng-class="{badge: true, speaker: (l.badge == 'SPEAKER'), organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER'), support: (l.badge == 'PHOTOGRAPHER' || l.badge == 'SOUND TECHNICIAN')}">{{l.badge}}</div>
+		</div>
+	</div>
+</div>
+</body>
+</html>

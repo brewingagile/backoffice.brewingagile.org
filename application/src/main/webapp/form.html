@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+	<meta charset="utf-8">
+    <title>Brewing Agile: Registration Form</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="img/favicon.ico" type="image/png" rel="icon" />
+	<link href="img/favicon.ico" type="image/png" rel="shortcut icon" />
+	<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" />
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-resource.min.js"></script>
+    <script src="form/app.js?version=4"></script>
+    <script src="form/registration.js?version=6"></script>
+<style>
+input.ng-invalid {
+  border-color: red;
+}
+input.textarea {
+	border-color: red;
+}
+</style>
+</head>
+
+<body ng-controller="RegistrationController">
+<div class="container-fluid">
+	<div class="page-header">
+		<h1>Registration Form <small>Brewing Agile 2015</small></h1>
+	</div>
+	<form class="form-horizontal" role="form" name="myForm" ng-submit="submit()">
+		<div class="form-group">
+			<label for="inputParticipantName" class="col-sm-2 control-label">Participant Name</label>
+			<div class="col-sm-10">
+				<input type="text" class="form-control" id="inputParticipantName" ng-model="r.participantName" placeholder="participant name" required>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="inputEmail" class="col-sm-2 control-label">Participant Email</label>
+			<div class="col-sm-10">
+				<input type="email" class="form-control" id="inputEmail" ng-model="r.participantEmail" placeholder="email address" required>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="inputTwitter" class="col-sm-2 control-label">Twitter Handle</label>
+			<div class="col-sm-10">
+				<input type="text" class="form-control" id="inputTwitter" ng-model="r.twitter" ng-pattern="/^@[a-zA-Z0-9_]{1,15}$/" placeholder="@twitter">
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="inputCompany" class="col-sm-2 control-label">Company</label>
+			<div class="col-sm-10">
+				<input type="text" class="form-control" id="inputCompany" ng-model="r.billingCompany" placeholder="company name">
+			</div>
+		</div>		
+		<div class="form-group">
+			<label for="inputBillingAddress" class="col-sm-2 control-label">Billing Name &amp; Address</label>
+			<div class="col-sm-10">
+				<textarea class="form-control" id="inputBillingAddress" ng-model="r.billingAddress"></textarea>
+			</div>
+		</div>		
+		<div class="form-group">
+			<label class="col-sm-2 control-label">Diet or allergies?</label>
+			<div class="col-sm-1">
+				<div class="checkbox">
+					<label>
+						<input type="checkbox" ng-model="diet"> Yes
+					</label>
+				</div>
+			</div>
+			<div class="col-sm-9" ng-show="diet">
+				<input type="text" class="form-control" id="inputDiet" ng-model="r.dietaryRequirements" placeholder="Please be as specific as possible about what you can and can't eat. Thank you!">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label">Package</label>
+			<div class="col-sm-10">
+				<div class="radio">
+					<label>
+						<input type="radio" ng-model="r.ticket" name="ticket" value="conference+workshop"> Conference &amp; Workshop: "No Estimates" with Woody Zuill (Friday morning). <em>2200 SEK</em>.
+					</label>
+				</div>
+				<div class="radio">
+					<label>
+						<input type="radio" ng-model="r.ticket" name="ticket" value="conference"> Conference: You go to the conference on Friday afternoon and the discussion groups on Saturday. Starts at 13:00. <em>1200 SEK</em>.
+					</label>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="row">
+			<div class="col-sm-offset-2 col-sm-9">
+				<p><strong>
+					Because we are a small, non-profit, organization we must enforce a strict no-cancellation policy.<br>
+					Program subject to change at any time.</strong>
+				</p>
+			</div>
+		</div>
+
+		<div class="row" style="padding-top: 2em;">
+			<div class="col-sm-offset-2 col-sm-9">
+				<div class="well">
+					After submitting the registration, you should receive a confirmation email within 24 hours.<br> If you do not receive it, please contact brewingagile@scrumbeers.com.
+				</div>
+			</div> 
+		</div>
+
+		<div class="col-sm-offset-2 col-sm-9 alert alert-success" role="alert" ng-show="success">
+			<strong>Thank you!</strong>
+			<p>We will send an invoice to you ASAP. If you do not receive it, please contact <a class="alert-link" href="mailto:brewingagile@scrumbeers.com">brewingagile@scrumbeers.com</a></p>
+			<p><a class="alert-link" href="" ng-click="reset()">Make another reservation?</a></p>
+		</div>
+
+		<div class="col-sm-offset-2 col-sm-9 alert alert-danger" role="alert" ng-show="error">
+			<Strong>Sorry!</Strong>
+			<p>Something went wrong, can you please try again?</p> 
+			<p>If it still does not work, write in caps to <a class="alert-link" href="mailto:brewingagile@scrumbeers.com">brewingagile@scrumbeers.com</a> </p>
+		</div> 
+
+		<div class="form-group">
+			<div class="col-sm-offset-2 col-sm-10">
+				<button type="submit" class="btn btn-lg btn-default" ng-disabled="!myForm.$valid || lastRegisteredName == r.participantName">Register!</button> 
+			</div>
+		</div>
+	</form>
+</div>
+
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+</body>
+</html>

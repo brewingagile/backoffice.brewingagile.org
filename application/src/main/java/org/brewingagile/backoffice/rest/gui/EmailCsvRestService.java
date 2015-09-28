@@ -3,8 +3,6 @@ package org.brewingagile.backoffice.rest.gui;
 import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
-import org.brewingagile.backoffice.sqlops.ResultSetMapper;
-import org.brewingagile.backoffice.sqlops.SqlOps;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,6 +15,7 @@ import javax.ws.rs.core.Response;
 import java.sql.Connection;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/emails/")
 @NeverCache
@@ -29,9 +28,10 @@ public class EmailCsvRestService {
 	public Response invoices(@Context HttpServletRequest request) throws Exception {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
-			ResultSetMapper<String> f2 = rs -> escaped(rs.getString("participant_name")) + "," + escaped(rs.getString("participant_email"));
-			List<String> map = SqlOps.map(c, RegistrationsSqlMapper.orderBy_ParticipantName(), f2);
-			return Response.ok(unlines(map)).header("content-disposition", "attachment; filename=" + "participants-" + Instant.now().toString() + ".csv").build();
+			List<String> p2s = RegistrationsSqlMapper.participantNameAndEmail(c).stream()
+				.map(x -> escaped(x._1()) + "," + escaped(x._2()))
+				.collect(Collectors.toList());
+			return Response.ok(unlines(p2s)).header("content-disposition", "attachment; filename=" + "participants-" + Instant.now().toString() + ".csv").build();
 		}
 	}
 

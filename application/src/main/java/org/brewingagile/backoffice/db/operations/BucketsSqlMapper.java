@@ -1,6 +1,7 @@
 package org.brewingagile.backoffice.db.operations;
 
 import com.google.common.collect.ImmutableList;
+import fj.function.Try1;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -31,7 +32,7 @@ public class BucketsSqlMapper {
 	public ImmutableList<Bucket> all(Connection c) throws SQLException {
 		String sql = "SELECT * FROM bucket ORDER BY bucket;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			return Common.list(ps, rs -> new Bucket(
+			return SqlOps.list(ps, rs -> new Bucket(
 				rs.getString("bucket"),
 				rs.getInt("conference"),
 				rs.getInt("workshop1"),
@@ -87,7 +88,7 @@ public class BucketsSqlMapper {
 			"LEFT JOIN registration_bucket rb ON (r.id = rb.registration_id) " +
 			"WHERE rb.bucket IS NULL;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			return Common.one(ps, rs -> new Individuals(
+			return SqlOps.one(ps, rs -> new Individuals(
 				rs.getInt("conference"),
 				rs.getInt("workshop1"),
 				rs.getInt("workshop2")
@@ -121,14 +122,14 @@ public class BucketsSqlMapper {
 			"	GROUP BY bucket" +
 			") sub USING (bucket)";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			Common.FunctionE<ResultSet, Bucket, SQLException> f = rs -> new Bucket(
+			Try1<ResultSet, Bucket, SQLException> f = rs -> new Bucket(
 				rs.getString("bucket"),
 				rs.getInt("conference"),
 				rs.getInt("workshop1"),
 				rs.getInt("workshop2")
 			);
-			return Common.list(ps, rs -> new BucketSummary(
-				f.apply(rs),
+			return SqlOps.list(ps, rs -> new BucketSummary(
+				f.f(rs),
 				rs.getInt("actual_conference"),
 				rs.getInt("actual_workshop1"),
 				rs.getInt("actual_workshop2")

@@ -4,17 +4,30 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import org.brewingagile.backoffice.sqlops.Query;
+import fj.P;
+import fj.P2;
 
 import com.google.common.base.Optional;
+import fj.function.Try1;
 
 public class RegistrationsSqlMapper {
-	public static enum BillingMethod {EMAIL, SNAILMAIL}
+	public static List<P2<String,String>> participantNameAndEmail(Connection c) throws SQLException {
+		try (PreparedStatement ps = c.prepareStatement("SELECT * FROM registrations ORDER BY participant_name")) {
+			Try1<ResultSet,P2<String,String>,SQLException> f = rs -> P.p(
+				rs.getString("participant_name"),
+				rs.getString("participant_email")
+			);
+			return SqlOps.list(ps, f);
+		}
+	}
+
+	public enum BillingMethod {EMAIL, SNAILMAIL}
 
 	public static final class Badge {
 		public final String badge;
@@ -68,7 +81,7 @@ public class RegistrationsSqlMapper {
 			"WHERE id = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
-			return Common.one(ps, RegistrationsSqlMapper::toRegistration);
+			return SqlOps.one(ps, RegistrationsSqlMapper::toRegistration);
 		}
 	}
 	
@@ -77,15 +90,8 @@ public class RegistrationsSqlMapper {
 			"LEFT JOIN registration_bucket rb ON (r.id = rb.registration_id) " +
 			"ORDER BY participant_name";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			return Common.list(ps, RegistrationsSqlMapper::toRegistration);
+			return SqlOps.list(ps, RegistrationsSqlMapper::toRegistration);
 		}
-	}
-
-	public static Query orderBy_ParticipantName() { return
-		c -> {
-			String sql = "SELECT * FROM registrations ORDER BY participant_name";
-			return c.prepareStatement(sql);
-		};
 	}
 
 	public void updateRegistrationState(Connection c, UUID id, RegistrationState oldState, RegistrationState nextState) throws SQLException {
@@ -133,7 +139,7 @@ public class RegistrationsSqlMapper {
 			rs.getString("twitter"),
 			Optional.fromNullable(Strings.emptyToNull(rs.getString("bucket")))
 		);
-	};
+	}
 
 	public void insertInvoiceReference(Connection c, UUID registrationId, UUID invoiceReferenceId) throws SQLException {
 		String sql = "INSERT INTO registration_invoices (registration_id, invoice_reference_id) VALUES (?, ?)";
@@ -148,13 +154,14 @@ public class RegistrationsSqlMapper {
 		String sql = "SELECT * FROM registration_invoices WHERE registration_id = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, invoiceId);
-			return Common.one(ps, r -> {
+			Try1<ResultSet, UUID, SQLException> f = r -> {
 				try {
-					return (UUID)r.getObject("invoice_reference_id");
+					return (UUID) r.getObject("invoice_reference_id");
 				} catch (SQLException e) {
 					throw new RuntimeException(e);
 				}
-			});
+			};
+			return SqlOps.one(ps, f);
 		}
 	}
 

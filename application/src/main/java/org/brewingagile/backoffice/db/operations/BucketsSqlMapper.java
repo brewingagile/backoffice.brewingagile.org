@@ -1,7 +1,5 @@
 package org.brewingagile.backoffice.db.operations;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 
 import java.sql.Connection;
@@ -17,12 +15,11 @@ public class BucketsSqlMapper {
 		public final int workshop1;
 		public final int workshop2;
 
-		@JsonCreator
 		public Bucket(
-			@JsonProperty("bucket") String bucket,
-			@JsonProperty("conference") int conference,
-			@JsonProperty("workshop1") int workshop1,
-			@JsonProperty("workshop2") int workshop2
+			String bucket,
+			int conference,
+			int workshop1,
+			int workshop2
 		) {
 			this.bucket = bucket;
 			this.conference = conference;

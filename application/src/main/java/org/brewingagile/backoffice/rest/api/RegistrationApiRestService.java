@@ -17,29 +17,25 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import argo.jdom.JsonRootNode;
+import fj.data.Either;
 import functional.Effect;
-import functional.Either;
 import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
 import org.brewingagile.backoffice.integrations.MandrillEmailClient;
-import org.brewingagile.backoffice.utils.JsonReaderWriter;
+import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Path("/registration/1/")
 public class RegistrationApiRestService {
-	private static final JsonReaderWriter jsonReaderWriter = new JsonReaderWriter();
 	private final DataSource dataSource = Application.INSTANCE.dataSource();
 	private final RegistrationsSqlMapper registrationsSqlMapper = Application.INSTANCE.registrationsSqlMapper();
 	private final MandrillEmailClient mandrillEmailClient = Application.INSTANCE.mandrillEmailClient;
 	private final MailchimpSubscribeClient mailchimpSubscribeClient = Application.INSTANCE.mailchimpSubscribeClient;
 
-	@JsonIgnoreProperties(ignoreUnknown=true)
 	public static final class RegistrationRequest {
 		public final String participantName;
 		public final String participantEmail;
@@ -51,14 +47,14 @@ public class RegistrationApiRestService {
 		public final String twitter;
 
 		public RegistrationRequest(
-				@JsonProperty("participantName") String participantName,
-				@JsonProperty("participantEmail") String participantEmail,
-				@JsonProperty("billingCompany") String billingCompany,
-				@JsonProperty("billingAddress") String billingAddress, 
-				@JsonProperty("billingMethod") String billingMethod, 
-				@JsonProperty("dietaryRequirements") String dietaryRequirements,
-				@JsonProperty("ticket") String ticket,
-				@JsonProperty("twitter") String twitter
+				String participantName,
+				String participantEmail,
+				String billingCompany,
+				String billingAddress,
+				String billingMethod,
+				String dietaryRequirements,
+				String ticket,
+				String twitter
 		) {
 			this.participantName = participantName;
 			this.participantEmail = participantEmail;
@@ -84,7 +80,14 @@ public class RegistrationApiRestService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response post(@Context HttpServletRequest request,  String body) throws  URISyntaxException, SQLException {
-		RegistrationRequest rr = jsonReaderWriter.deserialize(body, RegistrationRequest.class);
+		fj.data.Either<String, JsonRootNode> parseEither = ArgoUtils.parseEither(body);
+
+		if (parseEither.isLeft())
+			return Response.status(Response.Status.BAD_REQUEST).build();
+
+		JsonRootNode jrn = parseEither.right().value();
+
+		RegistrationRequest rr = fromJson(jrn);
 		System.out.println("============================");
 		System.out.println("participantName: " + rr.participantName);
 		System.out.println("participantEmail: " + rr.participantEmail);
@@ -96,7 +99,7 @@ public class RegistrationApiRestService {
 		System.out.println("twitter: " + rr.twitter);
 		
 		if ("fel".equals(rr.participantName)) {
-			ResponseBuilder ok = Response.ok(jsonReaderWriter.serialize(Result.failure("Registrering misslyckades: Du är inte cool nog.")));
+			ResponseBuilder ok = Response.ok(ArgoUtils.format(Result.failure("Registrering misslyckades: Du är inte cool nog.")));
 			return accessControl(request, ok).build();
 		}
 		
@@ -117,16 +120,29 @@ public class RegistrationApiRestService {
 
 		Either<String, String> emailResult = mandrillEmailClient.sendRegistrationReceived(rr.participantEmail);
 		if (emailResult.isLeft()) {
-			System.err.println("We couldn't send an email to " + rr.participantName + "(" + rr.participantEmail + "). Cause: " + emailResult.left());
+			System.err.println("We couldn't send an email to " + rr.participantName + "(" + rr.participantEmail + "). Cause: " + emailResult.left().value());
 		}
 
 		Either<String, Effect> subscribeResult = mailchimpSubscribeClient.subscribe(rr.participantEmail);
 		if (subscribeResult.isLeft()) {
-			System.err.println("We couldn't subscribe " + rr.participantEmail + " to email-list. Cause: " + subscribeResult.left());
+			System.err.println("We couldn't subscribe " + rr.participantEmail + " to email-list. Cause: " + subscribeResult.left().value());
 		}
 
-		ResponseBuilder ok = Response.ok(jsonReaderWriter.serialize(Result.success("Registrering klar.")));
+		ResponseBuilder ok = Response.ok(ArgoUtils.format(Result.success("Registrering klar.")));
 		return accessControl(request, ok).build();
+	}
+
+	private RegistrationRequest fromJson(JsonRootNode body) {
+		return new RegistrationRequest(
+			ArgoUtils.stringOrEmpty(body, "participantName"),
+			ArgoUtils.stringOrEmpty(body, "participantEmail"),
+			ArgoUtils.stringOrEmpty(body, "billingCompany"),
+			ArgoUtils.stringOrEmpty(body, "billingAddress"),
+			ArgoUtils.stringOrEmpty(body, "billingMethod"),
+			ArgoUtils.stringOrEmpty(body, "dietaryRequirements"),
+			ArgoUtils.stringOrEmpty(body, "ticket"),
+			ArgoUtils.stringOrEmpty(body, "twitter")
+		);
 	}
 
 	private static BillingMethod billingMethod(String billingMethod) {

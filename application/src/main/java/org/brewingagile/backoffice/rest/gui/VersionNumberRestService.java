@@ -6,32 +6,30 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import argo.jdom.JsonRootNode;
+import static argo.jdom.JsonNodeFactories.*;
 import org.brewingagile.backoffice.application.Application;
+import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.GitPropertiesDescribeVersionNumberProvider;
-import org.brewingagile.backoffice.utils.JsonReaderWriter;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
 @Path("/versionnumber")
 @NeverCache
 public class VersionNumberRestService {
-	private final JsonReaderWriter jsonReaderWriter;
-	private final GitPropertiesDescribeVersionNumberProvider versionNumberProvider;	
+	private final GitPropertiesDescribeVersionNumberProvider versionNumberProvider;
 
 	public VersionNumberRestService() {
-		this.jsonReaderWriter = new JsonReaderWriter();
 		this.versionNumberProvider = Application.INSTANCE.versionNumberProvider();
 	}
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response get() {
-		return Response.ok(jsonReaderWriter.serialize(json(versionNumberProvider.softwareVersion()))).build();
+		return Response.ok(ArgoUtils.format(json(versionNumberProvider.softwareVersion()))).build();
 	}
 
-	private static ObjectNode json(String version) {
-		return JsonNodeFactory.instance.objectNode().put("version", version);
+	private static JsonRootNode json(String version) {
+		return object(field("version", string(version)));
 	}
 }

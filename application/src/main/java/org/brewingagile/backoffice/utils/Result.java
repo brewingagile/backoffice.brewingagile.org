@@ -1,18 +1,18 @@
 package org.brewingagile.backoffice.utils;
 
+import argo.jdom.JsonRootNode;
+
+import static argo.jdom.JsonNodeFactories.*;
+
 public final class Result {
-	public final String message;
-	public final boolean success;
-	public final Object data;
-	
-	private Result(String message, boolean success, Object data) {
-		this.message = message;
-		this.success = success;
-		this.data = data;
+	public static JsonRootNode success(String message) { return result(message, true); }
+	public static JsonRootNode failure(String message) { return result(message, false); }
+
+	private static JsonRootNode result(String message, boolean value) {
+		return object(
+			field("message", string(message)),
+			field("success", booleanNode(value)),
+			field("data", nullNode())
+		);
 	}
-	
-	public static Result success(String message) { return new Result(message, true, null); }
-	public static Result success(String message, Object data) { return new Result(message, true, data); }
-	public static Result failure(String message) { return new Result(message, false, null); }
-	public static Result failure(String message, Object data) { return new Result(message, false, data); }
 }

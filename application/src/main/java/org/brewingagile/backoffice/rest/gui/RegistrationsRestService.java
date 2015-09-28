@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
@@ -18,10 +19,15 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import static argo.jdom.JsonNodeFactories.*;
+
+import argo.jdom.JsonNode;
+import argo.jdom.JsonRootNode;
+import argo.saj.InvalidSyntaxException;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import functional.Either;
+import fj.*;
+import fj.data.Either;
 import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
@@ -31,18 +37,14 @@ import org.brewingagile.backoffice.services.DismissRegistrationService;
 import org.brewingagile.backoffice.services.MarkAsCompleteService;
 import org.brewingagile.backoffice.services.MarkAsPaidService;
 import org.brewingagile.backoffice.services.SendInvoiceService;
-import org.brewingagile.backoffice.utils.JsonReaderWriter;
-import org.brewingagile.backoffice.utils.Responses;
+import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
 @Path("/registrations/")
 @NeverCache
 public class RegistrationsRestService {
-	private final JsonReaderWriter jsonReaderWriter = new JsonReaderWriter();
 	private final DataSource dataSource = Application.INSTANCE.dataSource();
 	private final AuthService authService = Application.INSTANCE.authService();
 	private final RegistrationsSqlMapper registrationsSqlMapper = Application.INSTANCE.registrationsSqlMapper();
@@ -58,11 +60,12 @@ public class RegistrationsRestService {
 		
 		try (Connection c = dataSource.getConnection()) {
 			List<RegistrationsSqlMapper.Registration> all = registrationsSqlMapper.all(c);
-			ObjectNode overview = JsonNodeFactory.instance.objectNode();
-			overview.put("received", all.stream().filter(r -> r.state == RegistrationState.RECEIVED).map(RegistrationsRestService::json).collect(JsonReaderWriter.toArrayNode()));
-			overview.put("invoicing", all.stream().filter(r -> r.state == RegistrationState.INVOICING).map(RegistrationsRestService::json).collect(JsonReaderWriter.toArrayNode()));
-			overview.put("paid", all.stream().filter(r -> r.state == RegistrationState.PAID).map(RegistrationsRestService::json).collect(JsonReaderWriter.toArrayNode()));
-			return Response.ok(jsonReaderWriter.serialize(overview)).build();
+			JsonRootNode overview = object(
+				field("received", all.stream().filter(r -> r.state == RegistrationState.RECEIVED).map(RegistrationsRestService::json).collect(ArgoUtils.toArray())),
+				field("invoicing", all.stream().filter(r -> r.state == RegistrationState.INVOICING).map(RegistrationsRestService::json).collect(ArgoUtils.toArray())),
+				field("paid", all.stream().filter(r -> r.state == RegistrationState.PAID).map(RegistrationsRestService::json).collect(ArgoUtils.toArray()))
+			);
+			return Response.ok(ArgoUtils.format(overview)).build();
 		}
 	}
 
@@ -73,8 +76,12 @@ public class RegistrationsRestService {
 		authService.guardAuthenticatedUser(request);
 		try {
 			try (Connection c = dataSource.getConnection()) {
-				Optional<JsonNode> jn = registrationsSqlMapper.one(c, id).transform(RegistrationsRestService::json);
-				return Responses.from(jsonReaderWriter, jn).build();
+				return registrationsSqlMapper.one(c, id)
+					.transform(RegistrationsRestService::json)
+					.transform(ArgoUtils::format)
+					.transform(Response::ok)
+					.or(Response.status(Status.NOT_FOUND))
+					.build();
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -82,19 +89,20 @@ public class RegistrationsRestService {
 		}
 	}
 
-	public static ObjectNode json(RegistrationsSqlMapper.Registration r) {
-		return JsonNodeFactory.instance.objectNode()
-			.put("id", r.id.toString())
-			.put("participantName", r.participantName)
-			.put("participantEmail", r.participantEmail)
-			.put("billingCompany", r.billingCompany)
-			.put("billingAddress", r.billingAddress)
-			.put("billingMethod", r.billingMethod.name())
-			.put("twitter", r.twitter)
-			.put("ticket", r.ticket)
-			.put("dietaryRequirements", r.dietaryRequirements)
-			.put("badge", r.badge.badge)
-			.put("bundle", r.bundle.or(""));
+	public static argo.jdom.JsonRootNode json(RegistrationsSqlMapper.Registration r) {
+		return object(
+			field("id", string(r.id.toString())),
+			field("participantName", string(r.participantName)),
+			field("participantEmail", string(r.participantEmail)),
+			field("billingCompany", string(r.billingCompany)),
+			field("billingAddress", string(r.billingAddress)),
+			field("billingMethod", string(r.billingMethod.name())),
+			field("twitter", string(r.twitter)),
+			field("ticket", string(r.ticket)),
+			field("dietaryRequirements", string(r.dietaryRequirements)),
+			field("badge", string(r.badge.badge)),
+			field("bundle", string(r.bundle.or("")))
+		);
 	}
 	
 	public static final class RegistrationsUpdate {
@@ -113,12 +121,17 @@ public class RegistrationsRestService {
 		}
 	}
 
-	private static RegistrationsUpdate registrationsUpdate(JsonNode jsonNode) {
-		return new RegistrationsUpdate(
-			new Badge(jsonNode.get("badge").asText()),
-			jsonNode.get("dietaryRequirements").asText(),
-			Optional.fromNullable(Strings.emptyToNull(jsonNode.get("bundle").asText()))
-		);
+	private static Either<String, RegistrationsUpdate> registrationsUpdate(JsonNode jsonNode) {
+		Either<String, Badge> badge = ArgoUtils.stringValue(jsonNode, "badge").right().map(Badge::new);
+		Either<String, String> dietaryRequirements = ArgoUtils.stringValue(jsonNode, "dietaryRequirements");
+		Either<String, Optional<String>> bundle = ArgoUtils.stringValue(jsonNode, "bundle")
+			.right().map(Strings::emptyToNull)
+			.right().map(Optional::fromNullable);
+
+		return bundle.right()
+			.apply(dietaryRequirements.right()
+				.apply(badge.right()
+					.apply(Either.right(Function.curry(RegistrationsUpdate::new)))));
 	}
 
 	@POST
@@ -127,11 +140,12 @@ public class RegistrationsRestService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response postUpdate(@Context HttpServletRequest request, @PathParam("registrationId") UUID id, String body) throws Exception {
 		authService.guardAuthenticatedUser(request);
-		Either<String, RegistrationsUpdate> transform = jsonReaderWriter.jsonNodeEither(body)
-			.transform(RegistrationsRestService::registrationsUpdate);
-		if (transform.isLeft()) return Response.serverError().build();
+		Either<String, RegistrationsUpdate> map = ArgoUtils.parseEither(body)
+			.right()
+			.bind(RegistrationsRestService::registrationsUpdate);
 
-		RegistrationsUpdate ru = transform.right();
+		if (map.isLeft()) return Response.serverError().build();
+		RegistrationsUpdate ru = map.right().value();
 		
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
@@ -142,42 +156,36 @@ public class RegistrationsRestService {
 		return Response.ok().build();
 	}
 
-	public static final class RegistrationsListRequest {
-		public List<UUID> registrations;
-	}
-	
 	@POST
 	@Path("/send-invoices")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response postSendInvoices(@Context HttpServletRequest request, String body) throws Exception {
 		authService.guardAuthenticatedUser(request);
-		RegistrationsListRequest sir = jsonReaderWriter.deserialize(body, RegistrationsListRequest.class);
 
 		int invoicesSent = 0;
-		for (UUID uuid : sir.registrations) {
+		for (UUID uuid : registrationListRequest(body)) {
 			sendInvoiceService.sendInvoice(uuid);
 			invoicesSent++;
 		}
 
-		return Responses.from(jsonReaderWriter, Result.success(String.format("Skickade %s fakturor.", invoicesSent))).build();
+		return Response.ok(ArgoUtils.format(Result.success(String.format("Skickade %s fakturor.", invoicesSent)))).build();
 	}
-		
+
 	@POST
 	@Path("/dismiss-registrations")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response postDismissRegistrations(@Context HttpServletRequest httpRequest, String body) throws Exception {
 		authService.guardAuthenticatedUser(httpRequest);
-		RegistrationsListRequest request = jsonReaderWriter.deserialize(body, RegistrationsListRequest.class);
 
 		int invoicesDismissed = 0;
-		for (UUID uuid : request.registrations) {
+		for (UUID uuid : registrationListRequest(body)) {
 			dismissRegistrationService.dismissRegistration(uuid);
 			invoicesDismissed++;
 		}
 
-		return Responses.from(jsonReaderWriter, Result.success(String.format("Avfärdade %s registreringar.", invoicesDismissed))).build();
+		return Response.ok(ArgoUtils.format(Result.success(String.format("Avfärdade %s registreringar.", invoicesDismissed)))).build();
 	}
 	
 	@POST
@@ -186,15 +194,14 @@ public class RegistrationsRestService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response postMarkAsComplete(@Context HttpServletRequest httpRequest, String body) throws Exception {
 		authService.guardAuthenticatedUser(httpRequest);
-		RegistrationsListRequest request = jsonReaderWriter.deserialize(body, RegistrationsListRequest.class);
 
 		int i = 0;
-		for (UUID uuid : request.registrations) {
+		for (UUID uuid : registrationListRequest(body)) {
 			markAsCompleteService.markAsComplete(uuid);
 			i++;
 		}
 
-		return Responses.from(jsonReaderWriter, Result.success(String.format("Flyttade %s registreringar.", i))).build();
+		return Response.ok(ArgoUtils.format(Result.success(String.format("Flyttade %s registreringar.", i)))).build();
 	}
 
 	@POST
@@ -203,14 +210,25 @@ public class RegistrationsRestService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response postMarkAsPaid(@Context HttpServletRequest httpRequest, String body) throws Exception {
 		authService.guardAuthenticatedUser(httpRequest);
-		RegistrationsListRequest request = jsonReaderWriter.deserialize(body, RegistrationsListRequest.class);
 
 		int i = 0;
-		for (UUID uuid : request.registrations) {
+		for (UUID uuid : registrationListRequest(body)) {
 			markAsPaidService.markAsPaid(uuid);
 			i++;
 		}
 
-		return Responses.from(jsonReaderWriter, Result.success(String.format("%s registreringar markerade som betalda.", i))).build();
+		return Response.ok(ArgoUtils.format(Result.success(String.format("%s registreringar markerade som betalda.", i)))).build();
+	}
+
+	private static List<UUID> registrationListRequest(String body) throws InvalidSyntaxException {
+		return ArgoUtils.parse(body)
+			.getArrayNode("registrations")
+			.stream()
+			.map(RegistrationsRestService::uuid)
+			.collect(Collectors.toList());
+	}
+
+	private static UUID uuid(JsonNode jsonNode) {
+		return UUID.fromString(jsonNode.getStringValue());
 	}
 }

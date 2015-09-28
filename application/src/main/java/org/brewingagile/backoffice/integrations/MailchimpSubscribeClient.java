@@ -1,20 +1,20 @@
 package org.brewingagile.backoffice.integrations;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import argo.jdom.JsonNode;
+import argo.jdom.JsonNodeFactories;
+import argo.jdom.JsonRootNode;
+import fj.data.Either;
 import functional.Effect;
-import functional.Either;
-import org.brewingagile.backoffice.utils.JsonReaderWriter;
+import org.brewingagile.backoffice.utils.ArgoUtils;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 
-public class MailchimpSubscribeClient {
-	private static final JsonReaderWriter jsonReaderWriter = new JsonReaderWriter();
+import static argo.jdom.JsonNodeFactories.*;
 
+public class MailchimpSubscribeClient {
 	private final Client client;
 	private final String endpoint;
 	private final String apikey;
@@ -26,31 +26,39 @@ public class MailchimpSubscribeClient {
 	}
 
 	public Either<String, Effect> subscribe(String emailAddress) {
-		ObjectNode request = request("da90a13118", emailAddress);
+		JsonRootNode request = request("da90a13118", emailAddress);
 		try {
 			return response(client.target(endpoint).path("lists/subscribe.json").request()
 				.accept(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(jsonReaderWriter.serialize(request), MediaType.APPLICATION_JSON)).readEntity(String.class));
+				.post(Entity.entity(ArgoUtils.format(request), MediaType.APPLICATION_JSON)).readEntity(String.class));
 		} catch (WebApplicationException e) {
 			return Either.left(e.getMessage());
 		}
 	}
 
-	private Either<String,Effect> response(String json) {
-		return jsonReaderWriter.jsonNode.apply(json).transform(MailchimpSubscribeClient::response).or(Either.left("Mandrill response did not contain JSON at all."));
+	private Either<String, Effect> response(String json) {
+		return Either.joinRight(ArgoUtils.parseEither(json)
+			.bimap(
+				l -> "Mandrill response did not contain JSON at all.",
+				MailchimpSubscribeClient::response
+			));
 	}
 
 	private static Either<String, Effect> response(JsonNode jn) {
-		if (!(jn.hasNonNull("email") && jn.hasNonNull("euid") && jn.hasNonNull("leid")))
-			return Either.left("MailChimp responded with error: \"" + jn.path("error").asText() + "\".");
+		if (!(jn.isStringValue("email") && jn.isStringValue("euid") && jn.isStringValue("leid"))) {
+			JsonNode error = jn.getNode("error");
+			return Either.left("MailChimp responded with error: \"" + ArgoUtils.format(error.getRootNode()) + "\".");
+		}
 		return Either.right(Effect.Performed);
 	}
 
-	private ObjectNode request(String listId, String emailAddress) {
-		return JsonNodeFactory.instance.objectNode()
-			.put("apikey", apikey)
-			.put("id", listId)
-			.putPOJO("email", JsonNodeFactory.instance.objectNode()
-				.put("email", emailAddress));
+	private JsonRootNode request(String listId, String emailAddress) {
+		return JsonNodeFactories.object(
+			field("apikey", string(apikey)),
+			field("id", string(listId)),
+			field("email", object(
+				field("email", string(emailAddress))
+			))
+		);
 	}
 }

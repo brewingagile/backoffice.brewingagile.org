@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import com.google.common.io.Resources;
-import functional.Either;
+import fj.data.Either;
 
 public class EtcPropertyFile {
 	private final Properties properties;
@@ -50,7 +50,7 @@ public class EtcPropertyFile {
 
 	public static <T> T killApplicationIfPropertiesAreMissing(Either<String, T> either) {
 		try {
-			return either.right();
+			return either.right().value();
 		} catch (Exception e) {
 			System.err.println("Could not read properties from properties file :(.");
 			System.err.println(either.left());

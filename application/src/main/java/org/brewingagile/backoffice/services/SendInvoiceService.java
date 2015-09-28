@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import javax.sql.DataSource;
 
-import functional.Either;
+import fj.data.Either;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
@@ -37,7 +37,7 @@ public class SendInvoiceService {
 			if (!registrationsSqlMapper.invoiceReference(c, id).isPresent()) {
 				Either<String,UUID> invoiceReferenceId = outvoiceInvoiceClient.postInvoice(registration.id, registration.billingMethod, registration.participantEmail, registration.billingCompany, registration.billingAddress, registration.ticket, registration.participantName);
 				if (invoiceReferenceId.isLeft()) System.err.println(invoiceReferenceId.left());
-				registrationsSqlMapper.insertInvoiceReference(c, registration.id, invoiceReferenceId.right());
+				registrationsSqlMapper.insertInvoiceReference(c, registration.id, invoiceReferenceId.right().value());
 				c.commit();
 			}
 		}

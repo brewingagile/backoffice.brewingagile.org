@@ -44,7 +44,7 @@ public class Main {
 		System.out.println("Serving " + resourceBase);
 		Server server = new Server(port);
 
-		Configuration config = Configuration.from(EtcPropertyFile.from(args[0]).right());
+		Configuration config = Configuration.from(EtcPropertyFile.from(args[0]).right().value());
 		atomic.set(config);
 
 		PostgresConnector postgresConnector = new PostgresConnector(config.dbHost, config.dbPort, config.dbName, config.dbUsername, config.dbPassword);

@@ -13,7 +13,7 @@ import javax.ws.rs.core.Response;
 import static argo.jdom.JsonNodeFactories.*;
 
 import argo.jdom.JsonRootNode;
-import functional.Either;
+import fj.data.Either;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 

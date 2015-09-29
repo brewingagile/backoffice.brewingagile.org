@@ -55,6 +55,7 @@ public final class ArgoUtils {
 	}
 
 	public static String stringOrEmpty(JsonNode body, String f) {
+		if (body.isNullNode(f)) return "";
 		if (!body.isStringValue(f)) return "";
 		return body.getStringValue(f);
 	}

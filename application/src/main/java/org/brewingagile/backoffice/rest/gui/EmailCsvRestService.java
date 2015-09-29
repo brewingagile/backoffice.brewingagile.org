@@ -1,5 +1,7 @@
 package org.brewingagile.backoffice.rest.gui;
 
+import fj.data.List;
+import fj.function.Strings;
 import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
@@ -14,8 +16,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.sql.Connection;
 import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Path("/emails/")
 @NeverCache
@@ -28,15 +28,10 @@ public class EmailCsvRestService {
 	public Response invoices(@Context HttpServletRequest request) throws Exception {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
-			List<String> p2s = RegistrationsSqlMapper.participantNameAndEmail(c).stream()
-				.map(x -> escaped(x._1()) + "," + escaped(x._2()))
-				.collect(Collectors.toList());
-			return Response.ok(unlines(p2s)).header("content-disposition", "attachment; filename=" + "participants-" + Instant.now().toString() + ".csv").build();
+			List<String> p2s = RegistrationsSqlMapper.participantNameAndEmail(c)
+				.map(x -> escaped(x._1()) + "," + escaped(x._2()));
+			return Response.ok(Strings.unlines(p2s)).header("content-disposition", "attachment; filename=" + "participants-" + Instant.now().toString() + ".csv").build();
 		}
-	}
-
-	private static String unlines(List<String> map) {
-		return map.stream().reduce((l,r) -> l + "\n" + r).orElse("");
 	}
 
 	private static String escaped(String value) {

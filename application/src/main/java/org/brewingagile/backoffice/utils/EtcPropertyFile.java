@@ -4,7 +4,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 
-import com.google.common.io.Resources;
+import com.hencjo.summer.migration.util.Resources;
 import fj.data.Either;
 
 public class EtcPropertyFile {

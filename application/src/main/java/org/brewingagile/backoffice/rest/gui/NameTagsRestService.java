@@ -1,7 +1,8 @@
 package org.brewingagile.backoffice.rest.gui;
 
 import argo.jdom.JsonRootNode;
-import com.google.common.collect.ImmutableSet;
+import fj.Ord;
+import fj.data.Set;
 import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
@@ -34,9 +35,7 @@ public class NameTagsRestService {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
 			return Response.ok(ArgoUtils.format(
-				registrationsSqlMapper.all(c).stream()
-					.map(NameTagsRestService::json)
-					.collect(ArgoUtils.toArray())
+				array(registrationsSqlMapper.all(c).map(NameTagsRestService::json))
 			)).build();
 		}
 	}
@@ -46,7 +45,7 @@ public class NameTagsRestService {
 			field("name", string(r.participantName)),
 			field("company", string(r.billingCompany)),
 			field("badge", string(r.badge.badge)),
-			field("workshop", booleanNode(ImmutableSet.of("conference+workshop", "conference+workshop2").contains(r.ticket))),
+			field("workshop", booleanNode(Set.set(Ord.stringOrd, "conference+workshop", "conference+workshop2").member(r.ticket))),
 			field("conference", booleanNode(true)),
 			field("burger", booleanNode(true)),
 			field("twitter", string(r.twitter)),

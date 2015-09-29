@@ -38,7 +38,7 @@ public class ReportsRestService {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
 			return Response.ok(ArgoUtils.format(
-				bucketsSqlMapper.bundles(c).stream().map(ReportsRestService::json).collect(ArgoUtils.toArray())
+				array(bucketsSqlMapper.bundles(c).map(ReportsRestService::json))
 			)).build();
 		}
 	}

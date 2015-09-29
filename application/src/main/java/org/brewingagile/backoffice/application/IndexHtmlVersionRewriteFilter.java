@@ -1,21 +1,18 @@
 package org.brewingagile.backoffice.application;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.CharStreams;
+import com.hencjo.summer.migration.util.Charsets;
 import com.hencjo.summer.security.api.AbstractFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.brewingagile.backoffice.utils.GitPropertiesDescribeVersionNumberProvider;
 import org.brewingagile.backoffice.utils.URLEncoder;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class IndexHtmlVersionRewriteFilter extends AbstractFilter {
 	private final GitPropertiesDescribeVersionNumberProvider versionNumberProvider = Application.INSTANCE.versionNumberProvider();
@@ -25,9 +22,13 @@ public class IndexHtmlVersionRewriteFilter extends AbstractFilter {
 		HttpServletRequest req = (HttpServletRequest)sreq;
 		HttpServletResponse res = (HttpServletResponse)sres;
 		ServletContext servletContext = req.getSession().getServletContext();
+		URL resource = servletContext.getResource("/index.html");
 		String html;
-		try (InputStream is = servletContext.getResourceAsStream("/index.html")) {
-			html = CharStreams.toString(new InputStreamReader(is, Charsets.UTF_8));
+		try {
+			html = new String(Files.readAllBytes(Paths.get(resource.toURI())), Charsets.UTF8);
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 		String updatedHtml = html.replaceAll("##version##", URLEncoder.encode(versionNumberProvider.softwareVersion()));
 		res.addHeader("Content-Type", "text/html; charset=utf-8");

@@ -28,13 +28,13 @@ public class SendInvoiceService {
 		Registration registration;
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
-			registration = registrationsSqlMapper.one(c, id).get();
+			registration = registrationsSqlMapper.one(c, id).some();
 			if (registration.state != RegistrationState.RECEIVED) throw new IllegalArgumentException("Registration is not in expected state.");
 		}
 		
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
-			if (!registrationsSqlMapper.invoiceReference(c, id).isPresent()) {
+			if (!registrationsSqlMapper.invoiceReference(c, id).isSome()) {
 				Either<String,UUID> invoiceReferenceId = outvoiceInvoiceClient.postInvoice(registration.id, registration.billingMethod, registration.participantEmail, registration.billingCompany, registration.billingAddress, registration.ticket, registration.participantName);
 				if (invoiceReferenceId.isLeft()) System.err.println(invoiceReferenceId.left());
 				registrationsSqlMapper.insertInvoiceReference(c, registration.id, invoiceReferenceId.right().value());

@@ -1,13 +1,12 @@
 package org.brewingagile.backoffice.db.operations;
 
-import com.google.common.collect.ImmutableList;
+import fj.data.List;
 import fj.function.Try1;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 public class BucketsSqlMapper {
 	public final static class Bucket {
@@ -29,7 +28,7 @@ public class BucketsSqlMapper {
 		}
 	}
 
-	public ImmutableList<Bucket> all(Connection c) throws SQLException {
+	public List<Bucket> all(Connection c) throws SQLException {
 		String sql = "SELECT * FROM bucket ORDER BY bucket;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			return SqlOps.list(ps, rs -> new Bucket(
@@ -92,7 +91,7 @@ public class BucketsSqlMapper {
 				rs.getInt("conference"),
 				rs.getInt("workshop1"),
 				rs.getInt("workshop2")
-			)).get();
+			)).some();
 		}
 	}
 
@@ -110,7 +109,7 @@ public class BucketsSqlMapper {
 		}
 	}
 
-	public ImmutableList<BucketSummary> bundles(Connection c) throws SQLException {
+	public List<BucketSummary> bundles(Connection c) throws SQLException {
 		String sql = "SELECT * FROM bucket b " +
 			"LEFT JOIN (" +
 			"	SELECT rb.bucket," +

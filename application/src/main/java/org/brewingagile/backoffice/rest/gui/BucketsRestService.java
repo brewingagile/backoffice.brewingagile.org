@@ -3,6 +3,8 @@ package org.brewingagile.backoffice.rest.gui;
 import argo.jdom.JsonNode;
 import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
+import fj.data.Collectors;
+import fj.data.List;
 import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BucketsSqlMapper;
@@ -17,8 +19,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.math.BigInteger;
 import java.sql.Connection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static argo.jdom.JsonNodeFactories.*;
 
@@ -55,9 +55,7 @@ public class BucketsRestService {
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			return Response.ok(ArgoUtils.format(
-				bucketsSqlMapper.all(c).stream()
-					.map(BucketsRestService::json)
-					.collect(ArgoUtils.toArray())
+				array(bucketsSqlMapper.all(c).map(BucketsRestService::json))
 			)).build();
 		}
 	}
@@ -86,8 +84,12 @@ public class BucketsRestService {
 		return Response.ok().build();
 	}
 
-	private List<Bucket> unJson(String json) throws InvalidSyntaxException {
-		return ArgoUtils.parse(json).getArrayNode().stream().map(BucketsRestService::unbucket).collect(Collectors.toList());
+	private static List<Bucket> unJson(String json) throws InvalidSyntaxException {
+		return ArgoUtils.parse(json)
+			.getArrayNode()
+			.stream()
+			.map(BucketsRestService::unbucket)
+			.collect(Collectors.toList());
 	}
 
 	private static Bucket unbucket(JsonNode node) {

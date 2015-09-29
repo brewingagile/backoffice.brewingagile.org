@@ -4,16 +4,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import fj.P;
 import fj.P2;
 
-import com.google.common.base.Optional;
+import fj.data.List;
+import fj.data.Option;
+import fj.function.Strings;
 import fj.function.Try1;
 
 public class RegistrationsSqlMapper {
@@ -49,7 +48,7 @@ public class RegistrationsSqlMapper {
 		public final String dietaryRequirements;
 		public final Badge badge;
 		public final String twitter;
-		public final Optional<String> bundle;
+		public final Option<String> bundle;
 
 		public Registration(UUID id, RegistrationState state, String participantName,
 				String participantEmail, String billingCompany,
@@ -58,7 +57,7 @@ public class RegistrationsSqlMapper {
 				String ticket, String dietaryRequirements,
 				Badge badge,
 				String twitter,
-				Optional<String> bundle
+				Option<String> bundle
 				) {
 			this.id = id;
 			this.state = state;
@@ -75,7 +74,7 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	public Optional<Registration> one(Connection c, UUID id) throws SQLException {
+	public Option<Registration> one(Connection c, UUID id) throws SQLException {
 		String sql = "SELECT *, rb.bucket FROM registrations r " +
 			"LEFT JOIN registration_bucket rb ON (r.id = rb.registration_id) " +
 			"WHERE id = ?";
@@ -85,7 +84,7 @@ public class RegistrationsSqlMapper {
 		}
 	}
 	
-	public ImmutableList<Registration> all(Connection c) throws SQLException {
+	public List<Registration> all(Connection c) throws SQLException {
 		String sql = "SELECT *, rb.bucket FROM registrations r " +
 			"LEFT JOIN registration_bucket rb ON (r.id = rb.registration_id) " +
 			"ORDER BY participant_name";
@@ -137,7 +136,7 @@ public class RegistrationsSqlMapper {
 			rs.getString("dietary_requirements"),
 			new Badge(rs.getString("badge")),
 			rs.getString("twitter"),
-			Optional.fromNullable(Strings.emptyToNull(rs.getString("bucket")))
+			Option.fromNull(rs.getString("bucket")).filter(Strings.isNotNullOrEmpty)
 		);
 	}
 
@@ -150,7 +149,7 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	public Optional<UUID> invoiceReference(Connection c, UUID invoiceId) throws SQLException {
+	public Option<UUID> invoiceReference(Connection c, UUID invoiceId) throws SQLException {
 		String sql = "SELECT * FROM registration_invoices WHERE registration_id = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, invoiceId);
@@ -173,7 +172,7 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	public void update(Connection c, UUID id, Badge badge, String diet, Optional<String> bundle) throws SQLException {
+	public void update(Connection c, UUID id, Badge badge, String diet, Option<String> bundle) throws SQLException {
 		replaceRegistrationBundle(c, id, bundle);
 		updateRegistration(c, id, badge, diet);
 	}
@@ -193,9 +192,9 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	private static void replaceRegistrationBundle(Connection c, UUID id, Optional<String> bundle) throws SQLException {
+	private static void replaceRegistrationBundle(Connection c, UUID id, Option<String> bundle) throws SQLException {
 		deleteRegistrationBundle(c, id);
-		if (bundle.isPresent()) insertRegistrationBundle(c, id, bundle.get());
+		if (bundle.isSome()) insertRegistrationBundle(c, id, bundle.some());
 	}
 
 	private static void deleteRegistrationBundle(Connection c, UUID id) throws SQLException {

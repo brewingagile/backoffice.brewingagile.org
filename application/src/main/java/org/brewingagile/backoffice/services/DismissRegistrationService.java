@@ -22,7 +22,7 @@ public class DismissRegistrationService {
 	public void dismissRegistration(UUID id) throws Exception {
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
-			Registration registration = registrationsSqlMapper.one(c, id).get();
+			Registration registration = registrationsSqlMapper.one(c, id).some();
 			if (registration.state != RegistrationState.RECEIVED) throw new IllegalArgumentException("Registration is not in expected state.");
 			registrationsSqlMapper.delete(c, id);
 			c.commit();

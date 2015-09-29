@@ -1,7 +1,6 @@
 package org.brewingagile.backoffice.integrations;
 
 import argo.jdom.JsonRootNode;
-import com.google.common.base.Strings;
 import fj.data.Either;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
@@ -51,7 +50,7 @@ public class MandrillEmailClient {
 		String messageId = ArgoUtils.stringOrEmpty(jsonNode, "_id");
 
 		if (!"sent".equals(status)) return Either.left("Mandrill Response Status was not expected 'sent' but '" + status + "'.");
-		if (Strings.isNullOrEmpty(messageId)) return Either.left("Mandrill Message Id was not present. That's odd.");
+		if (messageId.isEmpty()) return Either.left("Mandrill Message Id was not present. That's odd.");
 		return Either.right(messageId);
 	}
 

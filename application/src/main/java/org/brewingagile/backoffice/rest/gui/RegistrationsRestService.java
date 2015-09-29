@@ -2,9 +2,7 @@ package org.brewingagile.backoffice.rest.gui;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
@@ -24,10 +22,12 @@ import static argo.jdom.JsonNodeFactories.*;
 import argo.jdom.JsonNode;
 import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
-import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import fj.*;
+import fj.data.Collectors;
 import fj.data.Either;
+import fj.data.List;
+import fj.data.Option;
+import fj.function.Strings;
 import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
@@ -61,9 +61,9 @@ public class RegistrationsRestService {
 		try (Connection c = dataSource.getConnection()) {
 			List<RegistrationsSqlMapper.Registration> all = registrationsSqlMapper.all(c);
 			JsonRootNode overview = object(
-				field("received", all.stream().filter(r -> r.state == RegistrationState.RECEIVED).map(RegistrationsRestService::json).collect(ArgoUtils.toArray())),
-				field("invoicing", all.stream().filter(r -> r.state == RegistrationState.INVOICING).map(RegistrationsRestService::json).collect(ArgoUtils.toArray())),
-				field("paid", all.stream().filter(r -> r.state == RegistrationState.PAID).map(RegistrationsRestService::json).collect(ArgoUtils.toArray()))
+				field("received", array(all.filter(r -> r.state == RegistrationState.RECEIVED).map(RegistrationsRestService::json))),
+				field("invoicing", array(all.filter(r -> r.state == RegistrationState.INVOICING).map(RegistrationsRestService::json))),
+				field("paid", array(all.filter(r -> r.state == RegistrationState.PAID).map(RegistrationsRestService::json)))
 			);
 			return Response.ok(ArgoUtils.format(overview)).build();
 		}
@@ -77,10 +77,10 @@ public class RegistrationsRestService {
 		try {
 			try (Connection c = dataSource.getConnection()) {
 				return registrationsSqlMapper.one(c, id)
-					.transform(RegistrationsRestService::json)
-					.transform(ArgoUtils::format)
-					.transform(Response::ok)
-					.or(Response.status(Status.NOT_FOUND))
+					.map(RegistrationsRestService::json)
+					.map(ArgoUtils::format)
+					.map(Response::ok)
+					.orSome(Response.status(Status.NOT_FOUND))
 					.build();
 			}
 		} catch (SQLException e) {
@@ -101,19 +101,19 @@ public class RegistrationsRestService {
 			field("ticket", string(r.ticket)),
 			field("dietaryRequirements", string(r.dietaryRequirements)),
 			field("badge", string(r.badge.badge)),
-			field("bundle", string(r.bundle.or("")))
+			field("bundle", string(r.bundle.orSome("")))
 		);
 	}
 	
 	public static final class RegistrationsUpdate {
 		public final Badge badge;
 		public final String dietaryRequirements;
-		public final Optional<String> bundle;
+		public final Option<String> bundle;
 
 		public RegistrationsUpdate(
 			Badge badge,
 			String dietaryRequirements,
-			Optional<String> bundle
+			Option<String> bundle
 		) {
 			this.badge = badge;
 			this.dietaryRequirements = dietaryRequirements;
@@ -124,9 +124,9 @@ public class RegistrationsRestService {
 	private static Either<String, RegistrationsUpdate> registrationsUpdate(JsonNode jsonNode) {
 		Either<String, Badge> badge = ArgoUtils.stringValue(jsonNode, "badge").right().map(Badge::new);
 		Either<String, String> dietaryRequirements = ArgoUtils.stringValue(jsonNode, "dietaryRequirements");
-		Either<String, Optional<String>> bundle = ArgoUtils.stringValue(jsonNode, "bundle")
-			.right().map(Strings::emptyToNull)
-			.right().map(Optional::fromNullable);
+		Either<String, Option<String>> bundle = ArgoUtils.stringValue(jsonNode, "bundle")
+			.right().map(Option::fromNull)
+			.right().map(r -> r.filter(Strings.isNotNullOrEmpty));
 
 		return bundle.right()
 			.apply(dietaryRequirements.right()
@@ -149,7 +149,7 @@ public class RegistrationsRestService {
 		
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
-			if (!registrationsSqlMapper.one(c, id).isPresent()) return Response.status(Status.NOT_FOUND).build();
+			if (!registrationsSqlMapper.one(c, id).isSome()) return Response.status(Status.NOT_FOUND).build();
 			registrationsSqlMapper.update(c, id, ru.badge, ru.dietaryRequirements, ru.bundle);
 			c.commit();
 		}

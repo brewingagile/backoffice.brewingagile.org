@@ -4,25 +4,25 @@ import java.io.IOException;
 import javax.servlet.*;
 
 import org.brewingagile.backoffice.application.Configuration;
-import org.brewingagile.backoffice.application.Main;
 
 import com.hencjo.summer.security.*;
 import com.hencjo.summer.security.api.*;
 import static com.hencjo.summer.security.api.Summer.*;
 
 public class AuthenticationFilter extends AbstractFilter {
-	private final Configuration configuration = Main.getConfiguration();
-	
-	private final SummerLogger logger = Loggers.noop();
-	private final Authenticator authenticator = (username, password) -> (configuration.guiAdminUsername.equals(username) && configuration.guiAdminPassword.equals(password));
-	private final ServerSideSession session = new ServerSideSession("TOKEN");
-	private final HttpBasicAuthenticator httpBasicAuthenticator = new HttpBasicAuthenticator(authenticator, "BA_BACKOFFICE");
-	private final FormBasedLogin formBasedLogin = new FormBasedLogin(logger, authenticator, session.sessionWriter(), 
-			"/j_spring_security_check", "/j_spring_security_logout", 
-			"j_username", "j_password", 
+	private final SummerFilterDelegate filterDelegate;
+
+	public AuthenticationFilter(Configuration configuration) {
+		SummerLogger logger = Loggers.noop();
+		Authenticator authenticator = (username, password) -> (configuration.guiAdminUsername.equals(username) && configuration.guiAdminPassword.equals(password));
+		ServerSideSession session = new ServerSideSession("TOKEN");
+		HttpBasicAuthenticator httpBasicAuthenticator = new HttpBasicAuthenticator(authenticator, "BA_BACKOFFICE");
+		FormBasedLogin formBasedLogin = new FormBasedLogin(logger, authenticator, session.sessionWriter(),
+			"/j_spring_security_check", "/j_spring_security_logout",
+			"j_username", "j_password",
 			redirect("/login.html#?logout=true"), redirect("/login.html#?failure=true"), new RedirectToHashbang());
 
-	private final SummerFilterDelegate filterDelegate = summer(logger,
+		this.filterDelegate = summer(logger,
 			when(pathEquals("/form.html")).thenAllow(),
 			when(pathBeginsWith("/form/")).thenAllow(),
 			when(pathBeginsWith("/img/")).thenAllow(),
@@ -41,7 +41,8 @@ public class AuthenticationFilter extends AbstractFilter {
 			when(header("X-Requested-With").equals("XMLHttpRequest")).then(status(403)),
 			otherwise().then(redirect("/login.html"))
 		);
-	
+	}
+
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
 		filterDelegate.doFilter(request, response, filterChain);

@@ -2,6 +2,7 @@ package org.brewingagile.backoffice.utils;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.Properties;
 
 import com.hencjo.summer.migration.util.Resources;
@@ -14,14 +15,14 @@ public class EtcPropertyFile {
 		this.properties = properties;
 	}
 
-	public static Either<String,EtcPropertyFile> from(String propsFilename) {
+	public static Either<IOException, EtcPropertyFile> from(Reader reader) {
 		Properties properties = new Properties();
 		try {
-			properties.load(new FileReader(propsFilename));
+			properties.load(reader);
+			return Either.right(new EtcPropertyFile(properties));
 		} catch (IOException e) {
-			return Either.left("Could not read/find application property file '" + propsFilename + "'.");
+			return Either.left(e);
 		}
-		return Either.right(new EtcPropertyFile(properties));
 	}
 
 	public int integer(String key) {
@@ -39,7 +40,7 @@ public class EtcPropertyFile {
 		if (property == null) throw new RuntimeException("Missing property: " + key);
 		return property;
 	}
-	
+
 	public boolean bool(String key) {
 		String property = properties.getProperty(key);
 		if (property == null) throw new RuntimeException("Missing property: " + key);
@@ -47,19 +48,15 @@ public class EtcPropertyFile {
 		if ("false".equalsIgnoreCase(property)) return false;
 		throw new RuntimeException("Illegal value for boolean property: " + key + ": " + property);
 	}
-
-	public static <T> T killApplicationIfPropertiesAreMissing(Either<String, T> either) {
-		try {
-			return either.right().value();
-		} catch (Exception e) {
-			System.err.println("Could not read properties from properties file :(.");
-			System.err.println(either.left());
-			System.exit(1);
-			throw new RuntimeException("Never happens.");
-		}
-	}
-
-	public static Either<String,EtcPropertyFile> discover() {
-		return from(Resources.getResource("backend.conf").toExternalForm());
-	}
+//
+//	public static <T> T killApplicationIfPropertiesAreMissing(Try<T> either) {
+//		try {
+//			return either.get();
+//		} catch (Exception e) {
+//			System.err.println("Could not read properties from properties file :(.");
+//			either.exception().get().printStackTrace();
+//			System.exit(1);
+//			throw new RuntimeException("Never happens.");
+//		}
+//	}
 }

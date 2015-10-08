@@ -15,14 +15,19 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class IndexHtmlVersionRewriteFilter extends AbstractFilter {
-	private final GitPropertiesDescribeVersionNumberProvider versionNumberProvider = Application.INSTANCE.versionNumberProvider();
+	private final GitPropertiesDescribeVersionNumberProvider versionNumberProvider;
+
+	public IndexHtmlVersionRewriteFilter(
+		GitPropertiesDescribeVersionNumberProvider versionNumberProvider
+	) {
+		this.versionNumberProvider = versionNumberProvider;
+	}
 
 	@Override
 	public void doFilter(ServletRequest sreq, ServletResponse sres, FilterChain fc) throws IOException, ServletException {
 		HttpServletRequest req = (HttpServletRequest)sreq;
 		HttpServletResponse res = (HttpServletResponse)sres;
-		ServletContext servletContext = req.getSession().getServletContext();
-		URL resource = servletContext.getResource("/index.html");
+		URL resource = req.getSession().getServletContext().getResource("/index.html");
 		String html;
 		try {
 			html = new String(Files.readAllBytes(Paths.get(resource.toURI())), Charsets.UTF8);

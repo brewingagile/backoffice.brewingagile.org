@@ -9,7 +9,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import argo.jdom.JsonRootNode;
-import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 
 import org.brewingagile.backoffice.utils.ArgoUtils;
@@ -22,8 +21,8 @@ import static argo.jdom.JsonNodeFactories.*;
 public class LoggedInRestService {
 	private final AuthService authService;
 
-	public LoggedInRestService() {
-		this.authService = Application.INSTANCE.authService();
+	public LoggedInRestService(AuthService authService) {
+		this.authService = authService;
 	}
 	
 	@GET

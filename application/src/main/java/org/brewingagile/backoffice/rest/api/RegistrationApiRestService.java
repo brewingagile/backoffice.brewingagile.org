@@ -20,7 +20,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import argo.jdom.JsonRootNode;
 import fj.data.Either;
 import functional.Effect;
-import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
@@ -31,10 +30,22 @@ import org.brewingagile.backoffice.utils.Result;
 
 @Path("/registration/1/")
 public class RegistrationApiRestService {
-	private final DataSource dataSource = Application.INSTANCE.dataSource();
-	private final RegistrationsSqlMapper registrationsSqlMapper = Application.INSTANCE.registrationsSqlMapper();
-	private final MandrillEmailClient mandrillEmailClient = Application.INSTANCE.mandrillEmailClient;
-	private final MailchimpSubscribeClient mailchimpSubscribeClient = Application.INSTANCE.mailchimpSubscribeClient;
+	private final DataSource dataSource;
+	private final RegistrationsSqlMapper registrationsSqlMapper;
+	private final MandrillEmailClient mandrillEmailClient;
+	private final MailchimpSubscribeClient mailchimpSubscribeClient;
+
+	public RegistrationApiRestService(
+		DataSource dataSource,
+		RegistrationsSqlMapper registrationsSqlMapper,
+		MandrillEmailClient mandrillEmailClient,
+		MailchimpSubscribeClient mailchimpSubscribeClient
+	) {
+		this.dataSource = dataSource;
+		this.registrationsSqlMapper = registrationsSqlMapper;
+		this.mandrillEmailClient = mandrillEmailClient;
+		this.mailchimpSubscribeClient = mailchimpSubscribeClient;
+	}
 
 	public static final class RegistrationRequest {
 		public final String participantName;

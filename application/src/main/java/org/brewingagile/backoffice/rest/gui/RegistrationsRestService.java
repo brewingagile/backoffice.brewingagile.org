@@ -28,7 +28,6 @@ import fj.data.Either;
 import fj.data.List;
 import fj.data.Option;
 import fj.function.Strings;
-import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
@@ -45,14 +44,32 @@ import org.brewingagile.backoffice.utils.jersey.NeverCache;
 @Path("/registrations/")
 @NeverCache
 public class RegistrationsRestService {
-	private final DataSource dataSource = Application.INSTANCE.dataSource();
-	private final AuthService authService = Application.INSTANCE.authService();
-	private final RegistrationsSqlMapper registrationsSqlMapper = Application.INSTANCE.registrationsSqlMapper();
-	private final SendInvoiceService sendInvoiceService = Application.INSTANCE.sendInvoiceService();
-	private final DismissRegistrationService dismissRegistrationService = Application.INSTANCE.dismissRegistrationService();
-	private final MarkAsCompleteService markAsCompleteService = Application.INSTANCE.markAsCompleteService();
-	private final MarkAsPaidService markAsPaidService = Application.INSTANCE.markAsPaidService();
-	
+	private final DataSource dataSource;
+	private final AuthService authService;
+	private final RegistrationsSqlMapper registrationsSqlMapper;
+	private final SendInvoiceService sendInvoiceService;
+	private final DismissRegistrationService dismissRegistrationService;
+	private final MarkAsCompleteService markAsCompleteService;
+	private final MarkAsPaidService markAsPaidService;
+
+	public RegistrationsRestService(
+		DataSource dataSource,
+		AuthService authService,
+		RegistrationsSqlMapper registrationsSqlMapper,
+		SendInvoiceService sendInvoiceService,
+		DismissRegistrationService dismissRegistrationService,
+		MarkAsCompleteService markAsCompleteService,
+		MarkAsPaidService markAsPaidService
+	) {
+		this.dataSource = dataSource;
+		this.authService = authService;
+		this.registrationsSqlMapper = registrationsSqlMapper;
+		this.sendInvoiceService = sendInvoiceService;
+		this.dismissRegistrationService = dismissRegistrationService;
+		this.markAsCompleteService = markAsCompleteService;
+		this.markAsPaidService = markAsPaidService;
+	}
+
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response invoices(@Context HttpServletRequest request) throws Exception {

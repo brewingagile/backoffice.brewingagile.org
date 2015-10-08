@@ -1,12 +1,15 @@
 package org.brewingagile.backoffice.application;
 
 import com.hencjo.summer.security.SummerAuthenticatedUser;
+import fj.data.List;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BucketsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
 import org.brewingagile.backoffice.integrations.MandrillEmailClient;
 import org.brewingagile.backoffice.integrations.OutvoiceInvoiceClient;
+import org.brewingagile.backoffice.rest.api.RegistrationApiRestService;
+import org.brewingagile.backoffice.rest.gui.*;
 import org.brewingagile.backoffice.services.DismissRegistrationService;
 import org.brewingagile.backoffice.services.MarkAsCompleteService;
 import org.brewingagile.backoffice.services.MarkAsPaidService;
@@ -16,44 +19,36 @@ import org.brewingagile.backoffice.utils.GitPropertiesDescribeVersionNumberProvi
 import javax.sql.DataSource;
 import javax.ws.rs.client.ClientBuilder;
 
-public enum Application {
-	INSTANCE(configurationFromMain(), datasourceFromMain());
-	private final DataSource dataSource;
-	private final AuthService authService;
-	private final GitPropertiesDescribeVersionNumberProvider versionNumberProvider;
-	public final RegistrationsSqlMapper registrationsSqlMapper = new RegistrationsSqlMapper();
-	public final BucketsSqlMapper bucketsSqlMapper = new BucketsSqlMapper();
-	private final OutvoiceInvoiceClient outvoiceInvoiceClient;
-	private final SendInvoiceService sendInvoiceService;
-	private final DismissRegistrationService dismissRegistrationService;
-	private final MarkAsCompleteService markAsCompleteService;
-	private final MarkAsPaidService markAsPaidService;
-	public final MandrillEmailClient mandrillEmailClient;
-	public final MailchimpSubscribeClient mailchimpSubscribeClient;
+public class Application {
+	public final GitPropertiesDescribeVersionNumberProvider versionNumberProvider;
+	public final List<Object> apiRestServices;
+	public final List<Object> guiRestServices;
 
 	Application(Configuration config, DataSource dataSource) {
-		this.dataSource = dataSource;
-		
 		this.versionNumberProvider = new GitPropertiesDescribeVersionNumberProvider(Application.class, "/resources/git.properties");
-		this.authService = new AuthService(new SummerAuthenticatedUser());
-		this.outvoiceInvoiceClient = new OutvoiceInvoiceClient(ClientBuilder.newClient(), config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
-		this.sendInvoiceService = new SendInvoiceService(dataSource, registrationsSqlMapper, outvoiceInvoiceClient);
-		this.dismissRegistrationService = new DismissRegistrationService(dataSource, registrationsSqlMapper);
-		this.markAsCompleteService = new MarkAsCompleteService(dataSource, registrationsSqlMapper);
-		this.markAsPaidService = new MarkAsPaidService(dataSource, registrationsSqlMapper);
-		this.mandrillEmailClient = new MandrillEmailClient(ClientBuilder.newClient(), config.mandrillEndpoint, config.mandrillApikey);
-		this.mailchimpSubscribeClient = new MailchimpSubscribeClient(ClientBuilder.newClient(), config.mailchimpEndpoint, config.mailchimpApikey);
+		AuthService authService = new AuthService(new SummerAuthenticatedUser());
+		OutvoiceInvoiceClient outvoiceInvoiceClient = new OutvoiceInvoiceClient(ClientBuilder.newClient(), config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
+		RegistrationsSqlMapper registrationsSqlMapper = new RegistrationsSqlMapper();
+		SendInvoiceService sendInvoiceService = new SendInvoiceService(dataSource, registrationsSqlMapper, outvoiceInvoiceClient);
+		DismissRegistrationService dismissRegistrationService = new DismissRegistrationService(dataSource, registrationsSqlMapper);
+		MarkAsCompleteService markAsCompleteService = new MarkAsCompleteService(dataSource, registrationsSqlMapper);
+		MarkAsPaidService markAsPaidService = new MarkAsPaidService(dataSource, registrationsSqlMapper);
+		MandrillEmailClient mandrillEmailClient = new MandrillEmailClient(ClientBuilder.newClient(), config.mandrillEndpoint, config.mandrillApikey);
+		MailchimpSubscribeClient mailchimpSubscribeClient = new MailchimpSubscribeClient(ClientBuilder.newClient(), config.mailchimpEndpoint, config.mailchimpApikey);
+
+		this.apiRestServices = List.list(
+			new RegistrationApiRestService(dataSource, registrationsSqlMapper, mandrillEmailClient, mailchimpSubscribeClient)
+		);
+
+		BucketsSqlMapper bucketsSqlMapper = new BucketsSqlMapper();
+		this.guiRestServices = List.list(
+			new LoggedInRestService(authService),
+			new VersionNumberRestService(versionNumberProvider),
+			new RegistrationsRestService(dataSource, authService, registrationsSqlMapper, sendInvoiceService, dismissRegistrationService, markAsCompleteService, markAsPaidService),
+			new NameTagsRestService(dataSource, authService, registrationsSqlMapper),
+			new BucketsRestService(dataSource, authService, bucketsSqlMapper),
+			new ReportsRestService(dataSource, authService, bucketsSqlMapper),
+			new EmailCsvRestService(dataSource, authService)
+		);
 	}
-
-	private static Configuration configurationFromMain() { return Main.getConfiguration(); }
-	private static DataSource datasourceFromMain() { return Main.getDatasource(); }
-
-	public DataSource dataSource() { return dataSource; }
-	public AuthService authService() { return authService;	}
-	public GitPropertiesDescribeVersionNumberProvider versionNumberProvider() { return versionNumberProvider; }
-	public RegistrationsSqlMapper registrationsSqlMapper() { return registrationsSqlMapper; }
-	public SendInvoiceService sendInvoiceService() { return sendInvoiceService; }
-	public DismissRegistrationService dismissRegistrationService() { return dismissRegistrationService; }
-	public MarkAsCompleteService markAsCompleteService() { return markAsCompleteService; }
-	public MarkAsPaidService markAsPaidService() { return markAsPaidService; }
 }

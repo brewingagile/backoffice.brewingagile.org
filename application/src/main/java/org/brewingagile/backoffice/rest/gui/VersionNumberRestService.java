@@ -8,7 +8,7 @@ import javax.ws.rs.core.Response;
 
 import argo.jdom.JsonRootNode;
 import static argo.jdom.JsonNodeFactories.*;
-import org.brewingagile.backoffice.application.Application;
+
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.GitPropertiesDescribeVersionNumberProvider;
 
@@ -19,8 +19,8 @@ import org.brewingagile.backoffice.utils.jersey.NeverCache;
 public class VersionNumberRestService {
 	private final GitPropertiesDescribeVersionNumberProvider versionNumberProvider;
 
-	public VersionNumberRestService() {
-		this.versionNumberProvider = Application.INSTANCE.versionNumberProvider();
+	public VersionNumberRestService(GitPropertiesDescribeVersionNumberProvider versionNumberProvider) {
+		this.versionNumberProvider = versionNumberProvider;
 	}
 	
 	@GET

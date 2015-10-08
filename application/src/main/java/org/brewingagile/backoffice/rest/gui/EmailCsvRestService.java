@@ -2,7 +2,6 @@ package org.brewingagile.backoffice.rest.gui;
 
 import fj.data.List;
 import fj.function.Strings;
-import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
@@ -20,9 +19,14 @@ import java.time.Instant;
 @Path("/emails/")
 @NeverCache
 public class EmailCsvRestService {
-	private final DataSource dataSource = Application.INSTANCE.dataSource();
-	private final AuthService authService = Application.INSTANCE.authService();
-	
+	private final DataSource dataSource;
+	private final AuthService authService;
+
+	public EmailCsvRestService(DataSource dataSource, AuthService authService) {
+		this.dataSource = dataSource;
+		this.authService = authService;
+	}
+
 	@GET
 	@Produces("text/csv")
 	public Response invoices(@Context HttpServletRequest request) throws Exception {

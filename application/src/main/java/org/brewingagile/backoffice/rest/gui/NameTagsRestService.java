@@ -3,7 +3,6 @@ package org.brewingagile.backoffice.rest.gui;
 import argo.jdom.JsonRootNode;
 import fj.Ord;
 import fj.data.Set;
-import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
@@ -22,12 +21,22 @@ import java.sql.Connection;
 
 import static argo.jdom.JsonNodeFactories.*;
 
-@Path("/nametags/")
+@Path("/webapp/nametags/")
 @NeverCache
 public class NameTagsRestService {
-	private final DataSource dataSource = Application.INSTANCE.dataSource();
-	private final AuthService authService = Application.INSTANCE.authService();
-	private final RegistrationsSqlMapper registrationsSqlMapper = Application.INSTANCE.registrationsSqlMapper;
+	private final DataSource dataSource;
+	private final AuthService authService;
+	private final RegistrationsSqlMapper registrationsSqlMapper;
+
+	public NameTagsRestService(
+		DataSource dataSource,
+		AuthService authService,
+		RegistrationsSqlMapper registrationsSqlMapper
+	) {
+		this.dataSource = dataSource;
+		this.authService = authService;
+		this.registrationsSqlMapper = registrationsSqlMapper;
+	}
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)

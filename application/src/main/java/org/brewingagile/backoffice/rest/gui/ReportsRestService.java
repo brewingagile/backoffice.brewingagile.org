@@ -1,7 +1,6 @@
 package org.brewingagile.backoffice.rest.gui;
 
 import argo.jdom.JsonRootNode;
-import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BucketsSqlMapper;
 import org.brewingagile.backoffice.utils.ArgoUtils;
@@ -25,9 +24,15 @@ import static org.brewingagile.backoffice.db.operations.BucketsSqlMapper.Individ
 @Path("/reports/")
 @NeverCache
 public class ReportsRestService {
-	private final DataSource dataSource = Application.INSTANCE.dataSource();
-	private final AuthService authService = Application.INSTANCE.authService();
-	private final BucketsSqlMapper bucketsSqlMapper = Application.INSTANCE.bucketsSqlMapper;
+	private final DataSource dataSource;
+	private final AuthService authService;
+	private final BucketsSqlMapper bucketsSqlMapper;
+
+	public ReportsRestService(DataSource dataSource, AuthService authService, BucketsSqlMapper bucketsSqlMapper) {
+		this.dataSource = dataSource;
+		this.authService = authService;
+		this.bucketsSqlMapper = bucketsSqlMapper;
+	}
 
 	//curl -u admin:password http://localhost:9080/ba-backoffice/gui/reports/bundles  | jq .
 

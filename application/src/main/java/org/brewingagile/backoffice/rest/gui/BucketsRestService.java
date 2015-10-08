@@ -5,7 +5,6 @@ import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
 import fj.data.Collectors;
 import fj.data.List;
-import org.brewingagile.backoffice.application.Application;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BucketsSqlMapper;
 import org.brewingagile.backoffice.utils.ArgoUtils;
@@ -39,12 +38,6 @@ public class BucketsRestService {
 		this.dataSource = dataSource;
 		this.authService = authService;
 		this.bucketsSqlMapper = bucketsSqlMapper;
-	}
-
-	public BucketsRestService() {
-		this.dataSource = Application.INSTANCE.dataSource();
-		this.authService = Application.INSTANCE.authService();
-		this.bucketsSqlMapper = Application.INSTANCE.bucketsSqlMapper;
 	}
 
 	//	curl -u admin:password "http://localhost:9080/ba-backoffice/gui/buckets/"

@@ -1,18 +1,13 @@
 package org.brewingagile.backoffice.application;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.EnumSet;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.servlet.DispatcherType;
-import javax.sql.DataSource;
-
+import com.hencjo.summer.migration.util.Charsets;
+import fj.data.Either;
+import fj.data.List;
+import org.brewingagile.backoffice.application.CmdArgumentParser.CmdArguments;
 import org.brewingagile.backoffice.auth.AuthenticationFilter;
-import org.brewingagile.backoffice.rest.api.RegistrationApiRestService;
-import org.brewingagile.backoffice.rest.gui.*;
 import org.brewingagile.backoffice.utils.EtcPropertyFile;
 import org.brewingagile.backoffice.utils.PostgresConnector;
+import org.brewingagile.backoffice.utils.jersey.NeverCacheBindingFeature;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -20,96 +15,119 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceCollection;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.postgresql.ds.PGPoolingDataSource;
 
+import javax.servlet.DispatcherType;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.sql.SQLException;
+import java.util.EnumSet;
+import java.util.stream.Collectors;
+
 
 public class Main {
-	private static AtomicReference<Configuration> atomic = new AtomicReference<>(null);
-	private static AtomicReference<DataSource> dataSource = new AtomicReference<>(null);
-
-	public static void main(String[] args) throws Exception {
-		if (args.length == 0) {
-			System.err.println("Expected properties file as argument.");
-			System.exit(1);
-			return;
+	public static final class ExitCodeAndMessage {
+		public final int exitStatus;
+		public final String message;
+		public ExitCodeAndMessage(int exitStatus, String message) {
+			this.exitStatus = exitStatus;
+			this.message = message;
 		}
-		String contextPath = "/ba-backoffice";
+	}
 
-		String externalForm = Main.class.getClassLoader().getResource("resources/index.html").toExternalForm();
-		String resourceBase = externalForm.replace("/index.html", "/");
-		Integer port = 9080;
+	public static Either<ExitCodeAndMessage, Server> subMain(String[] rawArgs) throws Exception {
+		Either<String, CmdArguments> eitherArgs = CmdArgumentParser.parse(rawArgs);
+		if (eitherArgs.isLeft())
+			return eitherArgs.bimap(l -> new ExitCodeAndMessage(1, "Illegal arguments: " + l), r -> null);
 
-		System.out.println("Serving " + resourceBase);
-		Server server = new Server(port);
+		CmdArguments args = eitherArgs.right().value();
 
-		Configuration config = Configuration.from(EtcPropertyFile.from(args[0]).right().value());
-		atomic.set(config);
+		String contextPath = "/";
+
+		Either<ExitCodeAndMessage, Configuration> bimap = EtcPropertyFile.from(new InputStreamReader(new FileInputStream(args.propertiesFile), Charsets.UTF8))
+			.bimap(
+				l -> new ExitCodeAndMessage(1, "Could not read/find application property file '" + args.propertiesFile + "': " + l.getMessage()),
+				Configuration::from
+			);
+
+		if (bimap.isLeft()) return Either.left(bimap.left().value());
+
+		Configuration config = bimap.right().value();
 
 		PostgresConnector postgresConnector = new PostgresConnector(config.dbHost, config.dbPort, config.dbName, config.dbUsername, config.dbPassword);
 		PGPoolingDataSource ds = postgresConnector.poolingDatasource();
 		postgresConnector.testConnection(ds);
 		runDbUpgrades(ds);
-		dataSource.set(ds);
-		
+
+		Application application = new Application(config, ds);
+
+		int webPort = 9080;
+		Server server = new Server(webPort);
+		server.setHandler(context(config, application, contextPath, args));
+		server.start();
+		System.out.println("Application started on http://localhost:" + webPort + contextPath + "/");
+		return Either.right(server);
+	}
+
+	public static void main(String[] rawArgs) throws Exception {
+		Either<ExitCodeAndMessage, Server> server = subMain(rawArgs);
+		if (server.isLeft()) {
+			ExitCodeAndMessage left = server.left().value();
+			System.err.println(left.message);
+			System.exit(left.exitStatus);
+			return;
+		}
+		server.right().value().join();
+	}
+
+	private static ServletContextHandler context(Configuration configuration, Application application, String contextPath, CmdArguments args) throws IOException {
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.setContextPath(contextPath);
-
-		Resource inJar = Resource.newResource(resourceBase);
-		ResourceCollection resourceCollection;
-		{
-			if (args.length > 1 && "--dev".equals(args[1])) {
-				Resource inFilesystem = Resource.newResource("/home/henrik/brewingagile/ba-backoffice/application/src/main/webapp/");
-				resourceCollection = new ResourceCollection(inFilesystem, inJar);
-				System.out.println("--- DEV MODE ---");
-			} else {
-				resourceCollection = new ResourceCollection(inJar);
-			}
-		}
-		context.setBaseResource(resourceCollection);
-
-		AuthenticationFilter authenticationFilter = new AuthenticationFilter();
-		context.addFilter(new FilterHolder(authenticationFilter), "/*", EnumSet.allOf(DispatcherType.class));
+		context.getSessionHandler().getSessionManager().setMaxInactiveInterval(3600);
+		context.setBaseResource(resourceCollection(args));
+		context.addFilter(new FilterHolder(new AuthenticationFilter(configuration)), "/*", EnumSet.allOf(DispatcherType.class));
+//		context.addFilter(new FilterHolder(new IndexHtmlVersionRewriteFilter(application.versionNumberProvider)), "/", EnumSet.allOf(DispatcherType.class));
 		context.addServlet(DefaultServlet.class, "/*");
-
-		//api
-		context.addServlet(new ServletHolder(new ServletContainer(new ResourceConfig(
-			RegistrationApiRestService.class
-		))),"/api/*");
-
-		context.addServlet(new ServletHolder(new ServletContainer(new ResourceConfig(
-				//rest.gui
-				LoggedInRestService.class,
-				VersionNumberRestService.class,
-				//rest.gui.co
-				RegistrationsRestService.class,
-				NameTagsRestService.class,
-				BucketsRestService.class,
-				ReportsRestService.class,
-				EmailCsvRestService.class
-				))),"/gui/*");
-
-		server.setHandler(context);
-
-		server.start();
-		System.out.println("Application started on http://localhost:" + port + contextPath + "/");
-		server.join();
+		addJerseyServlet("/api/*", context,
+			List.list(MultiPartFeature.class, NeverCacheBindingFeature.class),
+			application.apiRestServices.toJavaList()
+		);
+		addJerseyServlet("/gui/*", context,
+			List.list(MultiPartFeature.class, NeverCacheBindingFeature.class),
+			application.guiRestServices.toJavaList()
+		);
+		return context;
 	}
 
-	public static Configuration getConfiguration() {
-		return atomic.get();
+	private static void addJerseyServlet(String pathSpec, ServletContextHandler context, List<Class<?>> features, java.util.List<Object> resources) {
+		ResourceConfig resourceConfig = new ResourceConfig(features.toCollection().stream().collect(Collectors.toSet()));
+		resourceConfig.registerInstances(resources.stream().collect(Collectors.toSet()));
+		context.addServlet(new ServletHolder(new ServletContainer(resourceConfig)), pathSpec);
 	}
 
-	public static DataSource getDatasource() {
-		return dataSource .get();
+	private static ResourceCollection resourceCollection(CmdArguments args) throws IOException {
+		Resource inJar = Resource.newResource(findWebResourceBase(), true);
+		if (args.devOverlayDirectory.isSome()) {
+			System.out.println("!!! DEV MODE: Build overlaid with: " + args.devOverlayDirectory.some());
+			return new ResourceCollection(Resource.newResource(args.devOverlayDirectory.some(), false), inJar);
+		} else {
+			return new ResourceCollection(inJar);
+		}
 	}
-	
+
 	private static void runDbUpgrades(PGPoolingDataSource ds) {
 		try {
 			new DbUpgrader().upgrade(ds);
 		} catch (SQLException | IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private static String findWebResourceBase() {
+		return Main.class.getClassLoader().getResource("webapp/index.html").toExternalForm().replace("/index.html", "/");
 	}
 }

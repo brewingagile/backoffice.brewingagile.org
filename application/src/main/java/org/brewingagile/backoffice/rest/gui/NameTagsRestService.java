@@ -21,7 +21,7 @@ import java.sql.Connection;
 
 import static argo.jdom.JsonNodeFactories.*;
 
-@Path("/webapp/nametags/")
+@Path("/nametags/")
 @NeverCache
 public class NameTagsRestService {
 	private final DataSource dataSource;

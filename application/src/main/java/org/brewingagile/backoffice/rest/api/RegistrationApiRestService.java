@@ -91,45 +91,45 @@ public class RegistrationApiRestService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response post(@Context HttpServletRequest request,  String body) throws  URISyntaxException, SQLException {
-		fj.data.Either<String, JsonRootNode> parseEither = ArgoUtils.parseEither(body);
+		try {
+			fj.data.Either<String, JsonRootNode> parseEither = ArgoUtils.parseEither(body);
 
-		if (parseEither.isLeft())
-			return Response.status(Response.Status.BAD_REQUEST).build();
+			if (parseEither.isLeft())
+				return Response.status(Response.Status.BAD_REQUEST).build();
 
-		JsonRootNode jrn = parseEither.right().value();
+			JsonRootNode jrn = parseEither.right().value();
 
-		RegistrationRequest rr = fromJson(jrn);
-		System.out.println("============================");
-		System.out.println("participantName: " + rr.participantName);
-		System.out.println("participantEmail: " + rr.participantEmail);
-		System.out.println("billingCompany: " + rr.billingCompany);
-		System.out.println("billingAddress: " + rr.billingAddress);
-		System.out.println("billingMethod: " + rr.billingMethod);
-		System.out.println("ticket: " + rr.ticket);
-		System.out.println("dietaryRequirements: " + rr.dietaryRequirements);
-		System.out.println("twitter: " + rr.twitter);
-		
-		if ("fel".equals(rr.participantName)) {
-			ResponseBuilder ok = Response.ok(ArgoUtils.format(Result.failure("Registrering misslyckades: Du är inte cool nog.")));
-			return accessControl(request, ok).build();
-		}
-		
-		try (Connection c = dataSource.getConnection()) { 
-			registrationsSqlMapper.insert(c, 
-					UUID.randomUUID(), 
-					RegistrationState.RECEIVED, 
+			RegistrationRequest rr = fromJson(jrn);
+			System.out.println("============================");
+			System.out.println("participantName: " + rr.participantName);
+			System.out.println("participantEmail: " + rr.participantEmail);
+			System.out.println("billingCompany: " + rr.billingCompany);
+			System.out.println("billingAddress: " + rr.billingAddress);
+			System.out.println("billingMethod: " + rr.billingMethod);
+			System.out.println("ticket: " + rr.ticket);
+			System.out.println("dietaryRequirements: " + rr.dietaryRequirements);
+			System.out.println("twitter: " + rr.twitter);
+
+			if ("fel".equals(rr.participantName)) {
+				ResponseBuilder ok = Response.ok(ArgoUtils.format(Result.failure("Registrering misslyckades: Du är inte cool nog.")));
+				return accessControl(request, ok).build();
+			}
+
+			try (Connection c = dataSource.getConnection()) {
+				registrationsSqlMapper.insert(c,
+					UUID.randomUUID(),
+					RegistrationState.RECEIVED,
 					rr.participantName,
 					rr.participantEmail,
 					rr.billingCompany,
 					rr.billingAddress,
-					billingMethod(rr.billingMethod), 
+					billingMethod(rr.billingMethod),
 					rr.ticket,
 					rr.dietaryRequirements,
 					rr.twitter
-					);
-		}
+				);
+			}
 
-		try {
 			Either<String, String> emailResult = mandrillEmailClient.sendRegistrationReceived(rr.participantEmail);
 			if (emailResult.isLeft()) {
 				System.err.println("We couldn't send an email to " + rr.participantName + "(" + rr.participantEmail + "). Cause: " + emailResult.left().value());
@@ -142,7 +142,7 @@ public class RegistrationApiRestService {
 
 			ResponseBuilder ok = Response.ok(ArgoUtils.format(Result.success("Registrering klar.")));
 			return accessControl(request, ok).build();
-		} catch (RuntimeException e) {
+		} catch (Exception e) {
 			System.err.println("Unexpected: " + e.getMessage());
 			e.printStackTrace();
 			return Response.serverError().build();

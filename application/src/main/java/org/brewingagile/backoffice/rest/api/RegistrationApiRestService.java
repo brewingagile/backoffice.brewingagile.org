@@ -78,14 +78,14 @@ public class RegistrationApiRestService {
 		}
 	}
 	
-	//curl  -v -X POST -H "Content-Type: application/json" http://localhost:9080/ba-backoffice/api/registration/1/  --data '{"participantName" : "fel" }'
+	//curl  -v -X POST -H "Content-Type: application/json" http://localhost:9080/api/registration/1/  --data '{"participantName" : "fel" }'
 
 	@OPTIONS
 	public Response options(@Context HttpServletRequest request,  String body) throws  URISyntaxException {
 		return accessControlHeaders(request, Response.noContent()).build();
 	}
 	
-//	curl  -v -X POST -H "Content-Type: application/json" http://localhost:9080/ba-backoffice/api/registration/1/  --data '{"participantName" : "participant name", "participantEmail":"participant@email", "billingCompany": "billing-company", "billingAddress": "billing address", "billingMethod": "EMAIL", "ticket": "conference", "dietaryRequirements": "", "twitter": "@meow" }'
+//	curl  -v -X POST -H "Content-Type: application/json" http://localhost:9080/api/registration/1/  --data '{"participantName" : "participant name", "participantEmail":"participant@email", "billingCompany": "billing-company", "billingAddress": "billing address", "billingMethod": "EMAIL", "ticket": "conference", "dietaryRequirements": "", "twitter": "@meow" }'
 	
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -129,18 +129,24 @@ public class RegistrationApiRestService {
 					);
 		}
 
-		Either<String, String> emailResult = mandrillEmailClient.sendRegistrationReceived(rr.participantEmail);
-		if (emailResult.isLeft()) {
-			System.err.println("We couldn't send an email to " + rr.participantName + "(" + rr.participantEmail + "). Cause: " + emailResult.left().value());
-		}
+		try {
+			Either<String, String> emailResult = mandrillEmailClient.sendRegistrationReceived(rr.participantEmail);
+			if (emailResult.isLeft()) {
+				System.err.println("We couldn't send an email to " + rr.participantName + "(" + rr.participantEmail + "). Cause: " + emailResult.left().value());
+			}
 
-		Either<String, Effect> subscribeResult = mailchimpSubscribeClient.subscribe(rr.participantEmail);
-		if (subscribeResult.isLeft()) {
-			System.err.println("We couldn't subscribe " + rr.participantEmail + " to email-list. Cause: " + subscribeResult.left().value());
-		}
+			Either<String, Effect> subscribeResult = mailchimpSubscribeClient.subscribe(rr.participantEmail);
+			if (subscribeResult.isLeft()) {
+				System.err.println("We couldn't subscribe " + rr.participantEmail + " to email-list. Cause: " + subscribeResult.left().value());
+			}
 
-		ResponseBuilder ok = Response.ok(ArgoUtils.format(Result.success("Registrering klar.")));
-		return accessControl(request, ok).build();
+			ResponseBuilder ok = Response.ok(ArgoUtils.format(Result.success("Registrering klar.")));
+			return accessControl(request, ok).build();
+		} catch (RuntimeException e) {
+			System.err.println("Unexpected: " + e.getMessage());
+			e.printStackTrace();
+			return Response.serverError().build();
+		}
 	}
 
 	private RegistrationRequest fromJson(JsonRootNode body) {

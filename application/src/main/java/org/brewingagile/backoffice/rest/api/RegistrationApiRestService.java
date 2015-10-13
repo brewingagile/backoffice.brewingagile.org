@@ -143,8 +143,8 @@ public class RegistrationApiRestService {
 			ResponseBuilder ok = Response.ok(ArgoUtils.format(Result.success("Registrering klar.")));
 			return accessControl(request, ok).build();
 		} catch (Exception e) {
-			System.err.println("Unexpected: " + e.getMessage());
-			e.printStackTrace();
+			System.out.println("Unexpected: " + e.getMessage());
+			e.printStackTrace(System.out);
 			return Response.serverError().build();
 		}
 	}

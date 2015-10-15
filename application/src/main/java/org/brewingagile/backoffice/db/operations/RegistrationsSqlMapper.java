@@ -104,6 +104,14 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
+	public void insertPrintedNametag(Connection c, UUID id) throws SQLException {
+		String sql = "INSERT INTO printed_nametags (registration_id) VALUES (?)";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			ps.setObject(1, id);
+			ps.execute();
+		}
+	}
+
 	public void updateRegistrationState(Connection c, UUID id, RegistrationState oldState, RegistrationState nextState) throws SQLException {
 		String sql = "UPDATE registrations SET state = ? WHERE (id = ? AND state = ?);";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {

@@ -189,6 +189,28 @@ public class RegistrationsRestService {
 		return Response.ok(ArgoUtils.format(Result.success(String.format("Skickade %s fakturor.", invoicesSent)))).build();
 	}
 
+//		 curl -u admin:password -X POST -H "Content-Type: application/json" -H "Accept: application/json" http://localhost:9080/gui/registrations/mark-as-printed --data '{"registrations": ["f29651e0-c638-43d7-ace5-9dd7a07b1b78"]}'
+
+	@POST
+	@Path("/mark-as-printed")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response markAsPrinted(@Context HttpServletRequest request, String body) throws Exception {
+		authService.guardAuthenticatedUser(request);
+
+		int i = 0;
+		for (UUID uuid : registrationListRequest(body)) {
+			try (Connection c = dataSource.getConnection()) {
+				registrationsSqlMapper.insertPrintedNametag(c, uuid);
+			}
+			i++;
+		}
+
+		return Response.ok(ArgoUtils.format(Result.success(String.format("Markerade %s namnbrickor som utskrivna.", i)))).build();
+	}
+
+
+
 	@POST
 	@Path("/dismiss-registrations")
 	@Consumes(MediaType.APPLICATION_JSON)

@@ -32,6 +32,7 @@ import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Badge;
+import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingCompany;
 import org.brewingagile.backoffice.services.DismissRegistrationService;
 import org.brewingagile.backoffice.services.MarkAsCompleteService;
 import org.brewingagile.backoffice.services.MarkAsPaidService;
@@ -123,15 +124,18 @@ public class RegistrationsRestService {
 	}
 	
 	public static final class RegistrationsUpdate {
+		public final BillingCompany billingCompany;
 		public final Badge badge;
 		public final String dietaryRequirements;
 		public final Option<String> bundle;
 
 		public RegistrationsUpdate(
+			BillingCompany billingCompany,
 			Badge badge,
 			String dietaryRequirements,
 			Option<String> bundle
 		) {
+			this.billingCompany = billingCompany;
 			this.badge = badge;
 			this.dietaryRequirements = dietaryRequirements;
 			this.bundle = bundle;
@@ -139,6 +143,7 @@ public class RegistrationsRestService {
 	}
 
 	private static Either<String, RegistrationsUpdate> registrationsUpdate(JsonNode jsonNode) {
+		Either<String, BillingCompany> billingCompany = ArgoUtils.stringValue(jsonNode, "billingCompany").right().map(BillingCompany::new);
 		Either<String, Badge> badge = ArgoUtils.stringValue(jsonNode, "badge").right().map(Badge::new);
 		Either<String, String> dietaryRequirements = ArgoUtils.stringValue(jsonNode, "dietaryRequirements");
 		Either<String, Option<String>> bundle = ArgoUtils.stringValue(jsonNode, "bundle")
@@ -148,7 +153,8 @@ public class RegistrationsRestService {
 		return bundle.right()
 			.apply(dietaryRequirements.right()
 				.apply(badge.right()
-					.apply(Either.right(Function.curry(RegistrationsUpdate::new)))));
+					.apply(billingCompany.right()
+						.apply(Either.right(Function.curry(RegistrationsUpdate::new))))));
 	}
 
 	@POST
@@ -167,7 +173,7 @@ public class RegistrationsRestService {
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			if (!registrationsSqlMapper.one(c, id).isSome()) return Response.status(Status.NOT_FOUND).build();
-			registrationsSqlMapper.update(c, id, ru.badge, ru.dietaryRequirements, ru.bundle);
+			registrationsSqlMapper.update(c, id, ru.billingCompany, ru.badge, ru.dietaryRequirements, ru.bundle);
 			c.commit();
 		}
 		return Response.ok().build();

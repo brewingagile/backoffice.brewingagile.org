@@ -36,6 +36,14 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
+	public static final class BillingCompany {
+		public final String value;
+
+		public BillingCompany(String value) {
+			this.value = Objects.requireNonNull(value);
+		}
+	}
+
 	public final static class Registration {
 		public final UUID id;
 		public final RegistrationState state;
@@ -191,22 +199,24 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	public void update(Connection c, UUID id, Badge badge, String diet, Option<String> bundle) throws SQLException {
+	public void update(Connection c, UUID id, BillingCompany billingCompany, Badge badge, String diet, Option<String> bundle) throws SQLException {
 		replaceRegistrationBundle(c, id, bundle);
-		updateRegistration(c, id, badge, diet);
+		updateRegistration(c, id, billingCompany, badge, diet);
 	}
 
 	private static void updateRegistration(
 		Connection c,
 		UUID id,
+		BillingCompany billingCompany,
 		Badge badge,
 		String diet
 	) throws SQLException {
-		String sql = "UPDATE registrations SET badge = ?, dietary_requirements = ? WHERE id = ?;";
+		String sql = "UPDATE registrations SET billing_company = ?, badge = ?, dietary_requirements = ? WHERE id = ?;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			ps.setString(1, badge.badge);
-			ps.setString(2, diet);
-			ps.setObject(3, id);
+			ps.setString(1, billingCompany.value);
+			ps.setString(2, badge.badge);
+			ps.setString(3, diet);
+			ps.setObject(4, id);
 			ps.execute();
 		}
 	}

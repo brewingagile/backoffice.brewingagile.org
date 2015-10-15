@@ -112,9 +112,18 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
+	public boolean printedNametag(Connection c, UUID id) throws SQLException {
+		try (PreparedStatement ps = c.prepareStatement("SELECT * FROM printed_nametags WHERE registration_id = ?")) {
+			ps.setObject(1, id);
+			try (ResultSet r = ps.executeQuery()) {
+				return r.next();
+			}
+		}
+	}
+
 	public void insertPrintedNametag(Connection c, UUID id) throws SQLException {
-		String sql = "INSERT INTO printed_nametags (registration_id) VALUES (?)";
-		try (PreparedStatement ps = c.prepareStatement(sql)) {
+		if (printedNametag(c, id)) return;
+		try (PreparedStatement ps = c.prepareStatement("INSERT INTO printed_nametags (registration_id) VALUES (?)")) {
 			ps.setObject(1, id);
 			ps.execute();
 		}

@@ -49,7 +49,7 @@ public class NameTagsRestService {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
 			return Response.ok(ArgoUtils.format(
-				array(registrationsSqlMapper.all(c).map(NameTagsRestService::json))
+				array(registrationsSqlMapper.unprintedNametags(c).map(NameTagsRestService::json))
 			)).build();
 		}
 	}

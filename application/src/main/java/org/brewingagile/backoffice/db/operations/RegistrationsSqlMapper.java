@@ -93,6 +93,17 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
+	public List<Registration> unprintedNametags(Connection c) throws SQLException {
+		String sql = "SELECT *, rb.bucket FROM registrations r " +
+			"LEFT JOIN registration_bucket rb ON (r.id = rb.registration_id) " +
+			"LEFT JOIN printed_nametags pn ON (r.id = pn.registration_id) " +
+			"WHERE pn.registration_id IS NULL " +
+			"ORDER BY participant_name";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			return SqlOps.list(ps, RegistrationsSqlMapper::toRegistration);
+		}
+	}
+
 	public void updateRegistrationState(Connection c, UUID id, RegistrationState oldState, RegistrationState nextState) throws SQLException {
 		String sql = "UPDATE registrations SET state = ? WHERE (id = ? AND state = ?);";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {

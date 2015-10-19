@@ -84,7 +84,7 @@ public class BucketsSqlMapper {
 			"	sum(CASE WHEN ticket = 'conference+workshop' THEN 1 ELSE 0 END) as workshop1, " +
 			"	sum(CASE WHEN ticket = 'conference+workshop2' THEN 1 ELSE 0 END) as workshop2 " +
 			"FROM registrations r " +
-			"LEFT JOIN registration_bucket rb ON (r.id = rb.registration_id) " +
+			"LEFT JOIN registration_bucket rb USING (registration_id) " +
 			"WHERE rb.bucket IS NULL;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			return SqlOps.one(ps, rs -> new Individuals(

@@ -27,7 +27,8 @@ public class DbUpgrader {
 			migration("participant-buckets").installsThrough(script("012-participant-buckets.sql")),
 			migration("deferrable-buckets").installsThrough(script("013-deferrable-buckets.sql")),
 			migration("role-to-badge").installsThrough(script("014-role-to-badge.sql")),
-			migration("printed-name-tags").installsThrough(script("015-printed-name-tags.sql"))
+			migration("printed-name-tags").installsThrough(script("015-printed-name-tags.sql")),
+			migration("rename-id-to-registration-id").installsThrough(script("016-rename-id-to-registration-id.sql"))
 		);
 	}
 

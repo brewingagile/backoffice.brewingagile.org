@@ -1,0 +1,1 @@
+ALTER TABLE registrations RENAME COLUMN id TO registration_id;

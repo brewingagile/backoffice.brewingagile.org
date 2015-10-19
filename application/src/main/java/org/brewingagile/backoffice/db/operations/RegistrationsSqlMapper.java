@@ -17,7 +17,7 @@ import fj.function.Try1;
 
 public class RegistrationsSqlMapper {
 	public static List<P2<String,String>> participantNameAndEmail(Connection c) throws SQLException {
-		try (PreparedStatement ps = c.prepareStatement("SELECT * FROM registrations ORDER BY participant_name")) {
+		try (PreparedStatement ps = c.prepareStatement("SELECT * FROM registration ORDER BY participant_name")) {
 			Try1<ResultSet,P2<String,String>,SQLException> f = rs -> P.p(
 				rs.getString("participant_name"),
 				rs.getString("participant_email")
@@ -83,7 +83,7 @@ public class RegistrationsSqlMapper {
 	}
 
 	public Option<Registration> one(Connection c, UUID id) throws SQLException {
-		String sql = "SELECT *, rb.bucket FROM registrations r " +
+		String sql = "SELECT *, rb.bucket FROM registration r " +
 			"LEFT JOIN registration_bucket rb USING (registration_id) " +
 			"WHERE registration_id = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
@@ -93,7 +93,7 @@ public class RegistrationsSqlMapper {
 	}
 	
 	public List<Registration> all(Connection c) throws SQLException {
-		String sql = "SELECT *, rb.bucket FROM registrations r " +
+		String sql = "SELECT *, rb.bucket FROM registration r " +
 			"LEFT JOIN registration_bucket rb USING (registration_id) " +
 			"ORDER BY participant_name";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
@@ -102,7 +102,7 @@ public class RegistrationsSqlMapper {
 	}
 
 	public List<Registration> unprintedNametags(Connection c) throws SQLException {
-		String sql = "SELECT *, rb.bucket FROM registrations r " +
+		String sql = "SELECT *, rb.bucket FROM registration r " +
 			"LEFT JOIN registration_bucket rb USING (registration_id) " +
 			"LEFT JOIN printed_nametags pn USING (registration_id) " +
 			"WHERE pn.registration_id IS NULL " +
@@ -130,7 +130,7 @@ public class RegistrationsSqlMapper {
 	}
 
 	public void updateRegistrationState(Connection c, UUID id, RegistrationState oldState, RegistrationState nextState) throws SQLException {
-		String sql = "UPDATE registrations SET state = ? WHERE (registration_id = ? AND state = ?);";
+		String sql = "UPDATE registration SET state = ? WHERE (registration_id = ? AND state = ?);";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setString(1, nextState.name());
 			ps.setObject(2, id);
@@ -142,7 +142,7 @@ public class RegistrationsSqlMapper {
 	public void insert(Connection c, UUID id, RegistrationState state, String participantName, String participantEmail,
 			String billingCompany, String billingAddress, BillingMethod billingMethod, 
 			String ticket, String dietaryRequirements, String twitter) throws SQLException {
-		String sql = "INSERT INTO registrations (registration_id, state, participant_name, participant_email, billing_company, billing_address, billing_method, ticket, dietary_requirements, twitter) " +
+		String sql = "INSERT INTO registration (registration_id, state, participant_name, participant_email, billing_company, billing_address, billing_method, ticket, dietary_requirements, twitter) " +
 				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
@@ -201,7 +201,7 @@ public class RegistrationsSqlMapper {
 	}
 
 	public void delete(Connection c, UUID id) throws SQLException {
-		String sql = "DELETE FROM registrations WHERE registration_id = ?";
+		String sql = "DELETE FROM registration WHERE registration_id = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
 			ps.execute();
@@ -220,7 +220,7 @@ public class RegistrationsSqlMapper {
 		Badge badge,
 		String diet
 	) throws SQLException {
-		String sql = "UPDATE registrations SET billing_company = ?, badge = ?, dietary_requirements = ? WHERE registration_id = ?;";
+		String sql = "UPDATE registration SET billing_company = ?, badge = ?, dietary_requirements = ? WHERE registration_id = ?;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setString(1, billingCompany.value);
 			ps.setString(2, badge.badge);

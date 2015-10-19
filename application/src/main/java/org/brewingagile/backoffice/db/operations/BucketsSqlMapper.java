@@ -83,7 +83,7 @@ public class BucketsSqlMapper {
 			"	sum(1) as conference, " +
 			"	sum(CASE WHEN ticket = 'conference+workshop' THEN 1 ELSE 0 END) as workshop1, " +
 			"	sum(CASE WHEN ticket = 'conference+workshop2' THEN 1 ELSE 0 END) as workshop2 " +
-			"FROM registrations r " +
+			"FROM registration r " +
 			"LEFT JOIN registration_bucket rb USING (registration_id) " +
 			"WHERE rb.bucket IS NULL;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
@@ -116,8 +116,8 @@ public class BucketsSqlMapper {
 			"		sum(1) as actual_conference, " +
 			"		sum(CASE WHEN ticket = 'conference+workshop' THEN 1 ELSE 0 END) as actual_workshop1, " +
 			"		sum(CASE WHEN ticket = 'conference+workshop2' THEN 1 ELSE 0 END) as actual_workshop2 " +
-			"	FROM registrations r " +
-			"	JOIN registration_bucket rb ON (r.id = rb.registration_id) " +
+			"	FROM registration r " +
+			"	JOIN registration_bucket rb USING (registration_id) " +
 			"	GROUP BY bucket" +
 			") sub USING (bucket)";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {

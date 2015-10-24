@@ -90,7 +90,7 @@ public class Main {
 		context.getSessionHandler().getSessionManager().setMaxInactiveInterval(3600);
 		context.setBaseResource(resourceCollection(args));
 		context.addFilter(new FilterHolder(new AuthenticationFilter(configuration)), "/*", EnumSet.allOf(DispatcherType.class));
-//		context.addFilter(new FilterHolder(new IndexHtmlVersionRewriteFilter(application.versionNumberProvider)), "/", EnumSet.allOf(DispatcherType.class));
+		context.addFilter(new FilterHolder(new IndexHtmlVersionRewriteFilter(application.versionNumberProvider)), "/", EnumSet.allOf(DispatcherType.class));
 		context.addServlet(DefaultServlet.class, "/*");
 		addJerseyServlet("/api/*", context,
 			List.list(MultiPartFeature.class, NeverCacheBindingFeature.class),

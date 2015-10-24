@@ -1,10 +1,11 @@
 package org.brewingagile.backoffice.application;
 
+import fj.P2;
 import fj.data.Either;
+import fj.data.List;
 import fj.data.Option;
 
 public class CmdArgumentParser {
-
 	public static final class CmdArguments {
 		public final String propertiesFile;
 		public final Option<String> devOverlayDirectory;
@@ -20,18 +21,17 @@ public class CmdArgumentParser {
 			.right().map(r -> new CmdArguments(r, getSwitchArgument("dev", args)));
 	}
 
-	private static boolean contains(String args[], String find) {
-		for (String arg : args) { if (find.equals(arg)) return true; }
-		return false;
-	}
-
 	private static Either<String, String> positionArgument(String name, String[] args, int position) {
 		if (args.length == 0) return Either.left(name);
 		return Either.right(args[0]);
 	}
 
-	private static Option<String> getSwitchArgument(String c, String[] args) {
-		for (String arg : args) { if (arg.startsWith("--"+c+" ")) return Option.some(arg.substring(2 + c.length())); }
-		return Option.none();
+	private static Option<String> getSwitchArgument(String key, String[] args) {
+		String argKey = "--" + key;
+		List<String> list = List.list(args);
+		return list.zip(list.tail())
+			.filter(k -> argKey.equals(k._1()))
+			.map(P2.__2())
+			.toOption();
 	}
 }

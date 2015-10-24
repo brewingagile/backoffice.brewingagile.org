@@ -47,10 +47,13 @@
 			<br>
 			<legend>Other</legend>
 			<ul class="nav nav-pills nav-stacked">
-			  <li ng-class="getClass('/overview')"><a href="#/overview">Bundle Overview</a></li>
-			  <li ng-class="getClass('/buckets')"><a href="#/buckets">Bundle Admin</a></li>
+				<li ng-class="getClass('/overview')"><a href="#/overview">Bundle Overview</a></li>
+				<li ng-class="getClass('/buckets')"><a href="#/buckets">Bundle Admin</a></li>
 				<li><a target="_blank" href="nametags/">Name Tags <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a></li>
-				<li><a target="_blank" href="gui/emails/">Emails as CSV <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a></li>
+			</ul>
+			<legend>Exports</legend>
+			<ul class="nav nav-pills nav-stacked">
+				<li><a target="_blank" href="gui/exports/emails/">Emails <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a></li>
 			</ul>
 		</div>
 		<div class="col-md-10" ng-view>

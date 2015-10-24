@@ -48,7 +48,7 @@ public class Application {
 			new NameTagsRestService(dataSource, authService, registrationsSqlMapper),
 			new BucketsRestService(dataSource, authService, bucketsSqlMapper),
 			new ReportsRestService(dataSource, authService, bucketsSqlMapper),
-			new EmailCsvRestService(dataSource, authService)
+			new ExportsRestService(dataSource, authService)
 		);
 	}
 }

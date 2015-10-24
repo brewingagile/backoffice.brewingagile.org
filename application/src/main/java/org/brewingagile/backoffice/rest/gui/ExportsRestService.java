@@ -16,18 +16,19 @@ import javax.ws.rs.core.Response;
 import java.sql.Connection;
 import java.time.Instant;
 
-@Path("/emails/")
+@Path("/exports")
 @NeverCache
-public class EmailCsvRestService {
+public class ExportsRestService {
 	private final DataSource dataSource;
 	private final AuthService authService;
 
-	public EmailCsvRestService(DataSource dataSource, AuthService authService) {
+	public ExportsRestService(DataSource dataSource, AuthService authService) {
 		this.dataSource = dataSource;
 		this.authService = authService;
 	}
 
 	@GET
+	@Path("/emails")
 	@Produces("text/csv")
 	public Response invoices(@Context HttpServletRequest request) throws Exception {
 		authService.guardAuthenticatedUser(request);

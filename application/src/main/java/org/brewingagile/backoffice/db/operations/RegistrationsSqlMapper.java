@@ -10,6 +10,7 @@ import java.util.UUID;
 import fj.P;
 import fj.P2;
 
+import fj.P3;
 import fj.data.List;
 import fj.data.Option;
 import fj.function.Strings;
@@ -21,6 +22,17 @@ public class RegistrationsSqlMapper {
 			Try1<ResultSet,P2<String,String>,SQLException> f = rs -> P.p(
 				rs.getString("participant_name"),
 				rs.getString("participant_email")
+			);
+			return SqlOps.list(ps, f);
+		}
+	}
+
+	public static List<P3<String,String,String>> diets(Connection c) throws SQLException {
+		try (PreparedStatement ps = c.prepareStatement("SELECT participant_name, ticket, dietary_requirements FROM registration WHERE dietary_requirements <> ''")) {
+			Try1<ResultSet,P3<String,String,String>,SQLException> f = rs -> P.p(
+				rs.getString("participant_name"),
+				rs.getString("ticket"),
+				rs.getString("dietary_requirements")
 			);
 			return SqlOps.list(ps, f);
 		}

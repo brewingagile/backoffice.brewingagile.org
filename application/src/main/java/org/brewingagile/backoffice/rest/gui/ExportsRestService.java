@@ -1,6 +1,5 @@
 package org.brewingagile.backoffice.rest.gui;
 
-import fj.data.List;
 import fj.function.Strings;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
@@ -30,12 +29,26 @@ public class ExportsRestService {
 	@GET
 	@Path("/emails")
 	@Produces("text/csv")
-	public Response invoices(@Context HttpServletRequest request) throws Exception {
+	public Response emails(@Context HttpServletRequest request) throws Exception {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
-			List<String> p2s = RegistrationsSqlMapper.participantNameAndEmail(c)
-				.map(x -> escaped(x._1()) + "," + escaped(x._2()));
-			return Response.ok(Strings.unlines(p2s)).header("content-disposition", "attachment; filename=" + "participants-" + Instant.now().toString() + ".csv").build();
+			return Response.ok(Strings.unlines(
+				RegistrationsSqlMapper.participantNameAndEmail(c)
+					.map(x -> escaped(x._1()) + "," + escaped(x._2()))
+			)).header("content-disposition", "attachment; filename=" + "participants-" + Instant.now().toString() + ".csv").build();
+		}
+	}
+
+	@GET
+	@Path("/diets")
+	@Produces("text/csv")
+	public Response diets(@Context HttpServletRequest request) throws Exception {
+		authService.guardAuthenticatedUser(request);
+		try (Connection c = dataSource.getConnection()) {
+			return Response.ok(Strings.unlines(
+				RegistrationsSqlMapper.diets(c)
+					.map(x -> escaped(x._1()) + "," + escaped(x._2()) + "," + escaped(x._3()))
+			)).header("content-disposition", "attachment; filename=" + "participants-" + Instant.now().toString() + ".csv").build();
 		}
 	}
 

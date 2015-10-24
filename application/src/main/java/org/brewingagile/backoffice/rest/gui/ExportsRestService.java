@@ -20,10 +20,16 @@ import java.time.Instant;
 public class ExportsRestService {
 	private final DataSource dataSource;
 	private final AuthService authService;
+	private final RegistrationsSqlMapper registrationsSqlMapper;
 
-	public ExportsRestService(DataSource dataSource, AuthService authService) {
+	public ExportsRestService(
+		DataSource dataSource,
+		AuthService authService,
+		RegistrationsSqlMapper registrationsSqlMapper
+	) {
 		this.dataSource = dataSource;
 		this.authService = authService;
+		this.registrationsSqlMapper = registrationsSqlMapper;
 	}
 
 	@GET
@@ -35,7 +41,20 @@ public class ExportsRestService {
 			return Response.ok(Strings.unlines(
 				RegistrationsSqlMapper.participantNameAndEmail(c)
 					.map(x -> escaped(x._1()) + "," + escaped(x._2()))
-			)).header("content-disposition", "attachment; filename=" + "participants-" + Instant.now().toString() + ".csv").build();
+			)).header("content-disposition", "attachment; filename=" + "emails-" + Instant.now().toString() + ".csv").build();
+		}
+	}
+
+	@GET
+	@Path("/registrations")
+	@Produces("text/csv")
+	public Response registrations(@Context HttpServletRequest request) throws Exception {
+		authService.guardAuthenticatedUser(request);
+		try (Connection c = dataSource.getConnection()) {
+			return Response.ok(Strings.unlines(
+				registrationsSqlMapper.all(c)
+					.map(r -> escaped(r.badge.badge) + "," + escaped(r.ticket) + "," + escaped(r.participantName) + "," + escaped(r.dietaryRequirements))
+			)).header("content-disposition", "attachment; filename=" + "registrations-" + Instant.now().toString() + ".csv").build();
 		}
 	}
 
@@ -48,7 +67,7 @@ public class ExportsRestService {
 			return Response.ok(Strings.unlines(
 				RegistrationsSqlMapper.diets(c)
 					.map(x -> escaped(x._1()) + "," + escaped(x._2()) + "," + escaped(x._3()))
-			)).header("content-disposition", "attachment; filename=" + "participants-" + Instant.now().toString() + ".csv").build();
+			)).header("content-disposition", "attachment; filename=" + "diets-" + Instant.now().toString() + ".csv").build();
 		}
 	}
 

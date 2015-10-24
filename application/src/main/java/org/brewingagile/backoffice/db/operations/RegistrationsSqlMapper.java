@@ -17,7 +17,7 @@ import fj.function.Strings;
 import fj.function.Try1;
 
 public class RegistrationsSqlMapper {
-	public static List<P2<String,String>> participantNameAndEmail(Connection c) throws SQLException {
+	public List<P2<String,String>> participantNameAndEmail(Connection c) throws SQLException {
 		try (PreparedStatement ps = c.prepareStatement("SELECT * FROM registration ORDER BY participant_name")) {
 			Try1<ResultSet,P2<String,String>,SQLException> f = rs -> P.p(
 				rs.getString("participant_name"),
@@ -27,7 +27,7 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	public static List<P3<String,String,String>> diets(Connection c) throws SQLException {
+	public List<P3<String,String,String>> diets(Connection c) throws SQLException {
 		try (PreparedStatement ps = c.prepareStatement("SELECT participant_name, ticket, dietary_requirements FROM registration WHERE dietary_requirements <> ''")) {
 			Try1<ResultSet,P3<String,String,String>,SQLException> f = rs -> P.p(
 				rs.getString("participant_name"),
@@ -225,7 +225,7 @@ public class RegistrationsSqlMapper {
 		updateRegistration(c, id, billingCompany, badge, diet);
 	}
 
-	private static void updateRegistration(
+	private void updateRegistration(
 		Connection c,
 		UUID id,
 		BillingCompany billingCompany,
@@ -242,12 +242,12 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	private static void replaceRegistrationBundle(Connection c, UUID id, Option<String> bundle) throws SQLException {
+	private void replaceRegistrationBundle(Connection c, UUID id, Option<String> bundle) throws SQLException {
 		deleteRegistrationBundle(c, id);
 		if (bundle.isSome()) insertRegistrationBundle(c, id, bundle.some());
 	}
 
-	private static void deleteRegistrationBundle(Connection c, UUID id) throws SQLException {
+	private void deleteRegistrationBundle(Connection c, UUID id) throws SQLException {
 		String sql = "DELETE FROM registration_bucket WHERE registration_id = ?;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
@@ -255,7 +255,7 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	private static void insertRegistrationBundle(Connection c, UUID registrationId, String bucket) throws SQLException {
+	private void insertRegistrationBundle(Connection c, UUID registrationId, String bucket) throws SQLException {
 		String sql = "INSERT INTO registration_bucket (registration_id, bucket) VALUES (?, ?);";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, registrationId);

@@ -39,7 +39,7 @@ public class ExportsRestService {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
 			return Response.ok(Strings.unlines(
-				RegistrationsSqlMapper.participantNameAndEmail(c)
+				registrationsSqlMapper.participantNameAndEmail(c)
 					.map(x -> escaped(x._1()) + "," + escaped(x._2()))
 			)).header("content-disposition", "attachment; filename=" + "emails-" + Instant.now().toString() + ".csv").build();
 		}
@@ -65,7 +65,7 @@ public class ExportsRestService {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
 			return Response.ok(Strings.unlines(
-				RegistrationsSqlMapper.diets(c)
+				registrationsSqlMapper.diets(c)
 					.map(x -> escaped(x._1()) + "," + escaped(x._2()) + "," + escaped(x._3()))
 			)).header("content-disposition", "attachment; filename=" + "diets-" + Instant.now().toString() + ".csv").build();
 		}

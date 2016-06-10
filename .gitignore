@@ -6,5 +6,4 @@ dependency-reduced-pom.xml
 
 # IntelliJ
 .idea/
-application.iml
-
+*.iml 

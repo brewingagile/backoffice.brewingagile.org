@@ -16,7 +16,7 @@ public class DbUpgrader {
 			migration("registrations-table").installsThrough(script("001-registrations.sql")),
 			migration("dietary-requirements-and-workshop").installsThrough(script("002-dietary-requirements-and-workshop.sql")),
 			migration("dietary-requirements-and-workshop-as-string").installsThrough(script("003-dietary-requirements-and-workshop-as-string.sql")),
-			migration("fixed-registration-date-and-added-primary-key.sql").installsThrough(script("004-fixed-registration-date-and-added-primary-key.sql")), 
+			migration("fixed-registration-date-and-added-primary-key.sql").installsThrough(script("004-fixed-registration-date-and-added-primary-key.sql")),
 			migration("add-billing-method").installsThrough(script("005-add-billing-method.sql")),
 			migration("convert-id-to-uuid").installsThrough(script("006-convert-id-to-uuid.sql")),
 			migration("invoice-registrations").installsThrough(script("007-invoice-registrations.sql")),
@@ -30,6 +30,10 @@ public class DbUpgrader {
 			migration("printed-name-tags").installsThrough(script("015-printed-name-tags.sql")),
 			migration("rename-id-to-registration-id").installsThrough(script("016-rename-id-to-registration-id.sql"))
 		);
+	}
+
+	private static ScriptUpgradeStep script(String file) {
+		return DSL.script("sql/" + file);
 	}
 
 	public void upgrade(DataSource ds) throws SQLException, IOException {

@@ -1,2 +1,2 @@
-#!/bin/bash
-mvn clean package && java -jar application/target/application-1-SNAPSHOT.jar ./backend.conf --dev application/src/main/resources/webapp/
+#!/usr/bin/env bash
+mvn clean package && ./run.sh

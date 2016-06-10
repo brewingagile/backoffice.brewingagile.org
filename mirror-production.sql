@@ -1,6 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
-PSQL="psql -U brewingagile -h localhost brewingagile"
+
+DB_HOST="${DB_HOST:-localhost}"
+echo "Using PostgreSQL at $DB_HOST"
+
+PSQL="psql -U brewingagile -h $DB_HOST brewingagile"
 PSQLI="$PSQL -t -c"
 
 ### Drop all tables

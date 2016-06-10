@@ -5,8 +5,8 @@ import fj.data.List;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BucketsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
+import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
-import org.brewingagile.backoffice.integrations.MandrillEmailClient;
 import org.brewingagile.backoffice.integrations.OutvoiceInvoiceClient;
 import org.brewingagile.backoffice.rest.api.RegistrationApiRestService;
 import org.brewingagile.backoffice.rest.gui.*;
@@ -33,11 +33,11 @@ public class Application {
 		DismissRegistrationService dismissRegistrationService = new DismissRegistrationService(dataSource, registrationsSqlMapper);
 		MarkAsCompleteService markAsCompleteService = new MarkAsCompleteService(dataSource, registrationsSqlMapper);
 		MarkAsPaidService markAsPaidService = new MarkAsPaidService(dataSource, registrationsSqlMapper);
-		MandrillEmailClient mandrillEmailClient = new MandrillEmailClient(ClientBuilder.newClient(), config.mandrillEndpoint, config.mandrillApikey);
+		ConfirmationEmailSender confirmationEmailSender = new ConfirmationEmailSender(config);
 		MailchimpSubscribeClient mailchimpSubscribeClient = new MailchimpSubscribeClient(ClientBuilder.newClient(), config.mailchimpEndpoint, config.mailchimpApikey);
 
 		this.apiRestServices = List.list(
-			new RegistrationApiRestService(dataSource, registrationsSqlMapper, mandrillEmailClient, mailchimpSubscribeClient)
+			new RegistrationApiRestService(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient)
 		);
 
 		BucketsSqlMapper bucketsSqlMapper = new BucketsSqlMapper();

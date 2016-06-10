@@ -23,8 +23,8 @@ import functional.Effect;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
+import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
-import org.brewingagile.backoffice.integrations.MandrillEmailClient;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
 
@@ -32,18 +32,18 @@ import org.brewingagile.backoffice.utils.Result;
 public class RegistrationApiRestService {
 	private final DataSource dataSource;
 	private final RegistrationsSqlMapper registrationsSqlMapper;
-	private final MandrillEmailClient mandrillEmailClient;
+	private final ConfirmationEmailSender confirmationEmailSender;
 	private final MailchimpSubscribeClient mailchimpSubscribeClient;
 
 	public RegistrationApiRestService(
 		DataSource dataSource,
 		RegistrationsSqlMapper registrationsSqlMapper,
-		MandrillEmailClient mandrillEmailClient,
+		ConfirmationEmailSender confirmationEmailSender,
 		MailchimpSubscribeClient mailchimpSubscribeClient
 	) {
 		this.dataSource = dataSource;
 		this.registrationsSqlMapper = registrationsSqlMapper;
-		this.mandrillEmailClient = mandrillEmailClient;
+		this.confirmationEmailSender = confirmationEmailSender;
 		this.mailchimpSubscribeClient = mailchimpSubscribeClient;
 	}
 
@@ -130,7 +130,7 @@ public class RegistrationApiRestService {
 				);
 			}
 
-			Either<String, String> emailResult = mandrillEmailClient.sendRegistrationReceived(rr.participantEmail);
+			Either<String, String> emailResult = confirmationEmailSender.email(rr.participantEmail);
 			if (emailResult.isLeft()) {
 				System.err.println("We couldn't send an email to " + rr.participantName + "(" + rr.participantEmail + "). Cause: " + emailResult.left().value());
 			}

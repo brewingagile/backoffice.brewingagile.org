@@ -10,41 +10,41 @@
 	</ul>
 	-->
 	<form class="form-horizontal" role="form">
-		<legend>{{registration.participantName}}</legend>
+		<legend>{{registration.tuple.participantName}}</legend>
 		<div class="form-group">
 			<label class="col-md-4 control-label">Name</label>
 			<div class="col-md-6">
-				<p class="form-control-static">{{registration.participantName}}</p>
+				<p class="form-control-static">{{registration.tuple.participantName}}</p>
 			</div>
 		</div>
 		<div class="form-group">
 			<label class="col-md-4 control-label">Email</label>
 			<div class="col-md-6">
-				<p class="form-control-static">{{registration.participantEmail}}</p>
+				<p class="form-control-static">{{registration.tuple.participantEmail}}</p>
 			</div>
 		</div>
 		<div class="form-group">
 			<label class="col-md-4 control-label">Twitter</label>
 			<div class="col-md-6">
-				<p class="form-control-static">{{registration.twitter}}</p>
+				<p class="form-control-static">{{registration.tuple.twitter}}</p>
 			</div>
 		</div>
 		<div class="form-group">
 			<label for="billingCompanyInput" class="col-md-4 control-label">Billing Company</label>
 			<div class="col-md-6">
-				<input type="text" class="form-control" id="billingCompanyInput" ng-model="registration.billingCompany"/>
+				<input type="text" class="form-control" id="billingCompanyInput" ng-model="registration.tuple.billingCompany"/>
 			</div>
 		</div>
 		<div class="form-group">
 			<label class="col-md-4 control-label">Billing Address</label>
 			<div class="col-md-6">
-				<p class="form-control-static">{{registration.billingAddress}}</p>
+				<p class="form-control-static">{{registration.tuple.billingAddress}}</p>
 			</div>
 		</div>
 		<div class="form-group">
 			<label class="col-md-4 control-label">Invoicing Method</label>
 			<div class="col-md-6">
-				<p class="form-control-static">{{registration.billingMethod}}</p>
+				<p class="form-control-static">{{registration.tuple.billingMethod}}</p>
 			</div>
 		</div>
     <div class="form-group">
@@ -56,13 +56,13 @@
 		<div class="form-group">
 			<label for="dietInput" class="col-md-4 control-label">Diet?</label>
 			<div class="col-md-6">
-				<input type="text" class="form-control" id="dietInput" ng-model="registration.dietaryRequirements"/>
+				<input type="text" class="form-control" id="dietInput" ng-model="registration.tuple.dietaryRequirements"/>
 			</div>
 		</div>
 		<div class="form-group">
 			<label for="inputBadge" class="col-md-4 control-label">Badge</label>
 			<div class="col-md-6">
-				<select name="inputBadge" class="form-control" ng-model="registration.badge">
+				<select name="inputBadge" class="form-control" ng-model="registration.tuple.badge">
 					<option value="SPEAKER">Speaker</option>
 					<option value="ORGANIZER">Organizer</option>
                     <option value="PHOTOGRAPHER">Photographer</option>
@@ -73,7 +73,7 @@
 		<div class="form-group">
 			<label for="inputBundle" class="col-md-4 control-label">Bundle</label>
 			<div class="col-md-6">
-				<select name="inputBundle" class="form-control" ng-model="registration.bundle" ng-options="b.bucket as b.bucket for b in bundles" nulltoemptystring>
+				<select name="inputBundle" class="form-control" ng-model="registration.tuple.bundle" ng-options="b.bucket as b.bucket for b in bundles" nulltoemptystring>
 					<option value="">(none) - Individual Participant</option>
 				</select>
 			</div>

@@ -181,9 +181,10 @@ public class RegistrationsRestService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response postUpdate(@Context HttpServletRequest request, @PathParam("registrationId") UUID id, String body) throws Exception {
 		authService.guardAuthenticatedUser(request);
-		Either<String, RegistrationsUpdate> map = ArgoUtils.parseEither(body)
-			.right()
-			.bind(RegistrationsRestService::registrationsUpdate);
+		Either<String, RegistrationsUpdate> map =
+			ArgoUtils.parseEither(body)
+				.right().map(x -> x.getNode("tuple"))
+				.right().bind(RegistrationsRestService::registrationsUpdate);
 
 		if (map.isLeft()) return Response.serverError().build();
 		RegistrationsUpdate ru = map.right().value();

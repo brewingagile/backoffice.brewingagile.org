@@ -29,13 +29,14 @@ public class SendInvoiceService {
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			registration = registrationsSqlMapper.one(c, id).some();
-			if (registration.state != RegistrationState.RECEIVED) throw new IllegalArgumentException("Registration is not in expected state.");
+			if (registration.tuple.state != RegistrationState.RECEIVED) throw new IllegalArgumentException("Registration is not in expected state.");
 		}
 		
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			if (!registrationsSqlMapper.invoiceReference(c, id).isSome()) {
-				Either<String,UUID> invoiceReferenceId = outvoiceInvoiceClient.postInvoice(registration.id, registration.billingMethod, registration.participantEmail, registration.billingCompany, registration.billingAddress, registration.ticket, registration.participantName);
+				RegistrationsSqlMapper.RegistrationTuple t = registration.tuple;
+				Either<String,UUID> invoiceReferenceId = outvoiceInvoiceClient.postInvoice(registration.id, t.billingMethod, t.participantEmail, t.billingCompany, t.billingAddress, registration.tickets, t.participantName);
 				if (invoiceReferenceId.isLeft()) System.err.println(invoiceReferenceId.left());
 				registrationsSqlMapper.insertInvoiceReference(c, registration.id, invoiceReferenceId.right().value());
 				c.commit();
@@ -44,7 +45,7 @@ public class SendInvoiceService {
 		
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
-			registrationsSqlMapper.updateRegistrationState(c, id, registration.state, NextStateHelper.nextState(registration));
+			registrationsSqlMapper.updateRegistrationState(c, id, registration.tuple.state, NextStateHelper.nextState(registration.tuple));
 			c.commit();
 		}
 	}

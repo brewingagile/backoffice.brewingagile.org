@@ -4,8 +4,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import fj.Ord;
 import fj.data.List;
 import fj.data.Option;
+import fj.data.Set;
 import fj.function.Try1;
 
 public class SqlOps {
@@ -24,5 +26,9 @@ public class SqlOps {
 			}
 			return invoices.toList();
 		}
+	}
+
+	public static <T> Set<T> set(PreparedStatement ps, Ord<T> ord, Try1<ResultSet, T, SQLException> f) throws SQLException {
+		return Set.iterableSet(ord, list(ps, f));
 	}
 }

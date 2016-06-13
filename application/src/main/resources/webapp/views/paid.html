@@ -15,12 +15,12 @@
 			<tbody>
 			<tr ng-repeat="r in registrations">
 				<td><input type="checkbox" ng-model="r.checked" ng-checked="r.checked"/></td>
-				<td><a ng-href="#/registrations/{{r.id}}">{{r.participantName}}</a></td>
-				<td>{{r.billingCompany}}</td>
-				<td>{{r.ticket}}</td>
-				<td>{{r.dietaryRequirements}}</td>
-				<td>{{r.badge}}</td>
-				<td>{{r.bundle}}</td>
+				<td><a ng-href="#/registrations/{{r.id}}">{{r.tuple.participantName}}</a></td>
+				<td>{{r.tuple.billingCompany}}</td>
+				<td>{{r.tickets}}</td>
+				<td>{{r.tuple.dietaryRequirements}}</td>
+				<td>{{r.tuple.badge}}</td>
+				<td>{{r.tuple.bundle}}</td>
 			</tr>
 			</tbody>
 		</table>

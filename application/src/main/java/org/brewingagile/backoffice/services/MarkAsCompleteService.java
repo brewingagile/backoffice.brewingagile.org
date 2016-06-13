@@ -24,7 +24,7 @@ public class MarkAsCompleteService {
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			registration = registrationsSqlMapper.one(c, id).some();
-			if (registration.state != RegistrationState.RECEIVED) throw new IllegalArgumentException("Registration is not in expected state.");
+			if (registration.tuple.state != RegistrationState.RECEIVED) throw new IllegalArgumentException("Registration is not in expected state.");
 			registrationsSqlMapper.updateRegistrationState(c, id, RegistrationState.RECEIVED, RegistrationState.PAID);
 			c.commit();
 		}

@@ -13,7 +13,9 @@ import javax.ws.rs.core.Response;
 import static argo.jdom.JsonNodeFactories.*;
 
 import argo.jdom.JsonRootNode;
+import fj.F;
 import fj.data.Either;
+import fj.data.Set;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
@@ -34,7 +36,7 @@ public class OutvoiceInvoiceClient {
 		String recipientEmailAddress,
 		String recipient,
 		String recipientBillingAddres,
-		String invoiceTemplate,
+		Set<String> tickets,
 		String participantName) {
 
 		JsonRootNode request = object(
@@ -43,7 +45,7 @@ public class OutvoiceInvoiceClient {
 			field("recipientEmailAddress", string(recipientEmailAddress)),
 			field("recipient", string(recipient)),
 			field("recipientBillingAddress", string(recipientBillingAddres)),
-			field("lines", lines(invoiceTemplate, participantName))
+			field("lines", tickets.toList().map(OutvoiceInvoiceClient.line(participantName)).toJavaList().stream().collect(ArgoUtils.toArray()))
 		);
 
 		Response post;
@@ -62,20 +64,15 @@ public class OutvoiceInvoiceClient {
 		return Either.right(registrationId);
 	}
 
-	private static JsonRootNode lines(String invoiceTemplate, String participantName) {
-		JsonRootNode conference = line("Brewing Agile 2015: Konferens", "Avser konferens 16-17 oktober.\nAvser deltagare: " + participantName, BigDecimal.valueOf(960), BigDecimal.ONE);
-		switch (invoiceTemplate) {
-			case "conference": return array(conference);
-			case "conference+workshop": return array(
-				conference,
-				line("Brewing Agile 2015: Workshop 1", "Avser workshop 16 oktober.\nAvser deltagare: " + participantName, BigDecimal.valueOf(800), BigDecimal.ONE)
-			);
-			case "conference+workshop2": return array(
-				conference,
-				line("Brewing Agile 2015: Workshop 2", "Avser workshop 16 oktober.\nAvser deltagare: " + participantName, BigDecimal.valueOf(800), BigDecimal.ONE)
-			);
-			default: throw new IllegalArgumentException("Unknown template: " + invoiceTemplate + ".");
-		}
+	private static F<String, JsonRootNode> line(String participantName) {
+		return ticket -> {
+			switch (ticket) {
+				case "conference": return line("Brewing Agile 2016: Konferens", "Avser konferens 3-4 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(960), BigDecimal.ONE);
+				case "workshop1": return line("Brewing Agile 2016: Workshop 1", "Avser workshop 2 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(2800), BigDecimal.ONE);
+				case "workshop2": return line("Brewing Agile 2016: Workshop 2", "Avser workshop 3 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(1400), BigDecimal.ONE);
+				default: throw new IllegalArgumentException("Unknown ticket: " + ticket+ ".");
+			}
+		};
 	}
 
 	private static JsonRootNode line(String text, String description, BigDecimal price, BigDecimal qty) {

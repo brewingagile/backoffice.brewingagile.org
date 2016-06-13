@@ -1,9 +1,10 @@
 package org.brewingagile.backoffice.rest.gui;
 
 import argo.jdom.JsonRootNode;
-import fj.Ord;
+import fj.F;
+import fj.data.IO;
+import fj.data.List;
 import fj.data.Option;
-import fj.data.Set;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
@@ -19,7 +20,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.UUID;
 
 import static argo.jdom.JsonNodeFactories.*;
@@ -48,10 +51,20 @@ public class NameTagsRestService {
 	public Response all(@Context HttpServletRequest request) throws Exception {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
-			return Response.ok(ArgoUtils.format(
-				array(registrationsSqlMapper.unprintedNametags(c).map(NameTagsRestService::json))
-			)).build();
+			List<UUID> registrationTuples = registrationsSqlMapper.unprintedNametags(c);
+			List<Registration> somes = Option.somes(registrationTuples.traverseIO(ioify(c)).run());
+			return Response.ok(ArgoUtils.format(array(somes.map(NameTagsRestService::json)))).build();
 		}
+	}
+
+	private F<UUID,IO<Option<Registration>>> ioify(Connection c) throws IOException {
+		return registrationId -> () -> {
+			try {
+				return registrationsSqlMapper.one(c, registrationId);
+			} catch (SQLException e) {
+				throw new IOException(e);
+			}
+		};
 	}
 
 //	curl -u admin:password -v http://localhost:9080/gui/nametags/8e57b3d5-2a50-47a5-853f-bdb76cdbbb62
@@ -71,14 +84,14 @@ public class NameTagsRestService {
 
 	private static JsonRootNode json(Registration r) {
 		return object(
-			field("name", string(r.participantName)),
-			field("company", string(r.billingCompany)),
-			field("badge", string(r.badge.badge)),
-			field("workshop", booleanNode(Set.set(Ord.stringOrd, "conference+workshop", "conference+workshop2").member(r.ticket))),
-			field("conference", booleanNode(true)),
+			field("name", string(r.tuple.participantName)),
+			field("company", string(r.tuple.billingCompany)),
+			field("badge", string(r.tuple.badge.badge)),
+			field("workshop", booleanNode(false)),
+			field("conference", booleanNode(r.tickets.member("conference"))),
 			field("burger", booleanNode(true)),
-			field("twitter", string(r.twitter)),
-			field("diet", booleanNode(!"".equals(r.dietaryRequirements)))
+			field("twitter", string(r.tuple.twitter)),
+			field("diet", booleanNode(!"".equals(r.tuple.dietaryRequirements)))
 		);
 	}
 }

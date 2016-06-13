@@ -23,8 +23,8 @@ public class DismissRegistrationService {
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			Registration registration = registrationsSqlMapper.one(c, id).some();
-			if (registration.state != RegistrationState.RECEIVED) throw new IllegalArgumentException("Registration is not in expected state.");
-			registrationsSqlMapper.delete(c, id);
+			if (registration.tuple.state != RegistrationState.RECEIVED) throw new IllegalArgumentException("Registration is not in expected state.");
+			registrationsSqlMapper.deleteRegistrationTuple(c, id);
 			c.commit();
 		}
 	}

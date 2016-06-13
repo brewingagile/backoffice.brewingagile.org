@@ -79,7 +79,7 @@
 		bottom: -8mm;
 		z-index: -1;
 	}
-	.ticket {
+	.tickets {
 
 	}
 	.badge {
@@ -137,10 +137,6 @@
 		<div class="twitter">{{l.twitter}}</div>
 		<div class="company">{{l.company}}</div>
 		<div class="statusbar">
-			<!--div class="ticket">
-				<span class="toggle" ng-show="l.workshop"><img src="1f477-Construction Worker.48.png"/></span>
-				<span class="toggle" ng-show="l.diet"><img src="1f489-Syringe.48.png"/></span>
-			</div-->
 			<div class="logo"><img src="logo.png"></div>
 			<div ng-class="{badge: true, speaker: (l.badge == 'SPEAKER'), organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER'), support: (l.badge == 'PHOTOGRAPHER' || l.badge == 'SOUND TECHNICIAN')}">{{l.badge}}</div>
 		</div>

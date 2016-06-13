@@ -18,7 +18,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import argo.jdom.JsonRootNode;
-import fj.data.Either;
+import fj.Ord;
+import fj.data.*;
 import functional.Effect;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
@@ -54,7 +55,7 @@ public class RegistrationApiRestService {
 		public final String billingAddress;
 		public final String billingMethod;
 		public final String dietaryRequirements;
-		public final String ticket;
+		public final Set<String> tickets;
 		public final String twitter;
 
 		public RegistrationRequest(
@@ -64,7 +65,7 @@ public class RegistrationApiRestService {
 				String billingAddress,
 				String billingMethod,
 				String dietaryRequirements,
-				String ticket,
+				Set<String> tickets,
 				String twitter
 		) {
 			this.participantName = participantName;
@@ -73,7 +74,7 @@ public class RegistrationApiRestService {
 			this.billingAddress = billingAddress;
 			this.billingMethod = billingMethod;
 			this.dietaryRequirements = dietaryRequirements;
-			this.ticket = ticket;
+			this.tickets = tickets;
 			this.twitter = twitter;
 		}
 	}
@@ -85,7 +86,7 @@ public class RegistrationApiRestService {
 		return accessControlHeaders(request, Response.noContent()).build();
 	}
 	
-//	curl  -v -X POST -H "Content-Type: application/json" http://localhost:9080/api/registration/1/  --data '{"participantName" : "participant name", "participantEmail":"participant@email", "billingCompany": "billing-company", "billingAddress": "billing address", "billingMethod": "EMAIL", "ticket": "conference", "dietaryRequirements": "", "twitter": "@meow" }'
+//	curl  -v -X POST -H "Content-Type: application/json" http://localhost:9080/api/registration/1/  --data '{"participantName" : "participant name", "participantEmail":"participant@email", "billingCompany": "billing-company", "billingAddress": "billing address", "billingMethod": "EMAIL", "tickets": "conference", "dietaryRequirements": "", "twitter": "@meow" }'
 	
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -106,7 +107,7 @@ public class RegistrationApiRestService {
 			System.out.println("billingCompany: " + rr.billingCompany);
 			System.out.println("billingAddress: " + rr.billingAddress);
 			System.out.println("billingMethod: " + rr.billingMethod);
-			System.out.println("ticket: " + rr.ticket);
+			System.out.println("tickets: " + rr.tickets);
 			System.out.println("dietaryRequirements: " + rr.dietaryRequirements);
 			System.out.println("twitter: " + rr.twitter);
 
@@ -116,17 +117,26 @@ public class RegistrationApiRestService {
 			}
 
 			try (Connection c = dataSource.getConnection()) {
-				registrationsSqlMapper.insert(c,
-					UUID.randomUUID(),
-					RegistrationState.RECEIVED,
-					rr.participantName,
-					rr.participantEmail,
-					rr.billingCompany,
-					rr.billingAddress,
-					billingMethod(rr.billingMethod),
-					rr.ticket,
-					rr.dietaryRequirements,
-					rr.twitter
+				UUID uuid = UUID.randomUUID();
+				registrationsSqlMapper.replace(
+					c,
+					uuid,
+					new RegistrationsSqlMapper.Registration(
+						uuid,
+						new RegistrationsSqlMapper.RegistrationTuple(
+							RegistrationState.RECEIVED,
+							rr.participantName,
+							rr.participantEmail,
+							rr.billingCompany,
+							rr.billingAddress,
+							billingMethod(rr.billingMethod),
+							rr.dietaryRequirements,
+							new RegistrationsSqlMapper.Badge(""),
+							rr.twitter,
+							Option.<String>none()
+						),
+						rr.tickets
+					)
 				);
 			}
 
@@ -157,9 +167,16 @@ public class RegistrationApiRestService {
 			ArgoUtils.stringOrEmpty(body, "billingAddress"),
 			ArgoUtils.stringOrEmpty(body, "billingMethod"),
 			ArgoUtils.stringOrEmpty(body, "dietaryRequirements"),
-			ArgoUtils.stringOrEmpty(body, "ticket"),
+			tickets(body),
 			ArgoUtils.stringOrEmpty(body, "twitter")
 		);
+	}
+
+	private static Set<String> tickets(JsonRootNode body) {
+		Option<String> conference1 = Option.iif(body.getBooleanValue("tickets", "conference"), "conference");
+		Option<String> workshop1 = Option.iif(body.getBooleanValue("tickets", "workshop1"), "workshop1");
+		Option<String> workshop2 = Option.iif(body.getBooleanValue("tickets", "workshop2"), "workshop2");
+		return Set.iterableSet(Ord.stringOrd, Option.somes(List.list(conference1, workshop1, workshop2)));
 	}
 
 	private static BillingMethod billingMethod(String billingMethod) {

@@ -81,8 +81,8 @@ public class BucketsSqlMapper {
 	public Individuals individuals(Connection c) throws SQLException {
 		String sql = "SELECT " +
 			"	sum(1) as conference, " +
-			"	sum(CASE WHEN ticket = 'conference+workshop' THEN 1 ELSE 0 END) as workshop1, " +
-			"	sum(CASE WHEN ticket = 'conference+workshop2' THEN 1 ELSE 0 END) as workshop2 " +
+			"	sum(CASE WHEN tickets = 'conference+workshop' THEN 1 ELSE 0 END) as workshop1, " +
+			"	sum(CASE WHEN tickets = 'conference+workshop2' THEN 1 ELSE 0 END) as workshop2 " +
 			"FROM registration r " +
 			"LEFT JOIN registration_bucket rb USING (registration_id) " +
 			"WHERE rb.bucket IS NULL;";
@@ -114,8 +114,8 @@ public class BucketsSqlMapper {
 			"LEFT JOIN (" +
 			"	SELECT rb.bucket," +
 			"		sum(1) as actual_conference, " +
-			"		sum(CASE WHEN ticket = 'conference+workshop' THEN 1 ELSE 0 END) as actual_workshop1, " +
-			"		sum(CASE WHEN ticket = 'conference+workshop2' THEN 1 ELSE 0 END) as actual_workshop2 " +
+			"		sum(CASE WHEN tickets = 'conference+workshop' THEN 1 ELSE 0 END) as actual_workshop1, " +
+			"		sum(CASE WHEN tickets = 'conference+workshop2' THEN 1 ELSE 0 END) as actual_workshop2 " +
 			"	FROM registration r " +
 			"	JOIN registration_bucket rb USING (registration_id) " +
 			"	GROUP BY bucket" +

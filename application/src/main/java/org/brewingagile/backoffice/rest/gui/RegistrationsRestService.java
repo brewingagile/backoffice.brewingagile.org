@@ -1,33 +1,13 @@
 package org.brewingagile.backoffice.rest.gui;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.UUID;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.sql.DataSource;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import static argo.jdom.JsonNodeFactories.*;
-
 import argo.jdom.JsonNode;
 import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
-import fj.*;
-import fj.data.Collectors;
-import fj.data.Either;
-import fj.data.List;
-import fj.data.Option;
+import fj.F;
+import fj.Function;
+import fj.data.*;
 import fj.function.Strings;
+import functional.Tuple2;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
@@ -39,8 +19,21 @@ import org.brewingagile.backoffice.services.MarkAsPaidService;
 import org.brewingagile.backoffice.services.SendInvoiceService;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
-
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.UUID;
+
+import static argo.jdom.JsonNodeFactories.*;
 
 @Path("/registrations/")
 @NeverCache
@@ -73,18 +66,29 @@ public class RegistrationsRestService {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response invoices(@Context HttpServletRequest request) throws Exception {
+	public Response invoices(@Context HttpServletRequest request) throws SQLException, IOException {
 		authService.guardAuthenticatedUser(request);
 		
 		try (Connection c = dataSource.getConnection()) {
-			List<RegistrationsSqlMapper.Registration> all = registrationsSqlMapper.all(c);
+			List<UUID> ids = registrationsSqlMapper.all(c).map(x -> x.fst());
+			List<RegistrationsSqlMapper.Registration> all = Option.somes(ids.traverseIO(ioify(c)).run());
 			JsonRootNode overview = object(
-				field("received", array(all.filter(r -> r.state == RegistrationState.RECEIVED).map(RegistrationsRestService::json))),
-				field("invoicing", array(all.filter(r -> r.state == RegistrationState.INVOICING).map(RegistrationsRestService::json))),
-				field("paid", array(all.filter(r -> r.state == RegistrationState.PAID).map(RegistrationsRestService::json)))
+				field("received", array(all.filter(x -> x.tuple.state == RegistrationState.RECEIVED).map(RegistrationsRestService::json))),
+				field("invoicing", array(all.filter(x -> x.tuple.state == RegistrationState.INVOICING).map(RegistrationsRestService::json))),
+				field("paid", array(all.filter(x -> x.tuple.state == RegistrationState.PAID).map(RegistrationsRestService::json)))
 			);
 			return Response.ok(ArgoUtils.format(overview)).build();
 		}
+	}
+
+	private F<UUID,IO<Option<RegistrationsSqlMapper.Registration>>> ioify(Connection c) {
+		return registrationId -> () -> {
+			try {
+				return registrationsSqlMapper.one(c, registrationId);
+			} catch (SQLException e) {
+				throw new IOException(e);
+			}
+		};
 	}
 
 	@GET
@@ -107,22 +111,36 @@ public class RegistrationsRestService {
 		}
 	}
 
-	public static argo.jdom.JsonRootNode json(RegistrationsSqlMapper.Registration r) {
+	public static argo.jdom.JsonRootNode json(Tuple2<UUID, RegistrationsSqlMapper.RegistrationTuple> t) {
+		RegistrationsSqlMapper.RegistrationTuple r = t._2;
+		return object(
+			field("id", string(t._1.toString())),
+			field("tuple", json(r))
+		);
+	}
+
+	private static JsonRootNode json(RegistrationsSqlMapper.Registration r) {
 		return object(
 			field("id", string(r.id.toString())),
+			field("tuple", json(r.tuple)),
+			field("tickets", r.tickets.toJavaSet().stream().collect(ArgoUtils.toStringArray()))
+		);
+	}
+
+	private static JsonRootNode json(RegistrationsSqlMapper.RegistrationTuple r) {
+		return object(
 			field("participantName", string(r.participantName)),
 			field("participantEmail", string(r.participantEmail)),
 			field("billingCompany", string(r.billingCompany)),
 			field("billingAddress", string(r.billingAddress)),
 			field("billingMethod", string(r.billingMethod.name())),
 			field("twitter", string(r.twitter)),
-			field("ticket", string(r.ticket)),
 			field("dietaryRequirements", string(r.dietaryRequirements)),
 			field("badge", string(r.badge.badge)),
 			field("bundle", string(r.bundle.orSome("")))
 		);
 	}
-	
+
 	public static final class RegistrationsUpdate {
 		public final BillingCompany billingCompany;
 		public final Badge badge;

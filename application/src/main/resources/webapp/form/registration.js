@@ -9,7 +9,11 @@ function RegistrationController($scope, $resource, $window, $timeout, $window) {
 		billingAddress: "",
 		billingMethod: "EMAIL", //EMAIL or SNAILMAIL
 		dietaryRequirements: "",
-		ticket: "conference",
+		tickets: {
+		    conference: true,
+		    workshop1: false,
+		    workshop2: false
+		},
 		twitter: ""
 	};
 
@@ -35,6 +39,10 @@ function RegistrationController($scope, $resource, $window, $timeout, $window) {
     if ($scope.success) return false;
     return true;
   }
+
+  $scope.anyTicket = function(t) {
+    return (t.conference === true) || (t.workshop1 === true) || (t.workshop2 === true)
+  };
 }
 
 RegistrationController.$inject = ['$scope', '$resource', '$window', '$timeout', '$window'];

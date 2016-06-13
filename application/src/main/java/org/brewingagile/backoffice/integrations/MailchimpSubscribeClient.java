@@ -1,16 +1,20 @@
 package org.brewingagile.backoffice.integrations;
 
-import argo.jdom.JsonNode;
-import argo.jdom.JsonNodeFactories;
 import argo.jdom.JsonRootNode;
 import fj.data.Either;
 import functional.Effect;
 import org.brewingagile.backoffice.utils.ArgoUtils;
+import org.brewingagile.backoffice.utils.Hex;
+import org.glassfish.jersey.internal.util.Base64;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import static argo.jdom.JsonNodeFactories.*;
 
@@ -25,40 +29,46 @@ public class MailchimpSubscribeClient {
 		this.apikey = apikey;
 	}
 
-	public Either<String, Effect> subscribe(String emailAddress) {
-		JsonRootNode request = request("da90a13118", emailAddress);
+	public Either<String, Effect> subscribe(String emailAddress, String listUniqueId) {
 		try {
-			return response(client.target(endpoint).path("lists/subscribe.json").request()
+			Response post = client.target(endpoint).path("3.0/lists/" + listUniqueId + "/members/" + md5Crap(emailAddress.toLowerCase())).request()
+				.header("Authorization", basic("anystring", apikey))
 				.accept(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(ArgoUtils.format(request), MediaType.APPLICATION_JSON)).readEntity(String.class));
+				.put(Entity.entity(ArgoUtils.format(request(emailAddress)), MediaType.APPLICATION_JSON));
+			return response(post.readEntity(String.class));
 		} catch (WebApplicationException e) {
 			return Either.left(e.getMessage());
 		}
 	}
 
+	private static String md5Crap(String s) {
+		try {
+			return Hex.encode(MessageDigest.getInstance("MD5").digest(s.getBytes("UTF-8")));
+		} catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private String basic(String username, String password) {
+		return "Basic " + Base64.encodeAsString(username + ":" + password);
+	}
+
 	private Either<String, Effect> response(String json) {
 		return Either.joinRight(ArgoUtils.parseEither(json)
 			.bimap(
-				l -> "Mandrill response did not contain JSON at all.",
-				MailchimpSubscribeClient::response
+				l -> "MailChimp response did not contain JSON at all.",
+				(jn) -> {
+					if (!(jn.isStringValue("email_address")))
+						return Either.left("MailChimp responded with error: \"" + json + "\".");
+					return Either.right(Effect.Performed);
+				}
 			));
 	}
 
-	private static Either<String, Effect> response(JsonNode jn) {
-		if (!(jn.isStringValue("email") && jn.isStringValue("euid") && jn.isStringValue("leid"))) {
-			JsonNode error = jn.getNode("error");
-			return Either.left("MailChimp responded with error: \"" + ArgoUtils.format(error.getRootNode()) + "\".");
-		}
-		return Either.right(Effect.Performed);
-	}
-
-	private JsonRootNode request(String listId, String emailAddress) {
-		return JsonNodeFactories.object(
-			field("apikey", string(apikey)),
-			field("id", string(listId)),
-			field("email", object(
-				field("email", string(emailAddress))
-			))
+	private JsonRootNode request(String emailAddress) {
+		return object(
+			field("email_address", string(emailAddress)),
+			field("status_if_new", string("subscribed"))
 		);
 	}
 }

@@ -133,7 +133,7 @@ public class RegistrationApiRestService {
 							rr.dietaryRequirements,
 							new RegistrationsSqlMapper.Badge(""),
 							rr.twitter,
-							Option.<String>none()
+							Option.none()
 						),
 						rr.tickets
 					)
@@ -145,7 +145,7 @@ public class RegistrationApiRestService {
 				System.err.println("We couldn't send an email to " + rr.participantName + "(" + rr.participantEmail + "). Cause: " + emailResult.left().value());
 			}
 
-			Either<String, Effect> subscribeResult = mailchimpSubscribeClient.subscribe(rr.participantEmail);
+			Either<String, Effect> subscribeResult = mailchimpSubscribeClient.subscribe(rr.participantEmail, "da90a13118");
 			if (subscribeResult.isLeft()) {
 				System.err.println("We couldn't subscribe " + rr.participantEmail + " to email-list. Cause: " + subscribeResult.left().value());
 			}
@@ -161,14 +161,14 @@ public class RegistrationApiRestService {
 
 	private RegistrationRequest fromJson(JsonRootNode body) {
 		return new RegistrationRequest(
-			ArgoUtils.stringOrEmpty(body, "participantName"),
-			ArgoUtils.stringOrEmpty(body, "participantEmail"),
-			ArgoUtils.stringOrEmpty(body, "billingCompany"),
-			ArgoUtils.stringOrEmpty(body, "billingAddress"),
-			ArgoUtils.stringOrEmpty(body, "billingMethod"),
-			ArgoUtils.stringOrEmpty(body, "dietaryRequirements"),
+			ArgoUtils.stringOrEmpty(body, "participantName").trim(),
+			ArgoUtils.stringOrEmpty(body, "participantEmail").trim().toLowerCase(),
+			ArgoUtils.stringOrEmpty(body, "billingCompany").trim(),
+			ArgoUtils.stringOrEmpty(body, "billingAddress").trim(),
+			ArgoUtils.stringOrEmpty(body, "billingMethod").trim(),
+			ArgoUtils.stringOrEmpty(body, "dietaryRequirements".trim()),
 			tickets(body),
-			ArgoUtils.stringOrEmpty(body, "twitter")
+			ArgoUtils.stringOrEmpty(body, "twitter".trim())
 		);
 	}
 

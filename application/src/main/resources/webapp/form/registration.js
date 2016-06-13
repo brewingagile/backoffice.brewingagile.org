@@ -2,6 +2,8 @@ function RegistrationController($scope, $resource, $window, $timeout, $window) {
 	var RegistrationResource = $resource("api/registration/1/", {});
 	$scope.lastRegisteredName = "";
 
+	$scope.loading = false;
+
 	$scope.r = {
 		participantName: "",
 		participantEmail: "",
@@ -27,11 +29,14 @@ function RegistrationController($scope, $resource, $window, $timeout, $window) {
 	$scope.submit = function() {
 		$scope.success = null;
 		$scope.error = null;
+		$scope.loading = true;
 		RegistrationResource.save($scope.r, function(p) {
 			if (p.success) $scope.lastRegisteredName = $scope.r.participantName;
 			$scope.success = p.success;
+			$scope.loading = false;
 		}, function(response) { 
 			$scope.error = true;
+			$scope.loading = false;
 		});
 	};
 

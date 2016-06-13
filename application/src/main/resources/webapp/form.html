@@ -7,6 +7,7 @@
 	<link href="img/favicon.ico" type="image/png" rel="icon" />
 	<link href="img/favicon.ico" type="image/png" rel="shortcut icon" />
 	<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" />
+	<link href="css/loader.css" rel="stylesheet" />
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-resource.min.js"></script>
@@ -107,7 +108,7 @@ input.textarea {
 				<div class="well">
 					After submitting the registration, you should receive a confirmation email within 24 hours.<br> If you do not receive it, please contact brewingagile@scrumbeers.com.
 				</div>
-			</div> 
+			</div>
 		</div>
 
 		<div class="col-sm-offset-2 col-sm-9 alert alert-success" role="alert" ng-show="success">
@@ -124,7 +125,8 @@ input.textarea {
 
 		<div class="form-group">
 			<div class="col-sm-offset-2 col-sm-10">
-				<button type="submit" class="btn btn-lg btn-default" ng-disabled="!myForm.$valid || lastRegisteredName == r.participantName || !anyTicket(r.tickets)">Register!</button>
+				<button type="submit" class="btn btn-lg btn-default" ng-hide="loading" ng-disabled="!myForm.$valid || lastRegisteredName == r.participantName || !anyTicket(r.tickets)">Register!</button>
+				<button type="submit" class="btn btn-lg btn-default" ng-show="loading" ng-disabled="true"><span class="glyphicon glyphicon-refresh spinning"></span> Registering... </button>
 			</div>
 		</div>
 	</form>

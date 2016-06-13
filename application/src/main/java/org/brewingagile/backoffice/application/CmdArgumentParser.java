@@ -32,6 +32,6 @@ public class CmdArgumentParser {
 		return list.zip(list.tail())
 			.filter(k -> argKey.equals(k._1()))
 			.map(P2.__2())
-			.toOption();
+			.headOption();
 	}
 }

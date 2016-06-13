@@ -79,13 +79,21 @@ public class BucketsSqlMapper {
 	}
 
 	public Individuals individuals(Connection c) throws SQLException {
-		String sql = "SELECT " +
-			"	sum(1) as conference, " +
-			"	sum(CASE WHEN tickets = 'conference+workshop' THEN 1 ELSE 0 END) as workshop1, " +
-			"	sum(CASE WHEN tickets = 'conference+workshop2' THEN 1 ELSE 0 END) as workshop2 " +
-			"FROM registration r " +
-			"LEFT JOIN registration_bucket rb USING (registration_id) " +
-			"WHERE rb.bucket IS NULL;";
+		String sql = "SELECT (\n" +
+			"\tSELECT count(1) FROM registration_ticket rt\n" +
+			"\tLEFT JOIN registration_bucket rb USING (registration_id) \n" +
+			"\tWHERE ticket = 'conference' AND rb.bucket IS NULL\n" +
+			") as conference,\n" +
+			"(\n" +
+			"\tSELECT count(1) FROM registration_ticket rt\n" +
+			"\tLEFT JOIN registration_bucket rb USING (registration_id) \n" +
+			"\tWHERE ticket = 'workshop1' AND rb.bucket IS NULL\n" +
+			") as workshop1,\n" +
+			"(\n" +
+			"\tSELECT count(1) FROM registration_ticket rt\n" +
+			"\tLEFT JOIN registration_bucket rb USING (registration_id) \n" +
+			"\tWHERE ticket = 'workshop2' AND rb.bucket IS NULL\n" +
+			") as workshop2 ";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			return SqlOps.one(ps, rs -> new Individuals(
 				rs.getInt("conference"),
@@ -110,16 +118,17 @@ public class BucketsSqlMapper {
 	}
 
 	public List<BucketSummary> bundles(Connection c) throws SQLException {
-		String sql = "SELECT * FROM bucket b " +
-			"LEFT JOIN (" +
-			"	SELECT rb.bucket," +
-			"		sum(1) as actual_conference, " +
-			"		sum(CASE WHEN tickets = 'conference+workshop' THEN 1 ELSE 0 END) as actual_workshop1, " +
-			"		sum(CASE WHEN tickets = 'conference+workshop2' THEN 1 ELSE 0 END) as actual_workshop2 " +
-			"	FROM registration r " +
-			"	JOIN registration_bucket rb USING (registration_id) " +
-			"	GROUP BY bucket" +
-			") sub USING (bucket)";
+		String sql = "SELECT\n" +
+			"\tbucket,\n" +
+			"\tcount(rt_conference.registration_id) as conference,\n" +
+			"\tcount(rt_workshop1.registration_id) as workshop1,\n" +
+			"\tcount(rt_workshop2.registration_id) as workshop2\n" +
+			"FROM bucket \n" +
+			"LEFT JOIN registration_bucket rb USING (bucket)\n" +
+			"LEFT JOIN registration_ticket rt_conference ON (rt_conference.registration_id = rb.registration_id AND rt_conference.ticket = 'conference') \n" +
+			"LEFT JOIN registration_ticket rt_workshop1 ON (rt_workshop1.registration_id = rb.registration_id AND rt_workshop1.ticket = 'workshop1') \n" +
+			"LEFT JOIN registration_ticket rt_workshop2 ON (rt_workshop2.registration_id = rb.registration_id AND rt_workshop2.ticket = 'workshop2') \n" +
+			"GROUP BY bucket ORDER BY bucket";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			Try1<ResultSet, Bucket, SQLException> f = rs -> new Bucket(
 				rs.getString("bucket"),
@@ -129,9 +138,9 @@ public class BucketsSqlMapper {
 			);
 			return SqlOps.list(ps, rs -> new BucketSummary(
 				f.f(rs),
-				rs.getInt("actual_conference"),
-				rs.getInt("actual_workshop1"),
-				rs.getInt("actual_workshop2")
+				rs.getInt("conference"),
+				rs.getInt("workshop1"),
+				rs.getInt("workshop2")
 			));
 		}
 	}

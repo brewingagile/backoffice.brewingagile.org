@@ -68,7 +68,8 @@ public class MailchimpSubscribeClient {
 	private JsonRootNode request(String emailAddress) {
 		return object(
 			field("email_address", string(emailAddress)),
-			field("status_if_new", string("subscribed"))
+			field("status_if_new", string("subscribed")),
+			field("status", string("subscribed"))
 		);
 	}
 }

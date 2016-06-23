@@ -120,12 +120,16 @@ public class RegistrationsSqlMapper {
 		deleteRegistrationTuple(c, id);
 		deleteRegistrationTicket(c, id);
 		insertRegistrationTuple(c, id, r.tuple);
-		insertRegistrationTickets(c, id, r.tickets);
+		for (String ticket : r.tickets) insertRegistrationTicket(c, id, ticket);
 
 	}
 
-	private void insertRegistrationTickets(Connection c, UUID id, Set<String> tickets) {
-
+	private void insertRegistrationTicket(Connection c, UUID id, String ticket) throws SQLException {
+		try (PreparedStatement ps = c.prepareStatement("INSERT INTO registration_ticket (registration_id, ticket) VALUES (?, ?)")) {
+			ps.setObject(1, id);
+			ps.setString(2, ticket);
+			ps.executeUpdate();
+		}
 	}
 
 	private Set<String> tickets(Connection c, UUID id) throws SQLException {

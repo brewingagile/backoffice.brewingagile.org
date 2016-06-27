@@ -34,7 +34,7 @@ public class ReportsRestService {
 		this.bucketsSqlMapper = bucketsSqlMapper;
 	}
 
-	//curl -u admin:password http://localhost:9080/ba-backoffice/gui/reports/bundles  | jq .
+	//curl -u admin:password http://localhost:9080/gui/reports/bundles  | jq .
 
 	@GET
 	@Path("/bundles")

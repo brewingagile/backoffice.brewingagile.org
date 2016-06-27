@@ -119,10 +119,10 @@ public class BucketsSqlMapper {
 
 	public List<BucketSummary> bundles(Connection c) throws SQLException {
 		String sql = "SELECT\n" +
-			"\tbucket,\n" +
-			"\tcount(rt_conference.registration_id) as conference,\n" +
-			"\tcount(rt_workshop1.registration_id) as workshop1,\n" +
-			"\tcount(rt_workshop2.registration_id) as workshop2\n" +
+			"\tbucket, conference, workshop1, workshop2,\n" +
+			"\tcount(rt_conference.registration_id) as actual_conference,\n" +
+			"\tcount(rt_workshop1.registration_id) as actual_workshop1,\n" +
+			"\tcount(rt_workshop2.registration_id) as actual_workshop2\n" +
 			"FROM bucket \n" +
 			"LEFT JOIN registration_bucket rb USING (bucket)\n" +
 			"LEFT JOIN registration_ticket rt_conference ON (rt_conference.registration_id = rb.registration_id AND rt_conference.ticket = 'conference') \n" +
@@ -138,9 +138,9 @@ public class BucketsSqlMapper {
 			);
 			return SqlOps.list(ps, rs -> new BucketSummary(
 				f.f(rs),
-				rs.getInt("conference"),
-				rs.getInt("workshop1"),
-				rs.getInt("workshop2")
+				rs.getInt("actual_conference"),
+				rs.getInt("actual_workshop1"),
+				rs.getInt("actual_workshop2")
 			));
 		}
 	}

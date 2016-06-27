@@ -28,10 +28,14 @@ public class RegistrationsSqlMapper {
 	}
 
 	public List<P3<String,String,String>> diets(Connection c) throws SQLException {
-		try (PreparedStatement ps = c.prepareStatement("SELECT participant_name, tickets, dietary_requirements FROM registration WHERE dietary_requirements <> ''")) {
+		try (PreparedStatement ps = c.prepareStatement("SELECT ticket, participant_name, dietary_requirements\n" +
+			"FROM registration \n" +
+			"JOIN registration_ticket USING (registration_id) \n" +
+			"WHERE dietary_requirements <> ''\n" +
+			"ORDER BY ticket")) {
 			Try1<ResultSet,P3<String,String,String>,SQLException> f = rs -> P.p(
 				rs.getString("participant_name"),
-				rs.getString("tickets"),
+				rs.getString("ticket"),
 				rs.getString("dietary_requirements")
 			);
 			return SqlOps.list(ps, f);

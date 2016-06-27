@@ -84,6 +84,7 @@ public class ExportsRestService {
 		};
 	}
 
+//	curl -u admin:password http://localhost:9080/gui/exports/diets
 	@GET
 	@Path("/diets")
 	@Produces("text/csv")

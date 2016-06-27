@@ -65,6 +65,8 @@ public class RegistrationsSqlMapper {
 		public final RegistrationTuple tuple;
 		public final Set<String> tickets;
 
+		public static Ord<RegistrationsSqlMapper.Registration> byBadge = Ord.ord(l -> r -> Ord.stringOrd.compare(l.tuple.badge.badge, r.tuple.badge.badge));
+
 		public Registration(UUID id, RegistrationTuple tuple, Set<String> tickets) {
 			this.id = id;
 			this.tuple = tuple;

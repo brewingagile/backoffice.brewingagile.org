@@ -2,6 +2,9 @@ package org.brewingagile.backoffice.rest.gui;
 
 import fj.F;
 import fj.F2;
+import fj.Ord;
+import fj.Ordering;
+import fj.data.Array;
 import fj.data.IO;
 import fj.data.List;
 import fj.data.Option;
@@ -41,6 +44,7 @@ public class ExportsRestService {
 		this.registrationsSqlMapper = registrationsSqlMapper;
 	}
 
+//	curl -u admin:password http://localhost:9080/gui/exports/emails
 	@GET
 	@Path("/emails")
 	@Produces("text/csv")
@@ -54,17 +58,18 @@ public class ExportsRestService {
 		}
 	}
 
+//	curl -u admin:password http://localhost:9080/gui/exports/registrations
 	@GET
-	@Path("/registrations/{ticket}")
+	@Path("/registrations")
 	@Produces("text/csv")
-	public Response registrations(@Context HttpServletRequest request, @PathParam("ticket") String ticket) throws SQLException, IOException {
+	public Response registrations(@Context HttpServletRequest request) throws SQLException, IOException {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
 			List<UUID> all = registrationsSqlMapper.all(c).map(x -> x._1);
 			List<RegistrationsSqlMapper.Registration> somes = Option.somes(all.traverseIO(ioify(c)).run());
-			List<RegistrationsSqlMapper.Registration> filtered = somes.filter(x -> x.tickets.member(ticket));
+//			List<RegistrationsSqlMapper.Registration> filtered = somes.filter(x -> x.tickets.member(ticket));
 			return Response.ok(Strings.unlines(
-				filtered
+				somes.sort(RegistrationsSqlMapper.Registration.byBadge)
 					.map(reg -> {
 						F2<String, String, String> stringStringStringF2 = (String l, String r) -> l + "+" + r;
 						RegistrationsSqlMapper.RegistrationTuple rt = reg.tuple;

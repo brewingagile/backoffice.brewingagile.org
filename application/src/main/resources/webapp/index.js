@@ -49,21 +49,20 @@ app.filter('empty', function() {
 	};
 });
 
-app.directive('ngConfirmClick', [
+directives.directive('confirmClick', [
   function(){
     return {
-      priority: -1,
-      restrict: 'A',
-      link: function(scope, element, attrs){
-        element.bind('click', function(e){
-          var message = attrs.ngConfirmClick;
-          if(message && !confirm(message)){
-            e.stopImmediatePropagation();
-            e.preventDefault();
+      priority: 1,
+      link: function(scope, element, attr){
+        var msg = attr.confirmClick;
+        var clickAction = attr.confirmedClick;
+        element.bind('click', function(event){
+          if (window.confirm(msg)) {
+            scope.$eval(clickAction);
           }
         });
       }
-    }
+    };
   }
 ]);
 

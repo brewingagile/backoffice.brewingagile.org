@@ -7,3 +7,5 @@ dependency-reduced-pom.xml
 # IntelliJ
 .idea/
 *.iml 
+
+default.nix

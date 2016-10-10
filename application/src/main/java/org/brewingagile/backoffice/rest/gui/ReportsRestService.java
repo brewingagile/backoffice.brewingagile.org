@@ -1,6 +1,7 @@
 package org.brewingagile.backoffice.rest.gui;
 
 import argo.jdom.JsonRootNode;
+import fj.data.List;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BucketsSqlMapper;
 import org.brewingagile.backoffice.utils.ArgoUtils;
@@ -61,6 +62,42 @@ public class ReportsRestService {
 			e.printStackTrace();
 			return Response.serverError().build();
 		}
+	}
+
+	//curl -u admin:password http://localhost:9080/gui/reports/totals  | jq .
+
+	@GET
+	@Path("/totals")
+	public Response total(@Context HttpServletRequest  request) throws Exception {
+		authService.guardAuthenticatedUser(request);
+		try {
+			try (Connection c = dataSource.getConnection()) {
+				List<BucketSummary> bundles = bucketsSqlMapper.bundles(c);
+				Individuals individuals = bucketsSqlMapper.individuals(c);
+				return Response.ok(ArgoUtils.format(json(
+					BundleLogic.logic(bundles, individuals)))).build();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return Response.serverError().build();
+		}
+	}
+
+	private static JsonRootNode json(BundleLogic.Total total) {
+		return object(
+			field("actual", row(total.bundlesActual)),
+			field("planned", row(total.bundlesPlanned)),
+			field("individuals", row(total.individuals)),
+			field("totals", row(total.total))
+		);
+	}
+
+	private static JsonRootNode row(BundleLogic.Total2 actual) {
+		return object(
+			field("conference", number(actual.conference)),
+			field("workshop1", number(actual.workshop1)),
+			field("workshop2", number(actual.workshop2))
+		);
 	}
 
 	public static JsonRootNode json(BucketSummary b) {

@@ -67,9 +67,9 @@ public class OutvoiceInvoiceClient {
 	private static F<String, JsonRootNode> line(String participantName) {
 		return ticket -> {
 			switch (ticket) {
-				case "conference": return line("Brewing Agile 2016: Konferens", "Avser konferens 3-4 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(960), BigDecimal.ONE);
-				case "workshop1": return line("Brewing Agile 2016: Workshop 1", "Avser workshop 2 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(2800), BigDecimal.ONE);
-				case "workshop2": return line("Brewing Agile 2016: Workshop 2", "Avser workshop 3 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(1400), BigDecimal.ONE);
+				case "conference": return line("Brewing Agile 2016: Konferens", "Avser konferens 4-5 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(960), BigDecimal.ONE);
+				case "workshop1": return line("Brewing Agile 2016: Workshop 1", "Avser workshop 3 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(2800), BigDecimal.ONE);
+				case "workshop2": return line("Brewing Agile 2016: Workshop 2", "Avser workshop 4 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(1400), BigDecimal.ONE);
 				default: throw new IllegalArgumentException("Unknown ticket: " + ticket+ ".");
 			}
 		};

@@ -156,7 +156,12 @@ public class BudgetJaxRs {
 			List<BudgetItem> revenue = List.list(
 				revenueWorkshop1,
 				revenueWorkshop2,
-				t(BudgetItemType.REVENUE, "Konferensbiljetter", logic.individuals.conference, 960)
+				t(BudgetItemType.REVENUE, "Konferensbiljetter", logic.individuals.conference, 960),
+				t(BudgetItemType.REVENUE, "Separate Invoices", 1, 32160),
+				t(BudgetItemType.REVENUE, "Sponsor: Informator", 1, 5000),
+				t(BudgetItemType.REVENUE, "Sponsor: Cognit", 1, 4040),
+				t(BudgetItemType.REVENUE, "Sponsor: Seat24", 1, 5000),
+				t(BudgetItemType.REVENUE, "Sponsor: Squeed", 1, 10000)
 			);
 
 			// + Sponsorer + Separate Invoice - Bundles (workshopar, konferensbiljetter)

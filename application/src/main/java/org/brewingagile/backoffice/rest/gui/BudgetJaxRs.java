@@ -125,8 +125,8 @@ public class BudgetJaxRs {
 				t(BudgetItemType.COST, "Torsdag eftermiddagsfika", logic.total.workshop1 + 2, 45),
 				t(BudgetItemType.COST, "Torsdag lokal", 1, 4000)
 			);
-			BudgetItem revenueWorkshop1 = t(BudgetItemType.REVENUE, "Workshop1", logic.individuals.workshop1, 2800);
-			BudgetItem revenueWorkshop2 = t(BudgetItemType.REVENUE, "Workshop2", logic.individuals.workshop2, 1400);
+			BudgetItem revenueWorkshop1 = t(BudgetItemType.REVENUE, "Workshop1, biljetter", logic.individuals.workshop1, 2800);
+			BudgetItem revenueWorkshop2 = t(BudgetItemType.REVENUE, "Workshop2, biljetter", logic.individuals.workshop2, 1400);
 
 			List<BudgetItem> costsWorkshop2 = List.list(
 				t(BudgetItemType.COST, "Fredag frukost", logic.total.workshop2 + 5 + 1, 54), // + organisers, speaker
@@ -159,8 +159,8 @@ public class BudgetJaxRs {
 				t(BudgetItemType.REVENUE, "Konferensbiljetter", logic.individuals.conference, 960)
 			);
 
-			// + Sponsorer / Bundles!!!
-			// Ingen middag, öl eller lunch
+			// + Sponsorer + Separate Invoice - Bundles (workshopar, konferensbiljetter)
+			// Ingen middag, öl eller brunch ännu.
 
 			BigDecimal allRevenue = sum(revenue);
 			BigDecimal allCosts = sum(costs);

@@ -1,26 +1,26 @@
-<div class="col-md-10">
+<div class="col-lg-10">
 	<div class="row">
-		<div class="col-md-10">
+		<div class="col-lg-10">
 			<legend>Bucket Admin</legend>
 		</div>
 	</div>
 	<form role="form" name="myForm" ng-submit="save(buckets)">
 		<div class="row">
-			<div class="col-md-3">Name</div>
-			<div class="col-md-2">Conference</div>
-			<div class="col-md-2">Workshop 1</div>
-			<div class="col-md-2">Workshop 2</div>
-			<div class="col-md-1"></div>
+			<div class="col-lg-3">Name</div>
+			<div class="col-lg-2">Conference</div>
+			<div class="col-lg-2">Workshop 1</div>
+			<div class="col-lg-2">Workshop 2</div>
+			<div class="col-lg-1"></div>
 		</div>
 		<div class="row" ng-repeat="b in buckets">
-			<div class="col-md-3"><input type="text" class="form-control" ng-model="b.bucket" required/></div>
-			<div class="col-md-2"><input type="number" class="form-control" ng-model="b.conference" required/></div>
-			<div class="col-md-2"><input type="number" class="form-control" ng-model="b.workshop1" required/></div>
-			<div class="col-md-2"><input type="number" class="form-control" ng-model="b.workshop2" required/></div>
-			<div class="col-md-1"><button type="button" class="btn btn-danger" title="ta bort" ng-click="remove(b)">&#x2715;</button></div>
+			<div class="col-lg-3"><input type="text" class="form-control" ng-model="b.bucket" required/></div>
+			<div class="col-lg-2"><input type="number" class="form-control" ng-model="b.conference" required/></div>
+			<div class="col-lg-2"><input type="number" class="form-control" ng-model="b.workshop1" required/></div>
+			<div class="col-lg-2"><input type="number" class="form-control" ng-model="b.workshop2" required/></div>
+			<div class="col-lg-1"><button type="button" class="btn btn-danger" title="ta bort" ng-click="remove(b)">&#x2715;</button></div>
 		</div>
 		<div class="row">
-			<div class="col-md-10">
+			<div class="col-lg-10">
 				<hr style="border-top: 1px solid #ddd;">
 				<div class="pull-left">
 					<button type="button" class="btn btn-link" ng-click="add()">Lägg till rad</button>
@@ -31,7 +31,7 @@
 			</div>
 		</div>
 		<div class="row" style="margin-top: 1em;">
-			<div class="col-md-10">
+			<div class="col-lg-10">
 				<div class="alert alert-success" role="alert" ng-show="success">
 					<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
 					<strong>{{success}}</strong>

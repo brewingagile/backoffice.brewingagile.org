@@ -55,7 +55,10 @@
 			<table class="table table-condensed table-striped">
 				<tr style="font-weight: bold;">
 					<td colspan="3">Profit</td>
-					<td>{{report.bottomLine.profit | number: 2}}</td>
+					<td>
+						<span style="color: red;" ng-show="report.bottomLine.profit < 0">{{report.bottomLine.profit | number: 2}}</span>
+						<span ng-hide="report.bottomLine.profit < 0">{{report.bottomLine.profit | number: 2}}</span>
+					</td>
 				</tr>
 			</table>
 			All amounts are quoted without VAT.

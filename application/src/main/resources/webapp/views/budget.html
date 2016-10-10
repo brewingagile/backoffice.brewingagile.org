@@ -1,47 +1,63 @@
-<div class="col-md-10">
+<div class="col-lg-10">
 	<div class="row">
-		<div class="col-md-10">
+		<div class="col-lg-10">
 			<legend>Budget</legend>
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-md-10">
+		<div class="col-lg-5">
 			<h1>Costs</h1>
-			<form role="form" name="myForm" ng-submit="save(costs)">
-				<div class="row">
-					<div class="col-md-6">Cost</div>
-					<div class="col-md-3">Amount</div>
-					<div class="col-md-1"></div>
-				</div>
-				<div class="row" ng-repeat="c in costs">
-					<div class="col-md-6"><input type="text" class="form-control" ng-model="c.cost" required/></div>
-					<div class="col-md-3"><input type="number" class="form-control" ng-model="c.amount" required/></div>
-					<div class="col-md-1"><button type="button" class="btn btn-danger" title="ta bort" ng-click="remove(c)">&#x2715;</button></div>
-				</div>
-				<div class="row">
-					<div class="col-md-10">
-						<hr style="border-top: 1px solid #ddd;">
-						<div class="pull-left">
-							<button type="button" class="btn btn-link" ng-click="add()">Lägg till rad</button>
-						</div>
-						<div class="pull-right">
-							<button type="submit" class="btn btn-primary" ng-disabled="!myForm.$valid">Spara</button>
-						</div>
-					</div>
-				</div>
-				<div class="row" style="margin-top: 1em;">
-					<div class="col-md-10">
-						<div class="alert alert-success" role="alert" ng-show="success">
-							<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-							<strong>{{success}}</strong>
-						</div>
-						<div class="alert alert-danger" role="alert" ng-show="error">
-							<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-							<strong>{{error}}</strong>
-						</div>
-					</div>
-				</div>
-			</form>
+			<table class="table table-condensed table-striped">
+				<thead>
+					<tr>
+					<th></th>
+					<th>qty</th>
+					<th>cost/unit</th>
+					<th>total</th>
+					</tr>
+				</thead>
+				<tr ng-repeat="c in report.costs">
+					<td>{{c.description}}</td>
+					<td>{{c.qty}}</td>
+					<td>{{c.amount | number: 2}}</td>
+					<td>{{c.total | number: 2}}</td>
+				</tr>
+				<tr style="font-weight: bold;">
+					<td colspan="3">Total</td>
+					<td>{{report.bottomLine.costs | number: 2}}</td>
+				</tr>
+			</table>
+		</div>
+		<div class="col-lg-5">
+			<h1>Revenue</h1>
+			<table class="table table-condensed table-striped">
+				<thead>
+				<tr>
+					<th></th>
+					<th>qty</th>
+					<th>cost/unit</th>
+					<th>total</th>
+				</tr>
+				</thead>
+				<tr ng-repeat="r in report.revenues">
+					<td>{{r.description}}</td>
+					<td>{{r.qty}}</td>
+					<td>{{r.amount | number: 2}}</td>
+					<td>{{r.total | number: 2}}</td>
+				</tr>
+				<tr style="font-weight: bold;">
+					<td colspan="3">Total</td>
+					<td>{{report.bottomLine.revenue | number: 2}}</td>
+				</tr>
+			</table>
+		</div>
+		<div class="col-lg-5">
+			<table class="table table-condensed table-striped">
+				<tr style="font-weight: bold;">
+					<td colspan="3">Profit</td>
+					<td>{{report.bottomLine.profit | number: 2}}</td>
+				</tr>
+			</table>
 		</div>
 	</div>
 </div>

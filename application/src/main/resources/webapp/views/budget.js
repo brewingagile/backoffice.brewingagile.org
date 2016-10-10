@@ -1,5 +1,8 @@
 function BudgetController($scope, $window, $resource) {
     var FixedCosts = $resource('gui/budget/fixed-costs', {}, {save: {method: 'PUT', isArray: true}});
+    var BudgetReport = $resource('gui/budget/report', {});
+
+    $scope.report = BudgetReport.get();
     $scope.costs = FixedCosts.query();
 
     $scope.remove = function(m) {

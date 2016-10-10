@@ -144,7 +144,8 @@ public class BudgetJaxRs {
 						t(BudgetItemType.COST, "Beer Labels, preliminary", 1, 732),
 						t(BudgetItemType.COST, "Lanyards, preliminary", 1, 1107),
 						t(BudgetItemType.COST, "Speaker: Vasco", 1, revenueWorkshop1.total.subtract(sum(costsWorkshop1))),
-						t(BudgetItemType.COST, "Speaker: Luis", 1, revenueWorkshop2.total.subtract(sum(costsWorkshop2)))
+						t(BudgetItemType.COST, "Speaker: Luis", 1, revenueWorkshop2.total.subtract(sum(costsWorkshop2))),
+						t(BudgetItemType.COST, "Speaker", 3, 10000)
 					)
 				)
 				.append(costsWorkshop1)

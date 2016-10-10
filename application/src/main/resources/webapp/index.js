@@ -8,6 +8,7 @@ var app = angular.module('backoffice', ['ngResource', 'ngRoute', 'directives', '
 		$routeProvider.when('/buckets', { templateUrl: 'views/buckets.html'+nocache, controller: BucketsController });
 		$routeProvider.when('/overview', { templateUrl: 'views/overview.html'+nocache, controller: OverviewController });
 		$routeProvider.when('/registrations/:registrationId', { templateUrl: 'views/registration.html'+nocache, controller: RegistrationController });
+		$routeProvider.when('/budget', {templateUrl: 'views/budget.html'+nocache, controller: BudgetController });
 	}
 );
 

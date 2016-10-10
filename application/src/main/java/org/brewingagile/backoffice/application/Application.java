@@ -4,6 +4,7 @@ import com.hencjo.summer.security.SummerAuthenticatedUser;
 import fj.data.List;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BucketsSqlMapper;
+import org.brewingagile.backoffice.db.operations.BudgetSql;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
@@ -28,6 +29,7 @@ public class Application {
 		this.versionNumberProvider = new GitPropertiesDescribeVersionNumberProvider(Application.class, "/resources/git.properties");
 		AuthService authService = new AuthService(new SummerAuthenticatedUser());
 		OutvoiceInvoiceClient outvoiceInvoiceClient = new OutvoiceInvoiceClient(ClientBuilder.newClient(), config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
+		BudgetSql budgetSql = new BudgetSql();
 		RegistrationsSqlMapper registrationsSqlMapper = new RegistrationsSqlMapper();
 		SendInvoiceService sendInvoiceService = new SendInvoiceService(dataSource, registrationsSqlMapper, outvoiceInvoiceClient);
 		DismissRegistrationService dismissRegistrationService = new DismissRegistrationService(dataSource, registrationsSqlMapper);
@@ -47,6 +49,7 @@ public class Application {
 			new RegistrationsRestService(dataSource, authService, registrationsSqlMapper, sendInvoiceService, dismissRegistrationService, markAsCompleteService, markAsPaidService),
 			new NameTagsRestService(dataSource, authService, registrationsSqlMapper),
 			new BucketsRestService(dataSource, authService, bucketsSqlMapper),
+			new BudgetJaxRs(dataSource, authService, budgetSql),
 			new ReportsRestService(dataSource, authService, bucketsSqlMapper),
 			new ExportsRestService(dataSource, authService,registrationsSqlMapper)
 		);

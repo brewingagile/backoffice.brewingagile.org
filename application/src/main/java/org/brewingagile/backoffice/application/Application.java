@@ -49,7 +49,7 @@ public class Application {
 			new RegistrationsRestService(dataSource, authService, registrationsSqlMapper, sendInvoiceService, dismissRegistrationService, markAsCompleteService, markAsPaidService),
 			new NameTagsRestService(dataSource, authService, registrationsSqlMapper),
 			new BucketsRestService(dataSource, authService, bucketsSqlMapper),
-			new BudgetJaxRs(dataSource, authService, budgetSql),
+			new BudgetJaxRs(dataSource, authService, budgetSql, registrationsSqlMapper, bucketsSqlMapper),
 			new ReportsRestService(dataSource, authService, bucketsSqlMapper),
 			new ExportsRestService(dataSource, authService,registrationsSqlMapper)
 		);

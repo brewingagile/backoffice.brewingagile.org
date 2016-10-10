@@ -114,51 +114,63 @@ public class BudgetJaxRs {
 	public Response getReport(@Context HttpServletRequest request) throws Exception {
 		authService.guardAuthenticatedUser(request);
 
-		List<Registration> registrations;
-		try (Connection c = dataSource.getConnection()) {
-			List<Tuple2<UUID, RegistrationsSqlMapper.RegistrationTuple>> all = registrationsSqlMapper.all(c);
-			List.Buffer<Registration> empty = List.Buffer.empty();
-			for (Tuple2<UUID, RegistrationsSqlMapper.RegistrationTuple> x : all)
-				empty.snoc(registrationsSqlMapper.one(c, x._1).some());
-
-			registrations = empty.toList();
-		}
-
 		try (Connection c = dataSource.getConnection()) {
 			List<BucketsSqlMapper.BucketSummary> bundles = bucketsSqlMapper.bundles(c);
 			BucketsSqlMapper.Individuals individuals = bucketsSqlMapper.individuals(c);
 			BundleLogic.Total logic = BundleLogic.logic(bundles, individuals);
 
-			List<BudgetItem> cost = List.list(
-				t(BudgetItemType.COST, "Torsdag förmiddagsfika", logic.total.workshop1, 54),
-				t(BudgetItemType.COST, "Torsdag lunch", logic.total.workshop1, 112.50),
-				t(BudgetItemType.COST, "Torsdag förmiddagsfika", logic.total.workshop1, 45),
-				t(BudgetItemType.COST, "Fredag förmiddagsfika", logic.total.workshop2, 54), // + organisers
-				t(BudgetItemType.COST, "Fredag lunch", logic.total.workshop2, 112.50), // + organisers, speakers
-				t(BudgetItemType.COST, "Fredag eftermiddagsfika", logic.total.conference, 45),
-				t(BudgetItemType.COST, "Lördag fika", logic.total.conference / 2, 45), //assumption, half attendees on saturday,
-				t(BudgetItemType.COST, "Lokalhyra", 1, 20000),
-				t(BudgetItemType.COST, "PA", 1, 6000) //don't remember exactly...
+			List<BudgetItem> costsWorkshop1 = List.list(
+				t(BudgetItemType.COST, "Torsdag frukost", logic.total.workshop1 + 2, 54), // speaker + 1 of us
+				t(BudgetItemType.COST, "Torsdag lunch", logic.total.workshop1 + 2, 112.50),
+				t(BudgetItemType.COST, "Torsdag eftermiddagsfika", logic.total.workshop1 + 2, 45),
+				t(BudgetItemType.COST, "Torsdag lokal", 1, 4000)
+			);
+			BudgetItem revenueWorkshop1 = t(BudgetItemType.REVENUE, "Workshop1", logic.individuals.workshop1, 2800);
+			BudgetItem revenueWorkshop2 = t(BudgetItemType.REVENUE, "Workshop2", logic.individuals.workshop2, 1400);
+
+			List<BudgetItem> costsWorkshop2 = List.list(
+				t(BudgetItemType.COST, "Fredag frukost", logic.total.workshop2 + 5 + 1, 54), // + organisers, speaker
+				t(BudgetItemType.COST, "Fredag lunch", logic.total.workshop2 + 5 + 5, 112.50) // + organisers, speakers
 			);
 
+			List<BudgetItem> costs = List.Buffer.<BudgetItem>empty()
+				.append(
+					List.list(
+						t(BudgetItemType.COST, "Fredag eftermiddagsfika", logic.total.conference, 45),
+						t(BudgetItemType.COST, "Lördag fika", logic.total.conference / 2, 45), //assumption, half attendees on saturday,
+						t(BudgetItemType.COST, "Lokalhyra fredag-lördag", 1, 16000),
+						t(BudgetItemType.COST, "PA", 1, 5350),
+						t(BudgetItemType.COST, "supplies", 1, 1000),
+						t(BudgetItemType.COST, "Beer Labels, preliminary", 1, 732),
+						t(BudgetItemType.COST, "Lanyards, preliminary", 1, 1107),
+						t(BudgetItemType.COST, "Speaker: Vasco", 1, revenueWorkshop1.total.subtract(sum(costsWorkshop1))),
+						t(BudgetItemType.COST, "Speaker: Luis", 1, revenueWorkshop2.total.subtract(sum(costsWorkshop2)))
+					)
+				)
+				.append(costsWorkshop1)
+				.append(costsWorkshop2)
+				.toList();
+
+
 			List<BudgetItem> revenue = List.list(
-				t(BudgetItemType.REVENUE, "Workshop1", logic.individuals.workshop1, 2800),
-				t(BudgetItemType.REVENUE, "Workshop2", logic.individuals.workshop2, 1400),
+				revenueWorkshop1,
+				revenueWorkshop2,
 				t(BudgetItemType.REVENUE, "Konferensbiljetter", logic.individuals.conference, 960)
 			);
 
-
 			// + Sponsorer / Bundles!!!
+			// Ingen middag, öl eller lunch
 
-			// Workshops don't actually cost. Speakers get it all!
-
-
-			BigDecimal allRevenue = revenue.foldLeft((BigDecimal l, BudgetItem r) -> l.add(r.total), BigDecimal.ZERO);
-			BigDecimal allCosts = cost.foldLeft((BigDecimal l, BudgetItem r) -> l.add(r.total), BigDecimal.ZERO);
+			BigDecimal allRevenue = sum(revenue);
+			BigDecimal allCosts = sum(costs);
 			BigDecimal profit = allRevenue.subtract(allCosts);
 
-			return Response.ok(ArgoUtils.format(json(revenue, cost, allRevenue, allCosts, profit))).build();
+			return Response.ok(ArgoUtils.format(json(revenue, costs, allRevenue, allCosts, profit))).build();
 		}
+	}
+
+	private static BigDecimal sum(List<BudgetItem> revenue) {
+		return revenue.foldLeft((BigDecimal l, BudgetItem r) -> l.add(r.total), BigDecimal.ZERO);
 	}
 
 	private static JsonRootNode json(
@@ -188,8 +200,12 @@ public class BudgetJaxRs {
 		);
 	}
 
-	private static BudgetItem t(BudgetItemType cost, String description, int qty, double price) {
-		return new BudgetItem(cost, description, qty, new BigDecimal(price), new BigDecimal(price).multiply(new BigDecimal(qty)));
+	private static BudgetItem t(BudgetItemType bit, String description, int qty, double price) {
+		return t(bit, description, qty, new BigDecimal(price));
+	}
+
+	private static BudgetItem t(BudgetItemType bit, String description, int qty, BigDecimal price) {
+		return new BudgetItem(bit, description, qty, price, price.multiply(new BigDecimal(qty)));
 	}
 
 	private static List<BudgetSql.FixedCost> unJson(String json) throws InvalidSyntaxException {

@@ -1,0 +1,55 @@
+package org.brewingagile.backoffice.integrations;
+
+import argo.jdom.JsonNode;
+import argo.saj.InvalidSyntaxException;
+import com.squareup.okhttp.*;
+import fj.P;
+import fj.P2;
+import fj.data.Array;
+import fj.data.Option;
+import org.brewingagile.backoffice.utils.ArgoUtils;
+
+import java.io.IOException;
+
+public class OutvoicePaidClient {
+	private final OkHttpClient okHttpClient;
+	private final String endpoint;
+	private final String apikey;
+
+	public OutvoicePaidClient(OkHttpClient okHttpClient, String endpoint, String apikey) {
+		this.okHttpClient = okHttpClient;
+		this.endpoint = endpoint;
+		this.apikey = apikey;
+	}
+
+	public String get() throws IOException {
+		HttpUrl url = HttpUrl.parse(endpoint).newBuilder()
+			.addEncodedPathSegment("paid")
+			.build();
+		Request request = new Request.Builder()
+			.url(url)
+			.header("X-API-KEY", apikey)
+			.cacheControl(CacheControl.FORCE_NETWORK)
+			.build();
+		Response execute = okHttpClient.newCall(request).execute();
+		if (!execute.isSuccessful() || execute.isRedirect()) throw new IOException("Call to " + url + " failed unexpectedly: " + execute);
+		return execute.body().string();
+	}
+
+	public static Array<P2<String, Option<String>>> parse(String json) throws InvalidSyntaxException {
+		return Array.iterableArray(ArgoUtils.parse(json).getArrayNode()).map(OutvoicePaidClient::unjson);
+	}
+
+	private static P2<String, Option<String>> unjson(JsonNode x) {
+		return P.p(
+			x.getStringValue("invoiceNumber"),
+			Option.fromNull(x.getNullableStringValue("apiClientReference"))
+		);
+	}
+
+	public static void main(String[] args) throws IOException, InvalidSyntaxException {
+		OutvoicePaidClient outvoicePaidClient = new OutvoicePaidClient(new OkHttpClient(), "http://localhost:9060/api/2/invoices/", "simplekey");
+		Array<P2<String, Option<String>>> parse = outvoicePaidClient.parse(outvoicePaidClient.get());
+		System.out.println(parse);
+	}
+}

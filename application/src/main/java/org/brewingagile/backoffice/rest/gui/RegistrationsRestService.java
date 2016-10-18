@@ -3,8 +3,10 @@ package org.brewingagile.backoffice.rest.gui;
 import argo.jdom.JsonNode;
 import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
+import com.squareup.okhttp.OkHttpClient;
 import fj.F;
 import fj.Function;
+import fj.P2;
 import fj.data.*;
 import fj.function.Strings;
 import functional.Tuple2;
@@ -13,6 +15,7 @@ import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Badge;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingCompany;
+import org.brewingagile.backoffice.integrations.OutvoicePaidClient;
 import org.brewingagile.backoffice.services.DismissRegistrationService;
 import org.brewingagile.backoffice.services.MarkAsCompleteService;
 import org.brewingagile.backoffice.services.MarkAsPaidService;
@@ -45,6 +48,7 @@ public class RegistrationsRestService {
 	private final DismissRegistrationService dismissRegistrationService;
 	private final MarkAsCompleteService markAsCompleteService;
 	private final MarkAsPaidService markAsPaidService;
+	private final OutvoicePaidClient outvoicePaidClient;
 
 	public RegistrationsRestService(
 		DataSource dataSource,
@@ -53,7 +57,8 @@ public class RegistrationsRestService {
 		SendInvoiceService sendInvoiceService,
 		DismissRegistrationService dismissRegistrationService,
 		MarkAsCompleteService markAsCompleteService,
-		MarkAsPaidService markAsPaidService
+		MarkAsPaidService markAsPaidService,
+		OutvoicePaidClient outvoicePaidClient
 	) {
 		this.dataSource = dataSource;
 		this.authService = authService;
@@ -62,6 +67,7 @@ public class RegistrationsRestService {
 		this.dismissRegistrationService = dismissRegistrationService;
 		this.markAsCompleteService = markAsCompleteService;
 		this.markAsPaidService = markAsPaidService;
+		this.outvoicePaidClient = outvoicePaidClient;
 	}
 
 	@GET
@@ -266,6 +272,48 @@ public class RegistrationsRestService {
 		}
 
 		return Response.ok(ArgoUtils.format(Result.success(String.format("Flyttade %s registreringar.", i)))).build();
+	}
+
+	//	curl -u admin:password -X POST 'http://localhost:9080/gui/registrations/auto-mark-as-paid'
+	@POST
+	@Path("/auto-mark-as-paid")
+	public Response postAutoMarkAsPaid(@Context HttpServletRequest httpRequest)  {
+		authService.guardAuthenticatedUser(httpRequest);
+
+		int i = 0;
+		try {
+			i = sub();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.ok(ArgoUtils.format(Result.success(String.format("%s registreringar markerade som betalda.", i)))).build();
+	}
+
+	private int sub() throws Exception {
+		Array<P2<String, Option<UUID>>> parse = outvoicePaidClient.parse(outvoicePaidClient.get());
+
+		int i = 0;
+		for (P2<String, Option<UUID>> p : parse) {
+			RegistrationsSqlMapper.Registration registration;
+			try (Connection c = dataSource.getConnection()) {
+				c.setAutoCommit(false);
+
+				Option<UUID> apiClientRef = p._2();
+				if (apiClientRef.isNone()) continue;
+
+				Option<UUID> registrationId = registrationsSqlMapper.invoiceReferenceToRegistrationId(c, apiClientRef.some());
+				if (registrationId.isNone()) continue;
+
+				registration = registrationsSqlMapper.one(c, registrationId.some()).some();
+			}
+
+			if (registration.tuple.state != RegistrationState.INVOICING) continue;
+
+			markAsPaidService.markAsPaid(registration.id);
+			i++;
+		}
+		return i;
 	}
 
 	@POST

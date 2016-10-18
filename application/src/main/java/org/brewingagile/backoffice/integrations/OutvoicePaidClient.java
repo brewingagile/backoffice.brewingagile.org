@@ -10,6 +10,7 @@ import fj.data.Option;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
 import java.io.IOException;
+import java.util.UUID;
 
 public class OutvoicePaidClient {
 	private final OkHttpClient okHttpClient;
@@ -36,20 +37,20 @@ public class OutvoicePaidClient {
 		return execute.body().string();
 	}
 
-	public static Array<P2<String, Option<String>>> parse(String json) throws InvalidSyntaxException {
+	public static Array<P2<String, Option<UUID>>> parse(String json) throws InvalidSyntaxException {
 		return Array.iterableArray(ArgoUtils.parse(json).getArrayNode()).map(OutvoicePaidClient::unjson);
 	}
 
-	private static P2<String, Option<String>> unjson(JsonNode x) {
+	private static P2<String, Option<UUID>> unjson(JsonNode x) {
 		return P.p(
 			x.getStringValue("invoiceNumber"),
-			Option.fromNull(x.getNullableStringValue("apiClientReference"))
+			Option.fromNull(x.getNullableStringValue("apiClientReference")).map(y -> UUID.fromString(y))
 		);
 	}
 
 	public static void main(String[] args) throws IOException, InvalidSyntaxException {
 		OutvoicePaidClient outvoicePaidClient = new OutvoicePaidClient(new OkHttpClient(), "http://localhost:9060/api/2/invoices/", "simplekey");
-		Array<P2<String, Option<String>>> parse = outvoicePaidClient.parse(outvoicePaidClient.get());
+		Array<P2<String, Option<UUID>>> parse = outvoicePaidClient.parse(outvoicePaidClient.get());
 		System.out.println(parse);
 	}
 }

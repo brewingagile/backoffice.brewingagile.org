@@ -42,6 +42,14 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
+	public Option<UUID> invoiceReferenceToRegistrationId(Connection c, UUID apiClientReference) throws SQLException {
+		String sql = "SELECT * FROM registration_invoices WHERE invoice_reference_id = ?";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			ps.setObject(1, apiClientReference);
+			return SqlOps.one(ps, rs -> (UUID)rs.getObject("registration_id"));
+		}
+	}
+
 	public enum BillingMethod {EMAIL, SNAILMAIL}
 
 	public static final class Badge {

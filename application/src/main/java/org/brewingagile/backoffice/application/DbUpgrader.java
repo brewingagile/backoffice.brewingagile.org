@@ -30,7 +30,8 @@ public class DbUpgrader {
 			migration("printed-name-tags").installsThrough(script("015-printed-name-tags.sql")),
 			migration("rename-id-to-registration-id").installsThrough(script("016-rename-id-to-registration-id.sql")),
 			migration("tickets-to-relation").installsThrough(script("017-tickets-to-relation.sql")),
-			migration("budget-fixed-costs").installsThrough(script("018-budget-fixed-costs.sql"))
+			migration("budget-fixed-costs").installsThrough(script("018-budget-fixed-costs.sql")),
+			migration("bundle-deal").installsThrough(script("019-bundle-deal.sql"))
 		);
 	}
 

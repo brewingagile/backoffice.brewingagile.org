@@ -2,9 +2,10 @@
 set -e
 
 DB_HOST="${DB_HOST:-localhost}"
-echo "Using PostgreSQL at $DB_HOST"
+DB_PORT="${DB_PORT:-5431}"
+echo "Using PostgreSQL at $DB_HOST:$DB_PORT"
 
-PSQL="psql -U brewingagile -h $DB_HOST brewingagile"
+PSQL="psql -U brewingagile --host=$DB_HOST --port=$DB_PORT brewingagile"
 PSQLI="$PSQL -t -c"
 
 ### Drop all tables

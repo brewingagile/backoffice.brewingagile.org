@@ -5,12 +5,10 @@ import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
 import fj.data.Collectors;
 import fj.data.List;
-import functional.Tuple2;
 import org.brewingagile.backoffice.auth.AuthService;
-import org.brewingagile.backoffice.db.operations.BucketsSqlMapper;
+import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.BudgetSql;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
-import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
@@ -22,7 +20,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.util.UUID;
 
 import static argo.jdom.JsonNodeFactories.*;
 
@@ -33,20 +30,20 @@ public class BudgetJaxRs {
 	private final AuthService authService;
 	private final BudgetSql budgetSql;
 	private final RegistrationsSqlMapper registrationsSqlMapper;
-	private final BucketsSqlMapper bucketsSqlMapper;
+	private final BundlesSql bundlesSql;
 
 	public BudgetJaxRs(
 		DataSource dataSource,
 		AuthService authService,
 		BudgetSql budgetSql,
 		RegistrationsSqlMapper registrationsSqlMapper,
-		BucketsSqlMapper bucketsSqlMapper
+		BundlesSql bundlesSql
 	) {
 		this.dataSource = dataSource;
 		this.authService = authService;
 		this.budgetSql = budgetSql;
 		this.registrationsSqlMapper = registrationsSqlMapper;
-		this.bucketsSqlMapper = bucketsSqlMapper;
+		this.bundlesSql = bundlesSql;
 	}
 
 //		curl -u admin:password "http://localhost:9080/ba-backoffice/gui/budget/fixed-costs"
@@ -115,37 +112,45 @@ public class BudgetJaxRs {
 		authService.guardAuthenticatedUser(request);
 
 		try (Connection c = dataSource.getConnection()) {
-			List<BucketsSqlMapper.BucketSummary> bundles = bucketsSqlMapper.bundles(c);
-			BucketsSqlMapper.Individuals individuals = bucketsSqlMapper.individuals(c);
+			List<BundlesSql.BucketSummary> bundles = bundlesSql.bundles(c);
+			BundlesSql.Individuals individuals = bundlesSql.individuals(c);
 			BundleLogic.Total logic = BundleLogic.logic(bundles, individuals);
 
 			List<BudgetItem> costsWorkshop1 = List.list(
-				t(BudgetItemType.COST, "Torsdag frukost", logic.total.workshop1 + 2, 54), // speaker + 1 of us
-				t(BudgetItemType.COST, "Torsdag lunch", logic.total.workshop1 + 2, 112.50),
-				t(BudgetItemType.COST, "Torsdag eftermiddagsfika", logic.total.workshop1 + 2, 45),
-				t(BudgetItemType.COST, "Torsdag lokal", 1, 4000)
+				t(BudgetItemType.COST, "Workshop1: Frukost", logic.total.workshop1 + 2, 54), // speaker + 1 of us
+				t(BudgetItemType.COST, "Workshop1: Lunch", logic.total.workshop1 + 2, 112.50),
+				t(BudgetItemType.COST, "Workshop1: Eftermiddagsfika", logic.total.workshop1 + 2, 45),
+				t(BudgetItemType.COST, "Workshop1: Lokal lokal", 1, 4000)
 			);
-			BudgetItem revenueWorkshop1 = t(BudgetItemType.REVENUE, "Workshop1, biljetter", logic.individuals.workshop1, 2800);
-			BudgetItem revenueWorkshop2 = t(BudgetItemType.REVENUE, "Workshop2, biljetter", logic.individuals.workshop2, 1400);
+			List<BudgetItem> revenuesWorkshop1 = List.list(
+				t(BudgetItemType.REVENUE, "Workshop1: biljetter", logic.individuals.workshop1, 2800),
+				t(BudgetItemType.REVENUE, "Workshop1: bundles", bundles.filter(x -> x.bucket.deal.isNone()).map(x -> x.bucket.workshop1).foldLeft1((l,r) -> l + r), 2800)
+			);
 
 			List<BudgetItem> costsWorkshop2 = List.list(
-				t(BudgetItemType.COST, "Fredag frukost", logic.total.workshop2 + 5 + 1, 54), // + organisers, speaker
-				t(BudgetItemType.COST, "Fredag lunch", logic.total.workshop2 + 5 + 5, 112.50) // + organisers, speakers
+				t(BudgetItemType.COST, "Workshop2: Frukost", logic.total.workshop2 + 5 + 1, 54), // + organisers, speaker
+				t(BudgetItemType.COST, "Workshop2 (mfl): Lunch", logic.total.workshop2 + 5 + 5, 112.50) // + organisers, speakers
+			);
+			List<BudgetItem> revenuesWorkshop2 = List.list(
+				t(BudgetItemType.REVENUE, "Workshop2: biljetter", logic.individuals.workshop2, 1400),
+				t(BudgetItemType.REVENUE, "Workshop2: bundles", bundles.filter(x -> x.bucket.deal.isNone()).map(x -> x.bucket.workshop2).foldLeft1((l,r) -> l + r), 1400)
 			);
 
 			List<BudgetItem> costs = List.Buffer.<BudgetItem>empty()
 				.append(
 					List.list(
-						t(BudgetItemType.COST, "Fredag eftermiddagsfika", logic.total.conference, 45),
-						t(BudgetItemType.COST, "Lördag fika", logic.total.conference / 2, 45), //assumption, half attendees on saturday,
-						t(BudgetItemType.COST, "Lokalhyra fredag-lördag", 1, 16000),
-						t(BudgetItemType.COST, "PA", 1, 5350),
-						t(BudgetItemType.COST, "supplies", 1, 1000),
-						t(BudgetItemType.COST, "Beer Labels, preliminary", 1, 732),
-						t(BudgetItemType.COST, "Lanyards, preliminary", 1, 1107),
-						t(BudgetItemType.COST, "Speaker: Vasco", 1, revenueWorkshop1.total.subtract(sum(costsWorkshop1))),
-						t(BudgetItemType.COST, "Speaker: Luis", 1, revenueWorkshop2.total.subtract(sum(costsWorkshop2))),
-						t(BudgetItemType.COST, "Speaker", 3, 10000)
+						t(BudgetItemType.COST, "Konferens: Fika", logic.total.conference, 45),
+						t(BudgetItemType.COST, "Konferens: Lokalhyra", 1, 16000),
+						t(BudgetItemType.COST, "Konferens: PA", 1, 5350),
+						t(BudgetItemType.COST, "Konferens: Beer Labels (p)", 1, 732),
+						t(BudgetItemType.COST, "Konferens: Lanyards (p)", 1, 1107),
+
+						t(BudgetItemType.COST, "Konferens: Speaker: Vasco", 1, sum(revenuesWorkshop1).subtract(sum(costsWorkshop1))),
+						t(BudgetItemType.COST, "Konferens: Speaker: Luis", 1, sum(revenuesWorkshop2).subtract(sum(costsWorkshop2))),
+						t(BudgetItemType.COST, "Konferens: Speaker", 3, 10000),
+
+						t(BudgetItemType.COST, "Open Spaces: Supplies", 1, 1000),
+						t(BudgetItemType.COST, "Open Spaces: Fika", logic.total.conference / 2, 45) //assumption, half attendees on saturday,
 					)
 				)
 				.append(costsWorkshop1)
@@ -153,25 +158,28 @@ public class BudgetJaxRs {
 				.toList();
 
 
-			List<BudgetItem> revenue = List.list(
-				revenueWorkshop1,
-				revenueWorkshop2,
-				t(BudgetItemType.REVENUE, "Konferensbiljetter", logic.individuals.conference, 960),
-				t(BudgetItemType.REVENUE, "Separate Invoices", 1, 32160),
-				t(BudgetItemType.REVENUE, "Sponsor: Informator", 1, 5000),
-				t(BudgetItemType.REVENUE, "Sponsor: Cognit", 1, 4040),
-				t(BudgetItemType.REVENUE, "Sponsor: Seat24", 1, 5000),
-				t(BudgetItemType.REVENUE, "Sponsor: Squeed", 1, 10000)
-			);
+			List<BudgetItem> revenues = List.Buffer.<BudgetItem>empty()
+				.append(
+					bundles.filter(x -> x.bucket.deal.isSome()).map(x -> t(BudgetItemType.REVENUE, "Bundle: " + x.bucket.bucket, 1, x.bucket.deal.some().price))
+				)
+				.append(
+					List.list(
+						t(BudgetItemType.REVENUE, "Konferens: biljetter", logic.individuals.conference, 960),
+						t(BudgetItemType.REVENUE, "Konferens: bundles", bundles.filter(x -> x.bucket.deal.isNone()).map(x -> x.bucket.conference).foldLeft1((l,r) -> l + r), 960)
+					)
+				)
+				.append(revenuesWorkshop1)
+				.append(revenuesWorkshop2)
+				.toList();
 
 			// + Sponsorer + Separate Invoice - Bundles (workshopar, konferensbiljetter)
 			// Ingen middag, öl eller brunch ännu.
 
-			BigDecimal allRevenue = sum(revenue);
+			BigDecimal allRevenue = sum(revenues);
 			BigDecimal allCosts = sum(costs);
 			BigDecimal profit = allRevenue.subtract(allCosts);
 
-			return Response.ok(ArgoUtils.format(json(revenue, costs, allRevenue, allCosts, profit))).build();
+			return Response.ok(ArgoUtils.format(json(revenues, costs, allRevenue, allCosts, profit))).build();
 		}
 	}
 

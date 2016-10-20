@@ -3,7 +3,7 @@ package org.brewingagile.backoffice.rest.gui;
 import argo.jdom.JsonRootNode;
 import fj.data.List;
 import org.brewingagile.backoffice.auth.AuthService;
-import org.brewingagile.backoffice.db.operations.BucketsSqlMapper;
+import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
@@ -19,20 +19,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.sql.Connection;
 
-import static org.brewingagile.backoffice.db.operations.BucketsSqlMapper.BucketSummary;
-import static org.brewingagile.backoffice.db.operations.BucketsSqlMapper.Individuals;
+import static org.brewingagile.backoffice.db.operations.BundlesSql.BucketSummary;
+import static org.brewingagile.backoffice.db.operations.BundlesSql.Individuals;
 
 @Path("/reports/")
 @NeverCache
 public class ReportsRestService {
 	private final DataSource dataSource;
 	private final AuthService authService;
-	private final BucketsSqlMapper bucketsSqlMapper;
+	private final BundlesSql bundlesSql;
 
-	public ReportsRestService(DataSource dataSource, AuthService authService, BucketsSqlMapper bucketsSqlMapper) {
+	public ReportsRestService(DataSource dataSource, AuthService authService, BundlesSql bundlesSql) {
 		this.dataSource = dataSource;
 		this.authService = authService;
-		this.bucketsSqlMapper = bucketsSqlMapper;
+		this.bundlesSql = bundlesSql;
 	}
 
 	//curl -u admin:password http://localhost:9080/gui/reports/bundles  | jq .
@@ -44,7 +44,7 @@ public class ReportsRestService {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
 			return Response.ok(ArgoUtils.format(
-				array(bucketsSqlMapper.bundles(c).map(ReportsRestService::json))
+				array(bundlesSql.bundles(c).map(ReportsRestService::json))
 			)).build();
 		}
 	}
@@ -56,7 +56,7 @@ public class ReportsRestService {
 		authService.guardAuthenticatedUser(request);
 		try {
 			try (Connection c = dataSource.getConnection()) {
-				return Response.ok(ArgoUtils.format(json(bucketsSqlMapper.individuals(c)))).build();
+				return Response.ok(ArgoUtils.format(json(bundlesSql.individuals(c)))).build();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -72,8 +72,8 @@ public class ReportsRestService {
 		authService.guardAuthenticatedUser(request);
 		try {
 			try (Connection c = dataSource.getConnection()) {
-				List<BucketSummary> bundles = bucketsSqlMapper.bundles(c);
-				Individuals individuals = bucketsSqlMapper.individuals(c);
+				List<BucketSummary> bundles = bundlesSql.bundles(c);
+				Individuals individuals = bundlesSql.individuals(c);
 				return Response.ok(ArgoUtils.format(json(
 					BundleLogic.logic(bundles, individuals)))).build();
 			}

@@ -10,6 +10,18 @@ function BucketsController($scope, $window, $resource) {
         $scope.buckets = _.union($scope.buckets, [{}]);
     };
 
+    $scope.toggleDeal = function(b) {
+        if (b.deal) {
+            b.deal = null;
+            return;
+        } else {
+            b.deal = {
+                price: 0
+            };
+            return;
+        }
+    };
+
     $scope.save = function(buckets) {
         $scope.success = null;
 		$scope.error = null;

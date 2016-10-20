@@ -1,14 +1,16 @@
 package org.brewingagile.backoffice.application;
 
 import com.hencjo.summer.security.SummerAuthenticatedUser;
+import com.squareup.okhttp.OkHttpClient;
 import fj.data.List;
 import org.brewingagile.backoffice.auth.AuthService;
-import org.brewingagile.backoffice.db.operations.BucketsSqlMapper;
+import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.BudgetSql;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
 import org.brewingagile.backoffice.integrations.OutvoiceInvoiceClient;
+import org.brewingagile.backoffice.integrations.OutvoicePaidClient;
 import org.brewingagile.backoffice.rest.api.RegistrationApiRestService;
 import org.brewingagile.backoffice.rest.gui.*;
 import org.brewingagile.backoffice.services.DismissRegistrationService;
@@ -29,6 +31,7 @@ public class Application {
 		this.versionNumberProvider = new GitPropertiesDescribeVersionNumberProvider(Application.class, "/resources/git.properties");
 		AuthService authService = new AuthService(new SummerAuthenticatedUser());
 		OutvoiceInvoiceClient outvoiceInvoiceClient = new OutvoiceInvoiceClient(ClientBuilder.newClient(), config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
+		OutvoicePaidClient outvoicePaidClient = new OutvoicePaidClient(new OkHttpClient(), config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 		BudgetSql budgetSql = new BudgetSql();
 		RegistrationsSqlMapper registrationsSqlMapper = new RegistrationsSqlMapper();
 		SendInvoiceService sendInvoiceService = new SendInvoiceService(dataSource, registrationsSqlMapper, outvoiceInvoiceClient);
@@ -42,15 +45,15 @@ public class Application {
 			new RegistrationApiRestService(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient)
 		);
 
-		BucketsSqlMapper bucketsSqlMapper = new BucketsSqlMapper();
+		BundlesSql bundlesSql = new BundlesSql();
 		this.guiRestServices = List.list(
 			new LoggedInRestService(authService),
 			new VersionNumberRestService(versionNumberProvider),
-			new RegistrationsRestService(dataSource, authService, registrationsSqlMapper, sendInvoiceService, dismissRegistrationService, markAsCompleteService, markAsPaidService),
+			new RegistrationsRestService(dataSource, authService, registrationsSqlMapper, sendInvoiceService, dismissRegistrationService, markAsCompleteService, markAsPaidService, outvoicePaidClient),
 			new NameTagsRestService(dataSource, authService, registrationsSqlMapper),
-			new BucketsRestService(dataSource, authService, bucketsSqlMapper),
-			new BudgetJaxRs(dataSource, authService, budgetSql, registrationsSqlMapper, bucketsSqlMapper),
-			new ReportsRestService(dataSource, authService, bucketsSqlMapper),
+			new BundlesJaxRs(dataSource, authService, bundlesSql),
+			new BudgetJaxRs(dataSource, authService, budgetSql, registrationsSqlMapper, bundlesSql),
+			new ReportsRestService(dataSource, authService, bundlesSql),
 			new ExportsRestService(dataSource, authService,registrationsSqlMapper)
 		);
 	}

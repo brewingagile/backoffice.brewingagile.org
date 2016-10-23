@@ -12,12 +12,12 @@
 	<script src="index.js"></script>
 
 <style>
+@media print {
 	@page {
-		margin: 5mm 0mm 0mm 0mm;
-		/*margin-top: 5mm;*/
-		size: 210mm 297mm;
+		margin: 3mm 0mm 0mm 7mm;
+		size: a5 landscape;
 	}
-/*@page */
+}
 
 @media all {
 
@@ -113,20 +113,6 @@
 		text-transform: uppercase;
 	}
 
-	.pagehack {
-		margin: 0px;
-		padding: 0px;
-		border: 1px solid white;
-		page-break-after: always;
-	}
-
-
-	/*
-	.registration:nth-child(even) {
-		page-break-after: always;
-	}
-	*/
-	
 }
 </style>
 </head>

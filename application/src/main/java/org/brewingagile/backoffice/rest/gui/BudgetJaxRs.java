@@ -117,9 +117,7 @@ public class BudgetJaxRs {
 			BundleLogic.Total logic = BundleLogic.logic(bundles, individuals);
 
 			List<BudgetItem> costsWorkshop1 = List.list(
-				t(BudgetItemType.COST, "Workshop1: Frukost", logic.total.workshop1 + 2, 54), // speaker + 1 of us
-				t(BudgetItemType.COST, "Workshop1: Lunch", logic.total.workshop1 + 2, 112.50),
-				t(BudgetItemType.COST, "Workshop1: Eftermiddagsfika", logic.total.workshop1 + 2, 45),
+				t(BudgetItemType.COST, "Workshop1: Mat F+L+F", logic.total.workshop1 + 2, 215), // speaker + 1 of us
 				t(BudgetItemType.COST, "Workshop1: Lokal lokal", 1, 4000)
 			);
 			List<BudgetItem> revenuesWorkshop1 = List.list(
@@ -128,8 +126,7 @@ public class BudgetJaxRs {
 			);
 
 			List<BudgetItem> costsWorkshop2 = List.list(
-				t(BudgetItemType.COST, "Workshop2: Frukost", logic.total.workshop2 + 5 + 1, 54), // + organisers, speaker
-				t(BudgetItemType.COST, "Workshop2 (mfl): Lunch", logic.total.workshop2 + 5 + 5, 112.50) // + organisers, speakers
+				t(BudgetItemType.COST, "Workshop2: Mat F+L", logic.total.workshop2 + 5 + 1 + 5 + 1, 175) // + organisers, speaker, support, video
 			);
 			List<BudgetItem> revenuesWorkshop2 = List.list(
 				t(BudgetItemType.REVENUE, "Workshop2: biljetter", logic.individuals.workshop2, 1400),
@@ -140,6 +137,8 @@ public class BudgetJaxRs {
 				.append(
 					List.list(
 						t(BudgetItemType.COST, "Konferens: Fika", logic.total.conference, 45),
+						t(BudgetItemType.COST, "Konferens: Middag", logic.total.conference, 130),
+						t(BudgetItemType.COST, "Konferens: öl", logic.total.conference, 55),
 						t(BudgetItemType.COST, "Konferens: Lokalhyra", 1, 16000),
 						t(BudgetItemType.COST, "Konferens: PA", 1, 5350),
 						t(BudgetItemType.COST, "Konferens: Beer Labels (p)", 1, 732),
@@ -150,6 +149,7 @@ public class BudgetJaxRs {
 						t(BudgetItemType.COST, "Konferens: Speaker", 3, 10000),
 
 						t(BudgetItemType.COST, "Open Spaces: Supplies", 1, 1000),
+						t(BudgetItemType.COST, "Open Spaces: Brunch", logic.total.conference /2, 130),
 						t(BudgetItemType.COST, "Open Spaces: Fika", logic.total.conference / 2, 45) //assumption, half attendees on saturday,
 					)
 				)

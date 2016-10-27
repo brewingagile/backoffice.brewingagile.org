@@ -150,8 +150,8 @@ public class BudgetJaxRs {
 						t(BudgetItemType.COST, "Konferens: Speaker", 3, 10000),
 
 						t(BudgetItemType.COST, "Open Spaces: Supplies", 1, 1000),
-						t(BudgetItemType.COST, "Open Spaces: Brunch", logic.total.conference /2, 130),
-						t(BudgetItemType.COST, "Open Spaces: Fika", logic.total.conference / 2, 45) //assumption, half attendees on saturday,
+						t(BudgetItemType.COST, "Open Spaces: Brunch (50%)", logic.total.conference / 2, 165),
+						t(BudgetItemType.COST, "Open Spaces: Fika (50%)", logic.total.conference / 2, 45) //assumption, half attendees on saturday,
 					)
 				)
 				.append(costsWorkshop1)

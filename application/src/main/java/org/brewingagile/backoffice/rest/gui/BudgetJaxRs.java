@@ -118,7 +118,7 @@ public class BudgetJaxRs {
 
 			List<BudgetItem> costsWorkshop1 = List.list(
 				t(BudgetItemType.COST, "Workshop1: Mat F+L+F", logic.total.workshop1 + 2, 215), // speaker + 1 of us
-				t(BudgetItemType.COST, "Workshop1: Lokal lokal", 1, 4000)
+				t(BudgetItemType.COST, "Workshop1: Lokal", 1, 4000)
 			);
 			List<BudgetItem> revenuesWorkshop1 = List.list(
 				t(BudgetItemType.REVENUE, "Workshop1: biljetter", logic.individuals.workshop1, 2800),
@@ -126,7 +126,7 @@ public class BudgetJaxRs {
 			);
 
 			List<BudgetItem> costsWorkshop2 = List.list(
-				t(BudgetItemType.COST, "Workshop2: Mat F+L", logic.total.workshop2 + 5 + 1 + 5 + 1, 175) // + organisers, speaker, support, video
+				t(BudgetItemType.COST, "Workshop2: Mat F+L", logic.total.workshop2 + 1, 175) // speaker
 			);
 			List<BudgetItem> revenuesWorkshop2 = List.list(
 				t(BudgetItemType.REVENUE, "Workshop2: biljetter", logic.individuals.workshop2, 1400),
@@ -136,6 +136,7 @@ public class BudgetJaxRs {
 			List<BudgetItem> costs = List.Buffer.<BudgetItem>empty()
 				.append(
 					List.list(
+						t(BudgetItemType.COST, "Konferens: Lunch", 5 + 5 + 1, 175), // organisers, support, video
 						t(BudgetItemType.COST, "Konferens: Fika", logic.total.conference, 45),
 						t(BudgetItemType.COST, "Konferens: Middag", logic.total.conference, 130),
 						t(BudgetItemType.COST, "Konferens: öl", logic.total.conference, 55),

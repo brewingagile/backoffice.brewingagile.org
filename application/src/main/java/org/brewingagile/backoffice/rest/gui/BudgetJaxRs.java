@@ -83,19 +83,13 @@ public class BudgetJaxRs {
 		return Response.ok().build();
 	}
 
-	private enum BudgetItemType {
-		COST, REVENUE
-	}
-
 	public static final class BudgetItem {
-		private final BudgetItemType type;
 		private final String description;
 		private final int qty;
 		private final BigDecimal amount;
 		private final BigDecimal total;
 
-		public BudgetItem(BudgetItemType type, String description, int qty, BigDecimal amount, BigDecimal total) {
-			this.type = type;
+		public BudgetItem(String description, int qty, BigDecimal amount, BigDecimal total) {
 			this.description = description;
 			this.qty = qty;
 			this.amount = amount;
@@ -117,41 +111,41 @@ public class BudgetJaxRs {
 			BundleLogic.Total logic = BundleLogic.logic(bundles, individuals);
 
 			List<BudgetItem> costsWorkshop1 = List.list(
-				t(BudgetItemType.COST, "Workshop1: Mat F+L+F", logic.total.workshop1 + 2, 215), // speaker + 1 of us
-				t(BudgetItemType.COST, "Workshop1: Lokal", 1, 4000)
+				t("Workshop1: Mat F+L+F", logic.total.workshop1 + 2, 215), // speaker + 1 of us
+				t("Workshop1: Lokal", 1, 4000)
 			);
 			List<BudgetItem> revenuesWorkshop1 = List.list(
-				t(BudgetItemType.REVENUE, "Workshop1: biljetter", logic.individuals.workshop1, 2800),
-				t(BudgetItemType.REVENUE, "Workshop1: bundles", bundles.filter(x -> x.bucket.deal.isNone()).map(x -> x.bucket.workshop1).foldLeft1((l,r) -> l + r), 2800)
+				t("Workshop1: biljetter", logic.individuals.workshop1, 2800),
+				t("Workshop1: bundles", bundles.filter(x -> x.bucket.deal.isNone()).map(x -> x.bucket.workshop1).foldLeft1((l,r) -> l + r), 2800)
 			);
 
 			List<BudgetItem> costsWorkshop2 = List.list(
-				t(BudgetItemType.COST, "Workshop2: Mat F+L", logic.total.workshop2 + 1, 175) // speaker
+				t("Workshop2: Mat F+L", logic.total.workshop2 + 1, 175) // speaker
 			);
 			List<BudgetItem> revenuesWorkshop2 = List.list(
-				t(BudgetItemType.REVENUE, "Workshop2: biljetter", logic.individuals.workshop2, 1400),
-				t(BudgetItemType.REVENUE, "Workshop2: bundles", bundles.filter(x -> x.bucket.deal.isNone()).map(x -> x.bucket.workshop2).foldLeft1((l,r) -> l + r), 1400)
+				t("Workshop2: biljetter", logic.individuals.workshop2, 1400),
+				t("Workshop2: bundles", bundles.filter(x -> x.bucket.deal.isNone()).map(x -> x.bucket.workshop2).foldLeft1((l,r) -> l + r), 1400)
 			);
 
 			List<BudgetItem> costs = List.Buffer.<BudgetItem>empty()
 				.append(
 					List.list(
-						t(BudgetItemType.COST, "Konferens: Lunch", 5 + 5 + 1, 175), // organisers, support, video
-						t(BudgetItemType.COST, "Konferens: Fika", logic.total.conference, 45),
-						t(BudgetItemType.COST, "Konferens: Middag", logic.total.conference, 130),
-						t(BudgetItemType.COST, "Konferens: öl", logic.total.conference, 55),
-						t(BudgetItemType.COST, "Konferens: Lokalhyra", 1, 16000),
-						t(BudgetItemType.COST, "Konferens: PA", 1, 5350),
-						t(BudgetItemType.COST, "Konferens: Beer Labels (p)", 1, 732),
-						t(BudgetItemType.COST, "Konferens: Lanyards (p)", 1, 1107),
+						t("Konferens: Lunch", 5 + 5 + 1, 175), // organisers, support, video
+						t("Konferens: Fika", logic.total.conference, 45),
+						t("Konferens: Middag", logic.total.conference, 130),
+						t("Konferens: öl", logic.total.conference, 55),
+						t("Konferens: Lokalhyra", 1, 16000),
+						t("Konferens: PA", 1, 5350),
+						t("Konferens: Beer Labels (p)", 1, 732),
+						t("Konferens: Lanyards (p)", 1, 1107),
 
-						t(BudgetItemType.COST, "Konferens: Speaker: Vasco", 1, sum(revenuesWorkshop1).subtract(sum(costsWorkshop1))),
-						t(BudgetItemType.COST, "Konferens: Speaker: Luis", 1, sum(revenuesWorkshop2).subtract(sum(costsWorkshop2))),
-						t(BudgetItemType.COST, "Konferens: Speaker", 3, 10000),
+						t("Konferens: Speaker: Vasco", 1, sum(revenuesWorkshop1).subtract(sum(costsWorkshop1))),
+						t("Konferens: Speaker: Luis", 1, sum(revenuesWorkshop2).subtract(sum(costsWorkshop2))),
+						t("Konferens: Speaker", 3, 10000),
 
-						t(BudgetItemType.COST, "Open Spaces: Supplies", 1, 1000),
-						t(BudgetItemType.COST, "Open Spaces: Brunch (50%)", logic.total.conference / 2, 165),
-						t(BudgetItemType.COST, "Open Spaces: Fika (50%)", logic.total.conference / 2, 45) //assumption, half attendees on saturday,
+						t("Open Spaces: Supplies", 1, 1000),
+						t("Open Spaces: Brunch (50%)", logic.total.conference / 2, 165),
+						t("Open Spaces: Fika (50%)", logic.total.conference / 2, 45) //assumption, half attendees on saturday,
 					)
 				)
 				.append(costsWorkshop1)
@@ -161,12 +155,12 @@ public class BudgetJaxRs {
 
 			List<BudgetItem> revenues = List.Buffer.<BudgetItem>empty()
 				.append(
-					bundles.filter(x -> x.bucket.deal.isSome()).map(x -> t(BudgetItemType.REVENUE, "Bundle: " + x.bucket.bucket, 1, x.bucket.deal.some().price))
+					bundles.filter(x -> x.bucket.deal.isSome()).map(x -> t("Bundle: " + x.bucket.bucket, 1, x.bucket.deal.some().price))
 				)
 				.append(
 					List.list(
-						t(BudgetItemType.REVENUE, "Konferens: biljetter", logic.individuals.conference, 960),
-						t(BudgetItemType.REVENUE, "Konferens: bundles", bundles.filter(x -> x.bucket.deal.isNone()).map(x -> x.bucket.conference).foldLeft1((l,r) -> l + r), 960)
+						t("Konferens: biljetter", logic.individuals.conference, 960),
+						t("Konferens: bundles", bundles.filter(x -> x.bucket.deal.isNone()).map(x -> x.bucket.conference).foldLeft1((l,r) -> l + r), 960)
 					)
 				)
 				.append(revenuesWorkshop1)
@@ -215,12 +209,12 @@ public class BudgetJaxRs {
 		);
 	}
 
-	private static BudgetItem t(BudgetItemType bit, String description, int qty, double price) {
-		return t(bit, description, qty, new BigDecimal(price));
+	private static BudgetItem t(String description, int qty, double price) {
+		return t(description, qty, new BigDecimal(price));
 	}
 
-	private static BudgetItem t(BudgetItemType bit, String description, int qty, BigDecimal price) {
-		return new BudgetItem(bit, description, qty, price, price.multiply(new BigDecimal(qty)));
+	private static BudgetItem t(String description, int qty, BigDecimal price) {
+		return new BudgetItem(description, qty, price, price.multiply(new BigDecimal(qty)));
 	}
 
 	private static List<BudgetSql.FixedCost> unJson(String json) throws InvalidSyntaxException {

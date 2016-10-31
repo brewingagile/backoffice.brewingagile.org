@@ -55,28 +55,42 @@
 		font-size: 10mm;
 		color: white;
 		font-weight: bold;
+		margin-top: 1px;
 	}
 
 	.name {
-
-		font-family: 'Source Code Pro', monospace;
 		margin-top: 5mm;
 		font-size: 15mm;
-		text-align: left;
+		text-align: center;
 		font-weight: bold;
 		line-height: 14mm;
+	}
+	.extras {
+		font-size: 5mm;
+		font-family: 'Source Code Pro', monospace;
+		overflow: hidden;
+		text-align: center;
+		position: absolute;
+		width: 100%;
+		bottom: 74mm;
 	}
 	.company {
 		font-size: 5mm;
 		font-family: 'Source Code Pro', monospace;
 		overflow: hidden;
-		text-align: left;
+		text-align: center;
+		position: absolute;
+		width: 100%;
+		bottom: 74mm;
 	}
 	.twitter {
 		font-family: 'Source Code Pro', monospace;
-		font-size: 7mm;
-		text-align: left;
+		font-size: 5mm;
+		text-align: center;
 		margin-bottom: 1mm;
+		position: absolute;
+		width: 100%;
+		bottom: 80mm;
 	}
 	.logo {
 	}
@@ -129,8 +143,9 @@
 	<div class="label" ng-repeat="d in [1,2]" ng-class="{organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER')}">
 		<div class="organiser" ng-show="(l.badge == 'ORGANIZER' || l.badge == 'ORGANISER')">ORGANISER</div>
 		<div class="name">{{l.name}}</div>
-		<div class="twitter" ng-show="l.twitter"><i class="fa fa-twitter" aria-hidden="true"></i> {{l.twitter}}</div>
-		<div class="company" ng-show="l.company"><i class="fa fa-home" aria-hidden="true"></i> {{l.company}}</div>
+		<div class="extras">{{l.twitter}}<br>{{l.company}}</div>
+		<!--<div class="twitter" ng-show="l.twitter">{{l.twitter}}</div>-->
+		<!--<div class="company" ng-show="l.company"></i> {{l.company}}</div>-->
 		<div class="statusbar">
 			<div class="logo"><img src="logo.png"></div>
 			<!--<div ng-class="{badge: true, speaker: (l.badge == 'SPEAKER'), organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER'), support: (l.badge == 'PHOTOGRAPHER' || l.badge == 'SOUND TECHNICIAN')}">{{l.badge}}</div>-->

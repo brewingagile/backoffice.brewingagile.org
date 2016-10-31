@@ -5,6 +5,8 @@
 	<link rel="stylesheet" href="reset.css" type="text/css">
 
 	<title>Name Tags</title>
+	<link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 	<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-resource.min.js"></script>
@@ -32,43 +34,49 @@
 	}
 	.label {
 		position: relative;
-		/*padding: 5mm 0mm 0mm 0mm;*/
-		margin: 5mm;
-		/*border-right: 1px solid black;*/
-		/*border-bottom: 1px solid black;*/
-		width: 88mm; /* 105 - 10 */
-		height: 128mm; /* 148 - 10 */
+		margin: 0mm 5mm 0mm 5mm;
+		width: 88mm;
+		height: 138mm;
 		float: left;
-		/*border-left: 1px solid black;
-		border-bottom: 1px solid black;*/
 		overflow: hidden;
-/*		background-size: 60mm;
-		background-image: url(logo.png);
-		background-position: 43mm 30mm;
-		background-repeat:no-repeat;
-			*/
-/*		background-color: grey; */
 		page-break-inside: avoid;
 	}
-	.name {
-		text-transform: capitalize;
-		margin-top: 5mm;
-		font-size: 10mm;
-		font-weight: bold;
+
+	.label.organiser {
+		border-left: 3mm solid red;
+		border-right: 3mm solid red;
+		margin: 0mm 2mm 0mm 2mm !important;
+	}
+
+	.organiser .organiser {
+		background-color: red;
 		text-align: center;
+		font-family: 'Source Code Pro', monospace;
+		font-size: 10mm;
+		color: white;
+		font-weight: bold;
+	}
+
+	.name {
+
+		font-family: 'Source Code Pro', monospace;
+		margin-top: 5mm;
+		font-size: 15mm;
+		text-align: left;
+		font-weight: bold;
+		line-height: 14mm;
 	}
 	.company {
-		text-transform: uppercase;
-		font-size:5mm;
-		font-family: "Courier New", Courier, monospace;
-		/*width: 50mm;*/
+		font-size: 5mm;
+		font-family: 'Source Code Pro', monospace;
 		overflow: hidden;
-		text-align: center;
+		text-align: left;
 	}
 	.twitter {
-		font-size: 5mm;
-		text-align: center;
-		margin-bottom: 5mm;
+		font-family: 'Source Code Pro', monospace;
+		font-size: 7mm;
+		text-align: left;
+		margin-bottom: 1mm;
 	}
 	.logo {
 	}
@@ -118,13 +126,14 @@
 </head>
 <body ng-controller="LabelsController">
 <div class="registration" ng-repeat="l in labels">
-	<div class="label" ng-repeat="d in [1,2]">
+	<div class="label" ng-repeat="d in [1,2]" ng-class="{organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER')}">
+		<div class="organiser" ng-show="(l.badge == 'ORGANIZER' || l.badge == 'ORGANISER')">ORGANISER</div>
 		<div class="name">{{l.name}}</div>
-		<div class="twitter">{{l.twitter}}</div>
-		<div class="company">{{l.company}}</div>
+		<div class="twitter" ng-show="l.twitter"><i class="fa fa-twitter" aria-hidden="true"></i> {{l.twitter}}</div>
+		<div class="company" ng-show="l.company"><i class="fa fa-home" aria-hidden="true"></i> {{l.company}}</div>
 		<div class="statusbar">
 			<div class="logo"><img src="logo.png"></div>
-			<div ng-class="{badge: true, speaker: (l.badge == 'SPEAKER'), organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER'), support: (l.badge == 'PHOTOGRAPHER' || l.badge == 'SOUND TECHNICIAN')}">{{l.badge}}</div>
+			<!--<div ng-class="{badge: true, speaker: (l.badge == 'SPEAKER'), organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER'), support: (l.badge == 'PHOTOGRAPHER' || l.badge == 'SOUND TECHNICIAN')}">{{l.badge}}</div>-->
 		</div>
 	</div>
 </div>

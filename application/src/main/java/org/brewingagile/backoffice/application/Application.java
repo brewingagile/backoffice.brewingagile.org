@@ -33,6 +33,7 @@ public class Application {
 		OutvoiceInvoiceClient outvoiceInvoiceClient = new OutvoiceInvoiceClient(ClientBuilder.newClient(), config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 		OutvoicePaidClient outvoicePaidClient = new OutvoicePaidClient(new OkHttpClient(), config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 		BudgetSql budgetSql = new BudgetSql();
+		BundlesSql bundlesSql = new BundlesSql();
 		RegistrationsSqlMapper registrationsSqlMapper = new RegistrationsSqlMapper();
 		SendInvoiceService sendInvoiceService = new SendInvoiceService(dataSource, registrationsSqlMapper, outvoiceInvoiceClient);
 		DismissRegistrationService dismissRegistrationService = new DismissRegistrationService(dataSource, registrationsSqlMapper);
@@ -42,10 +43,9 @@ public class Application {
 		MailchimpSubscribeClient mailchimpSubscribeClient = new MailchimpSubscribeClient(ClientBuilder.newClient(), config.mailchimpEndpoint, config.mailchimpApikey);
 
 		this.apiRestServices = List.list(
-			new RegistrationApiRestService(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient)
+			new RegistrationApiRestService(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql)
 		);
 
-		BundlesSql bundlesSql = new BundlesSql();
 		this.guiRestServices = List.list(
 			new LoggedInRestService(authService),
 			new VersionNumberRestService(versionNumberProvider),

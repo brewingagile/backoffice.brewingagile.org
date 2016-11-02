@@ -129,7 +129,7 @@ public class RegistrationsRestService {
 		return object(
 			field("id", string(r.id.toString())),
 			field("tuple", json(r.tuple)),
-			field("tickets", r.tickets.toJavaSet().stream().collect(ArgoUtils.toStringArray()))
+			field("tickets", r.tickets.toList().map(ToJson::json).toJavaList().stream().collect(ArgoUtils.toArray()))
 		);
 	}
 

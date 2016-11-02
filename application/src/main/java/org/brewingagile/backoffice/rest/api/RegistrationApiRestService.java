@@ -1,33 +1,38 @@
 package org.brewingagile.backoffice.rest.api;
 
+import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.UUID;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.OPTIONS;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import argo.jdom.JsonNode;
 import argo.jdom.JsonRootNode;
 import fj.Ord;
 import fj.data.*;
+import fj.data.List;
+import fj.data.Set;
 import functional.Effect;
+import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
+import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
+import org.brewingagile.backoffice.rest.gui.BundleLogic;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
+
+import static argo.jdom.JsonNodeFactories.*;
 
 @Path("/registration/1/")
 public class RegistrationApiRestService {
@@ -35,17 +40,20 @@ public class RegistrationApiRestService {
 	private final RegistrationsSqlMapper registrationsSqlMapper;
 	private final ConfirmationEmailSender confirmationEmailSender;
 	private final MailchimpSubscribeClient mailchimpSubscribeClient;
+	private final BundlesSql bundlesSql;
 
 	public RegistrationApiRestService(
 		DataSource dataSource,
 		RegistrationsSqlMapper registrationsSqlMapper,
 		ConfirmationEmailSender confirmationEmailSender,
-		MailchimpSubscribeClient mailchimpSubscribeClient
+		MailchimpSubscribeClient mailchimpSubscribeClient,
+		BundlesSql bundlesSql
 	) {
 		this.dataSource = dataSource;
 		this.registrationsSqlMapper = registrationsSqlMapper;
 		this.confirmationEmailSender = confirmationEmailSender;
 		this.mailchimpSubscribeClient = mailchimpSubscribeClient;
+		this.bundlesSql = bundlesSql;
 	}
 
 	public static final class RegistrationRequest {
@@ -55,18 +63,18 @@ public class RegistrationApiRestService {
 		public final String billingAddress;
 		public final String billingMethod;
 		public final String dietaryRequirements;
-		public final Set<String> tickets;
+		public final Set<TicketsSql.TicketName> tickets;
 		public final String twitter;
 
 		public RegistrationRequest(
-				String participantName,
-				String participantEmail,
-				String billingCompany,
-				String billingAddress,
-				String billingMethod,
-				String dietaryRequirements,
-				Set<String> tickets,
-				String twitter
+			String participantName,
+			String participantEmail,
+			String billingCompany,
+			String billingAddress,
+			String billingMethod,
+			String dietaryRequirements,
+			Set<TicketsSql.TicketName> tickets,
+			String twitter
 		) {
 			this.participantName = participantName;
 			this.participantEmail = participantEmail;
@@ -159,7 +167,44 @@ public class RegistrationApiRestService {
 		}
 	}
 
+	//	curl -u admin:password "http://localhost:9080/api/registration/1/tickets"
+	@GET
+	@Path("tickets")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response get(@Context HttpServletRequest request) throws Exception {
+		BundleLogic.Total logic;
+		try (Connection c = dataSource.getConnection()) {
+			c.setAutoCommit(false);
+			List<BundlesSql.BucketSummary> bundles = bundlesSql.bundles(c);
+			BundlesSql.Individuals individuals = bundlesSql.individuals(c);
+			logic = BundleLogic.logic(bundles, individuals);
+		}
+
+		BundleLogic.Total2 total = logic.total;
+		return Response.ok(ArgoUtils.format(
+			object(
+				field("tickets", array(
+					ticketJson("conference", "Conference: You go to the conference on Friday afternoon and the discussion groups on Saturday. Starts at 13:00.", total.conference < 110, BigDecimal.valueOf(1200)),
+					ticketJson("workshop1", "Workshop: \"#NoEstimates\" with Vasco Duarte (Thursday, all day). 3500 SEK.", total.workshop1 < 22, BigDecimal.valueOf(3500)),
+					ticketJson("workshop2", "Workshop: \"Agile Retrospectives\" with Luis Goncalves (Friday morning). 1750 SEK.", total.workshop2 < 20, BigDecimal.valueOf(1750))
+				))
+			)
+		)).build();
+	}
+
+	private static JsonRootNode ticketJson(String conference, String description, boolean value, BigDecimal price) {
+		return object(
+			field("ticket", string(conference)),
+			field("description", string(description)),
+			field("available", booleanNode(value)),
+			field("price", number(price))
+		);
+	}
+
+
 	private RegistrationRequest fromJson(JsonRootNode body) {
+		Array<String> a = Array.iterableArray(body.getArrayNode("tickets")).map(x -> x.getStringValue());
+		Set<TicketsSql.TicketName> tickets = Set.iterableSet(Ord.stringOrd, a).map(Ord.hashEqualsOrd(), x -> TicketsSql.TicketName.ticketName(x));
 		return new RegistrationRequest(
 			ArgoUtils.stringOrEmpty(body, "participantName").trim(),
 			ArgoUtils.stringOrEmpty(body, "participantEmail").trim().toLowerCase(),
@@ -167,7 +212,7 @@ public class RegistrationApiRestService {
 			ArgoUtils.stringOrEmpty(body, "billingAddress").trim(),
 			ArgoUtils.stringOrEmpty(body, "billingMethod").trim(),
 			ArgoUtils.stringOrEmpty(body, "dietaryRequirements".trim()),
-			tickets(body),
+			tickets,
 			ArgoUtils.stringOrEmpty(body, "twitter".trim())
 		);
 	}

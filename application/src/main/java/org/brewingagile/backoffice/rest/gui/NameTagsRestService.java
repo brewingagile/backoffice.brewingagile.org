@@ -8,6 +8,7 @@ import fj.data.Option;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
+import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
@@ -26,6 +27,7 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 import static argo.jdom.JsonNodeFactories.*;
+import static org.brewingagile.backoffice.db.operations.TicketsSql.TicketName.ticketName;
 
 @Path("/nametags/")
 @NeverCache
@@ -88,7 +90,7 @@ public class NameTagsRestService {
 			field("company", string(r.tuple.billingCompany)),
 			field("badge", string(r.tuple.badge.badge)),
 			field("workshop", booleanNode(false)),
-			field("conference", booleanNode(r.tickets.member("conference"))),
+			field("conference", booleanNode(r.tickets.member(ticketName("conference")))),
 			field("burger", booleanNode(true)),
 			field("twitter", string(r.tuple.twitter)),
 			field("diet", booleanNode(!"".equals(r.tuple.dietaryRequirements)))

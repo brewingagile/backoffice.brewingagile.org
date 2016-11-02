@@ -1,22 +1,21 @@
 package org.brewingagile.backoffice.rest.gui;
 
 import fj.F;
-import fj.F2;
-import fj.Ord;
-import fj.Ordering;
-import fj.data.Array;
 import fj.data.IO;
 import fj.data.List;
 import fj.data.Option;
 import fj.function.Strings;
-import jersey.repackaged.com.google.common.base.Optional;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
+import org.brewingagile.backoffice.db.operations.TicketsSql.TicketName;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -62,7 +61,7 @@ public class ExportsRestService {
 	@Produces("text/csv")
 	public Response registrations(@Context HttpServletRequest request, @QueryParam("ticket") String ticket0) throws SQLException, IOException {
 		authService.guardAuthenticatedUser(request);
-		Option<String> ticket1 = Option.fromNull(ticket0);
+		Option<TicketName> ticket1 = Option.fromNull(ticket0).map(TicketName::ticketName);
 		try (Connection c = dataSource.getConnection()) {
 			List<UUID> all = registrationsSqlMapper.all(c).map(x -> x._1);
 			List<RegistrationsSqlMapper.Registration> somes = Option.somes(all.traverseIO(ioify(c)).run());
@@ -71,9 +70,10 @@ public class ExportsRestService {
 				filtered.sort(RegistrationsSqlMapper.Registration.byBadge)
 					.map(reg -> {
 						RegistrationsSqlMapper.RegistrationTuple rt = reg.tuple;
-						return escaped(rt.badge.badge) + "," + escaped(reg.tickets.toList().foldLeft1((l, r) -> l + "+" + r)) + "," + escaped(rt.participantName) + "," + escaped(rt.dietaryRequirements);
+						String ticketName = reg.tickets.toList().map(x -> x.ticketName).foldLeft1((l,r) -> l + "+" + r);
+						return escaped(rt.badge.badge) + "," + escaped(ticketName) + "," + escaped(rt.participantName) + "," + escaped(rt.dietaryRequirements);
 					})
-			)).header("content-disposition", "attachment; filename=" + ticket1.orSome("registrations") + "-" + Instant.now().toString() + ".csv").build();
+			)).header("content-disposition", "attachment; filename=" + ticket1.map(x -> x.ticketName).orSome("registrations") + "-" + Instant.now().toString() + ".csv").build();
 		}
 	}
 

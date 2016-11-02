@@ -1,21 +1,20 @@
 function RegistrationController($scope, $resource, $window, $timeout, $window) {
 	var RegistrationResource = $resource("api/registration/1/", {});
+	var Tickets = $resource("api/registration/1/tickets");
 	$scope.lastRegisteredName = "";
 
 	$scope.loading = false;
+	Tickets.get(function(d) {
+	    $scope.tickets = d.tickets;
+	});
 
 	$scope.r = {
 		participantName: "",
 		participantEmail: "",
 		billingCompany: "",
 		billingAddress: "",
-		billingMethod: "EMAIL", //EMAIL or SNAILMAIL
 		dietaryRequirements: "",
-		tickets: {
-		    conference: true,
-		    workshop1: false,
-		    workshop2: false
-		},
+		tickets: [],
 		twitter: ""
 	};
 
@@ -26,14 +25,32 @@ function RegistrationController($scope, $resource, $window, $timeout, $window) {
 		});
 	};
 
+    $scope.selectedTickets = function() {
+        return _.filter($scope.r.tickets, function(x) { return x != "" });
+    };
+
 	$scope.submit = function() {
 		$scope.success = null;
 		$scope.error = null;
 		$scope.loading = true;
-		RegistrationResource.save($scope.r, function(p) {
+		var r = $scope.r;
+		RegistrationResource.save(
+		    {
+        		participantName: r.participantName,
+        		participantEmail: r.participantEmail,
+        		billingCompany: r.billingCompany,
+        		billingAddress: r.billingAddress,
+        		billingMethod: "EMAIL", //EMAIL or SNAILMAIL
+        		dietaryRequirements: r.dietaryRequirements,
+        		tickets: $scope.selectedTickets(),
+        		twitter: r.twitter
+        	}
+		, function(p) {
 			if (p.success) $scope.lastRegisteredName = $scope.r.participantName;
 			$scope.success = p.success;
 			$scope.loading = false;
+
+			Tickets.get(function(d) { $scope.tickets = d.tickets; });
 		}, function(response) { 
 			$scope.error = true;
 			$scope.loading = false;
@@ -46,7 +63,7 @@ function RegistrationController($scope, $resource, $window, $timeout, $window) {
   }
 
   $scope.anyTicket = function(t) {
-    return (t.conference === true) || (t.workshop1 === true) || (t.workshop2 === true)
+    return ($scope.selectedTickets().length > 0);
   };
 }
 

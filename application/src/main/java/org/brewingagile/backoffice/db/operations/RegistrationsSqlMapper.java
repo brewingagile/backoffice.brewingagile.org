@@ -15,6 +15,7 @@ import fj.data.Set;
 import fj.function.Strings;
 import fj.function.Try1;
 import functional.Tuple2;
+import org.brewingagile.backoffice.db.operations.TicketsSql.TicketName;
 
 public class RegistrationsSqlMapper {
 	public List<P2<String,String>> participantNameAndEmail(Connection c) throws SQLException {
@@ -71,11 +72,11 @@ public class RegistrationsSqlMapper {
 	public final static class Registration {
 		public final UUID id;
 		public final RegistrationTuple tuple;
-		public final Set<String> tickets;
+		public final Set<TicketName> tickets;
 
 		public static Ord<RegistrationsSqlMapper.Registration> byBadge = Ord.ord(l -> r -> Ord.stringOrd.compare(l.tuple.badge.badge, r.tuple.badge.badge));
 
-		public Registration(UUID id, RegistrationTuple tuple, Set<String> tickets) {
+		public Registration(UUID id, RegistrationTuple tuple, Set<TicketName> tickets) {
 			this.id = id;
 			this.tuple = tuple;
 			this.tickets = tickets;
@@ -122,7 +123,7 @@ public class RegistrationsSqlMapper {
 		Option<RegistrationTuple> registration = registration(c, id);
 		if (registration.isNone()) return Option.none();
 
-		Set<String> tickets = tickets(c, id);
+		Set<TicketName> tickets = tickets(c, id);
 		return Option.some(
 			new Registration(
 				id, registration.some(), tickets
@@ -134,23 +135,23 @@ public class RegistrationsSqlMapper {
 		deleteRegistrationTuple(c, id);
 		deleteRegistrationTicket(c, id);
 		insertRegistrationTuple(c, id, r.tuple);
-		for (String ticket : r.tickets) insertRegistrationTicket(c, id, ticket);
+		for (TicketName ticket : r.tickets) insertRegistrationTicket(c, id, ticket);
 
 	}
 
-	private void insertRegistrationTicket(Connection c, UUID id, String ticket) throws SQLException {
+	private void insertRegistrationTicket(Connection c, UUID id, TicketName ticket) throws SQLException {
 		try (PreparedStatement ps = c.prepareStatement("INSERT INTO registration_ticket (registration_id, ticket) VALUES (?, ?)")) {
 			ps.setObject(1, id);
-			ps.setString(2, ticket);
+			ps.setString(2, ticket.ticketName);
 			ps.executeUpdate();
 		}
 	}
 
-	private Set<String> tickets(Connection c, UUID id) throws SQLException {
+	private Set<TicketName> tickets(Connection c, UUID id) throws SQLException {
 		String sql = "SELECT ticket FROM registration_ticket WHERE registration_id = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
-			return SqlOps.set(ps, Ord.stringOrd, rs -> rs.getString("ticket"));
+			return SqlOps.set(ps, Ord.hashEqualsOrd(), rs -> TicketName.ticketName(rs.getString("ticket")));
 		}
 	}
 
@@ -287,9 +288,10 @@ public class RegistrationsSqlMapper {
 	}
 
 	public void deleteRegistrationTuple(Connection c, UUID id) throws SQLException {
-		String sql = "DELETE FROM registration WHERE registration_id = ?";
+		String sql = "DELETE FROM registration_ticket WHERE registration_id = ?; DELETE FROM registration WHERE registration_id = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
+			ps.setObject(2, id);
 			ps.execute();
 		}
 	}

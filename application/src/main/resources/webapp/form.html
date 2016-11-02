@@ -11,14 +11,18 @@
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-resource.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
     <script src="form/app.js?version=4"></script>
-    <script src="form/registration.js?version=6"></script>
+    <script src="form/registration.js?version=7"></script>
 <style>
 input.ng-invalid {
   border-color: red;
 }
 input.textarea {
 	border-color: red;
+}
+.soldout {
+	text-decoration: line-through;
 }
 </style>
 </head>
@@ -72,27 +76,17 @@ input.textarea {
 				<input type="text" class="form-control" id="inputDiet" ng-model="r.dietaryRequirements" placeholder="Please be as specific as possible about what you can and can't eat. Thank you!">
 			</div>
 		</div>
+
 		<div class="form-group">
 			<label class="col-sm-2 control-label">Package</label>
 			<div class="col-sm-10">
-				<div class="checkbox">
+				<div class="checkbox" ng-repeat="t in tickets">
 					<label>
-						<input type="checkbox" ng-model="r.tickets.conference" value="conference"> Conference: You go to the conference on Friday afternoon and the discussion groups on Saturday. Starts at 13:00. <em>1200 SEK</em>.
-					</label>
-				</div>
-				<div class="checkbox">
-					<label>
-						<input type="checkbox" ng-model="r.tickets.workshop1" value="workshop1"> Workshop: "#NoEstimates" with Vasco Duarte (Thursday, all day). <em>3500 SEK</em>.
-					</label>
-				</div>
-				<div class="checkbox">
-					<label>
-						<input type="checkbox" ng-model="r.tickets.workshop2" value="workshop2" disabled> <span style="text-decoration: line-through;"> Workshop: "Agile Retrospectives" with Luis Goncalves (Friday morning). <em>1750 SEK</em>. </span> <span style="font-weight: bold;">SOLD OUT!</span>
+						<input type="checkbox" ng-model="r.tickets[$index]" ng-true-value="{{t.ticket}}" ng-false-value="" ng-disabled="!t.available"> <span ng-class="{soldout: !t.available}"> {{t.description}} <em>{{t.price}} SEK</em>. <span style="font-weight: bold;" ng-show="!t.available">SOLD OUT!</span></span>
 					</label>
 				</div>
 			</div>
 		</div>
-
 
 		<div class="row">
 			<div class="col-sm-offset-2 col-sm-9">

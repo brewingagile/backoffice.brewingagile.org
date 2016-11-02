@@ -71,7 +71,7 @@ public class ExportsRestService {
 					.map(reg -> {
 						RegistrationsSqlMapper.RegistrationTuple rt = reg.tuple;
 						String ticketName = reg.tickets.toList().map(x -> x.ticketName).foldLeft1((l,r) -> l + "+" + r);
-						return escaped(rt.badge.badge) + "," + escaped(ticketName) + "," + escaped(rt.participantName) + "," + escaped(rt.dietaryRequirements);
+						return escaped(rt.badge.badge) + "," + escaped(ticketName) + "," + escaped(rt.participantName) + "," + escaped(rt.dietaryRequirements) + "," + escaped(rt.participantEmail);
 					})
 			)).header("content-disposition", "attachment; filename=" + ticket1.map(x -> x.ticketName).orSome("registrations") + "-" + Instant.now().toString() + ".csv").build();
 		}

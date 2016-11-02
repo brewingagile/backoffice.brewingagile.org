@@ -185,8 +185,8 @@ public class RegistrationApiRestService {
 			object(
 				field("tickets", array(
 					ticketJson("conference", "Conference: You go to the conference on Friday afternoon and the discussion groups on Saturday. Starts at 13:00.", total.conference < 110, BigDecimal.valueOf(1200)),
-					ticketJson("workshop1", "Workshop: \"#NoEstimates\" with Vasco Duarte (Thursday, all day). 3500 SEK.", total.workshop1 < 22, BigDecimal.valueOf(3500)),
-					ticketJson("workshop2", "Workshop: \"Agile Retrospectives\" with Luis Goncalves (Friday morning). 1750 SEK.", total.workshop2 < 20, BigDecimal.valueOf(1750))
+					ticketJson("workshop1", "Workshop: \"#NoEstimates\" with Vasco Duarte (Thursday, all day).", total.workshop1 < 22, BigDecimal.valueOf(3500)),
+					ticketJson("workshop2", "Workshop: \"Agile Retrospectives\" with Luis Goncalves (Friday morning).", total.workshop2 < 20, BigDecimal.valueOf(1750))
 				))
 			)
 		)).build();

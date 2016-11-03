@@ -120,7 +120,8 @@ public class BudgetJaxRs {
 			);
 
 			List<BudgetItem> costsWorkshop2 = List.list(
-				t("Workshop2: Mat F+L", logic.total.workshop2 + 1, 175) // speaker
+				t("Workshop2: Mat F+L", logic.total.workshop2 + 1, 175), // speaker
+				t("Workshop1: Lokal", 1, 2000)
 			);
 			List<BudgetItem> revenuesWorkshop2 = List.list(
 				t("Workshop2: biljetter", logic.individuals.workshop2, 1400),
@@ -134,10 +135,9 @@ public class BudgetJaxRs {
 						t("Konferens: Fika", logic.total.conference, 45),
 						t("Konferens: Middag", logic.total.conference, 130),
 						t("Konferens: öl", logic.total.conference, 55),
-						t("Konferens: Lokalhyra", 1, 16000),
+						t("Konferens: Lokalhyra", 1, 14000),
 						t("Konferens: PA", 1, 5350),
-						t("Konferens: Beer Labels (p)", 1, 732),
-						t("Konferens: Lanyards (p)", 1, 1107),
+						t("Konferens: Lanyards", 1, 529 + 325),
 
 						t("Konferens: Speaker: Vasco", 1, sum(revenuesWorkshop1).subtract(sum(costsWorkshop1))),
 						t("Konferens: Speaker: Luis", 1, sum(revenuesWorkshop2).subtract(sum(costsWorkshop2))),

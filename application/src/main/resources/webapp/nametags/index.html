@@ -42,20 +42,53 @@
 		page-break-inside: avoid;
 	}
 
-	.label.organiser {
-		border-left: 3mm solid red;
-		border-right: 3mm solid red;
+	.label.badge {
 		margin: 0mm 2mm 0mm 2mm !important;
 	}
 
-	.organiser .organiser {
-		background-color: red;
+	.label .badge {
 		text-align: center;
 		font-family: 'Source Code Pro', monospace;
 		font-size: 10mm;
 		color: white;
 		font-weight: bold;
-		margin-top: 1px;
+	}
+
+	.label.organiser {
+		border-left: 3mm solid red;
+		border-right: 3mm solid red;
+	}
+
+	.label.organiser .badge {
+		background-color: red;
+	}
+
+	.label.support {
+		border-left: 3mm solid green;
+		border-right: 3mm solid green;
+	}
+
+	.label.support .badge {
+		background-color: green;
+	}
+
+	.label.co {
+		border-left: 3mm solid pink;
+		border-right: 3mm solid pink;
+	}
+
+	.label.co .badge {
+		background-color: pink;
+		color: black;
+	}
+
+	.label.speaker {
+		border-left: 3mm solid blue;
+		border-right: 3mm solid blue;
+	}
+
+	.label.speaker .badge {
+		background-color: blue;
 	}
 
 	.name {
@@ -101,51 +134,22 @@
 		bottom: -8mm;
 		z-index: -1;
 	}
-	.tickets {
 
-	}
-	.badge {
-		font-size: 7mm;
-		text-transform: uppercase;
-		text-align: center;
-		font-weight: bold;
-	}
-	.badge.speaker {
-		background-color: black;
-		color: white;
-	}
-	.badge.support {
-		background-color: black;
-		color: white;
-
-	}
-	.badge.organiser {
-		background-color: black;
-		color: white;
-
-	}
 	.statusbar {
 		position: absolute;
 		bottom: 0mm;
 		display: block;
 		width: 100%;
 	}
-
-	.toggle {
-		text-transform: uppercase;
-	}
-
 }
 </style>
 </head>
 <body ng-controller="LabelsController">
 <div class="registration" ng-repeat="l in labels">
-	<div class="label" ng-repeat="d in [1,2]" ng-class="{organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER')}">
-		<div class="organiser" ng-show="(l.badge == 'ORGANIZER' || l.badge == 'ORGANISER')">ORGANISER</div>
+	<div class="label" ng-repeat="d in [1,2]" ng-class="{organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER'), support: (l.badge == 'VIDEO' || l.badge == 'AUDIO' || l.badge == 'PHOTO' || l.badge == 'VOLUNTEER'), co: (l.badge == 'HOSTESS' || l.badge == 'HOST'), speaker: (l.badge == 'SPEAKER'), badge: (l.badge != '')}">
+		<div class="badge" ng-show="l.badge != ''">{{l.badge}}</div>
 		<div class="name">{{l.name}}</div>
 		<div class="extras">{{l.twitter}}<br>{{l.company}}</div>
-		<!--<div class="twitter" ng-show="l.twitter">{{l.twitter}}</div>-->
-		<!--<div class="company" ng-show="l.company"></i> {{l.company}}</div>-->
 		<div class="statusbar">
 			<div class="logo"><img src="logo.png"></div>
 			<!--<div ng-class="{badge: true, speaker: (l.badge == 'SPEAKER'), organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER'), support: (l.badge == 'PHOTOGRAPHER' || l.badge == 'SOUND TECHNICIAN')}">{{l.badge}}</div>-->

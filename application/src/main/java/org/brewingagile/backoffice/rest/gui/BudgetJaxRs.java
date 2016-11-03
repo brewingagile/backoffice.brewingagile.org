@@ -131,9 +131,12 @@ public class BudgetJaxRs {
 			List<BudgetItem> costs = List.Buffer.<BudgetItem>empty()
 				.append(
 					List.list(
+						t("Torsdag: Frukost (organisatörer)", 11, 45),
+						t("Torsdag: Middag (organisatörer)", 11, 148.50),
+
 						t("Konferens: Lunch", 5 + 5 + 1, 175), // organisers, support, video
 						t("Konferens: Fika", logic.total.conference, 45),
-						t("Konferens: Middag", logic.total.conference, 130),
+						t("Konferens: Middag", logic.total.conference, 148.50),
 						t("Konferens: öl", logic.total.conference, 55),
 						t("Konferens: Lokalhyra", 1, 14000),
 						t("Konferens: PA", 1, 5350),
@@ -144,7 +147,7 @@ public class BudgetJaxRs {
 						t("Konferens: Speaker", 3, 10000),
 
 						t("Open Spaces: Supplies", 1, 1000),
-						t("Open Spaces: Brunch (50%)", logic.total.conference / 2, 165),
+						t("Open Spaces: Brunch (50%)", logic.total.conference / 2, 117),
 						t("Open Spaces: Fika (50%)", logic.total.conference / 2, 45) //assumption, half attendees on saturday,
 					)
 				)

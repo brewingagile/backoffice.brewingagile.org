@@ -15,6 +15,7 @@ import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Badge;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingCompany;
+import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.PrintedNametag;
 import org.brewingagile.backoffice.integrations.OutvoicePaidClient;
 import org.brewingagile.backoffice.services.DismissRegistrationService;
 import org.brewingagile.backoffice.services.MarkAsCompleteService;
@@ -129,6 +130,7 @@ public class RegistrationsRestService {
 		return object(
 			field("id", string(r.id.toString())),
 			field("tuple", json(r.tuple)),
+			field("printedNametag", booleanNode(r.printedNametag.isSome())),
 			field("tickets", r.tickets.toList().map(ToJson::json).toJavaList().stream().collect(ArgoUtils.toArray()))
 		);
 	}
@@ -232,7 +234,7 @@ public class RegistrationsRestService {
 		int i = 0;
 		for (UUID uuid : registrationListRequest(body)) {
 			try (Connection c = dataSource.getConnection()) {
-				registrationsSqlMapper.insertPrintedNametag(c, uuid);
+				registrationsSqlMapper.replacePrintedNametag(c, uuid, Option.some(new PrintedNametag()));
 			}
 			i++;
 		}
@@ -240,6 +242,23 @@ public class RegistrationsRestService {
 		return Response.ok(ArgoUtils.format(Result.success(String.format("Markerade %s namnbrickor som utskrivna.", i)))).build();
 	}
 
+	@POST
+	@Path("/unmark-as-printed")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response unmarkAsPrinted(@Context HttpServletRequest request, String body) throws Exception {
+		authService.guardAuthenticatedUser(request);
+
+		int i = 0;
+		for (UUID uuid : registrationListRequest(body)) {
+			try (Connection c = dataSource.getConnection()) {
+				registrationsSqlMapper.replacePrintedNametag(c, uuid, Option.none());
+			}
+			i++;
+		}
+
+		return Response.ok(ArgoUtils.format(Result.success(String.format("Avmarkerade %s namnbrickor som utskrivna.", i)))).build();
+	}
 
 
 	@POST

@@ -2,6 +2,7 @@ package org.brewingagile.backoffice.db.operations;
 
 import java.sql.*;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import fj.Ord;
@@ -73,13 +74,15 @@ public class RegistrationsSqlMapper {
 		public final UUID id;
 		public final RegistrationTuple tuple;
 		public final Set<TicketName> tickets;
+		public final Option<PrintedNametag> printedNametag;
 
 		public static Ord<RegistrationsSqlMapper.Registration> byBadge = Ord.ord(l -> r -> Ord.stringOrd.compare(l.tuple.badge.badge, r.tuple.badge.badge));
 
-		public Registration(UUID id, RegistrationTuple tuple, Set<TicketName> tickets) {
+		public Registration(UUID id, RegistrationTuple tuple, Set<TicketName> tickets, Option<PrintedNametag> printedNametag) {
 			this.id = id;
 			this.tuple = tuple;
 			this.tickets = tickets;
+			this.printedNametag = printedNametag;
 		}
 	}
 
@@ -126,7 +129,7 @@ public class RegistrationsSqlMapper {
 		Set<TicketName> tickets = tickets(c, id);
 		return Option.some(
 			new Registration(
-				id, registration.some(), tickets
+				id, registration.some(), tickets, printedNametag(c, id)
 			)
 		);
 	}
@@ -136,7 +139,6 @@ public class RegistrationsSqlMapper {
 		deleteRegistrationTicket(c, id);
 		insertRegistrationTuple(c, id, r.tuple);
 		for (TicketName ticket : r.tickets) insertRegistrationTicket(c, id, ticket);
-
 	}
 
 	private void insertRegistrationTicket(Connection c, UUID id, TicketName ticket) throws SQLException {
@@ -197,18 +199,27 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	public boolean printedNametag(Connection c, UUID id) throws SQLException {
+	public Option<PrintedNametag> printedNametag(Connection c, UUID id) throws SQLException {
 		try (PreparedStatement ps = c.prepareStatement("SELECT * FROM printed_nametags WHERE registration_id = ?")) {
 			ps.setObject(1, id);
-			try (ResultSet r = ps.executeQuery()) {
-				return r.next();
-			}
+			return SqlOps.one(ps, rs -> new PrintedNametag());
 		}
 	}
 
-	public void insertPrintedNametag(Connection c, UUID id) throws SQLException {
-		if (printedNametag(c, id)) return;
+	public void replacePrintedNametag(Connection c, UUID id, Option<PrintedNametag> v) throws SQLException {
+		deletePrintedNametag(c, id);
+		if (v.isSome()) insertPrintedNametag(c, id, v.some());
+	}
+
+	private void insertPrintedNametag(Connection c, UUID id, PrintedNametag __) throws SQLException {
 		try (PreparedStatement ps = c.prepareStatement("INSERT INTO printed_nametags (registration_id) VALUES (?)")) {
+			ps.setObject(1, id);
+			ps.execute();
+		}
+	}
+
+	private void deletePrintedNametag(Connection c, UUID id) throws SQLException {
+		try (PreparedStatement ps = c.prepareStatement("DELETE FROM printed_nametags WHERE registration_id = ?")) {
 			ps.setObject(1, id);
 			ps.execute();
 		}
@@ -339,4 +350,6 @@ public class RegistrationsSqlMapper {
 			ps.execute();
 		}
 	}
+
+	public static final class PrintedNametag {}
 }

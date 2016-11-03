@@ -143,7 +143,8 @@ public class RegistrationApiRestService {
 							rr.twitter,
 							Option.none()
 						),
-						rr.tickets
+						rr.tickets,
+						Option.none()
 					)
 				);
 			}

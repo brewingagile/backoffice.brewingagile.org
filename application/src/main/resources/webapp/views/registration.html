@@ -62,7 +62,7 @@
 		<div class="form-group">
 			<label for="inputBadge" class="col-lg-4 control-label">Badge</label>
 			<div class="col-lg-6">
-				<select name="inputBadge" class="form-control" ng-model="registration.tuple.badge">
+				<select id="inputBadge" class="form-control" ng-model="registration.tuple.badge">
 					<option value="SPEAKER">Speaker</option>
 					<option value="ORGANIZER">Organizer</option>
                     <option value="PHOTOGRAPHER">Photographer</option>
@@ -73,14 +73,15 @@
 		<div class="form-group">
 			<label for="inputBundle" class="col-lg-4 control-label">Bundle</label>
 			<div class="col-lg-6">
-				<select name="inputBundle" class="form-control" ng-model="registration.tuple.bundle" ng-options="b.bucket as b.bucket for b in bundles" nulltoemptystring>
+				<select id="inputBundle" class="form-control" ng-model="registration.tuple.bundle" ng-options="b.bucket as b.bucket for b in bundles" nulltoemptystring>
 					<option value="">(none) - Individual Participant</option>
 				</select>
 			</div>
 		</div>
 		<div class="form-group">
 			<div class="col-lg-10 text-right">
-				<button class="btn btn-warning" ng-click="markNametagPrinted()">Markera: Namnbricka utskriven</button>
+				<button class="btn btn-warning" ng-click="unmarkNametagPrinted()" ng-disabled="!registration.printedNametag">Avmarkera: Namnbricka utskriven</button>
+				<button class="btn btn-warning" ng-click="markNametagPrinted()" ng-disabled="registration.printedNametag">Markera: Namnbricka utskriven</button>
 				<button class="btn btn-primary" ng-click="save()">Save</button>
 			</div>
 		</div>

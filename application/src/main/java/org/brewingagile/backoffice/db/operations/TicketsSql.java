@@ -82,14 +82,10 @@ public class TicketsSql {
 	}
 
 	public void replace(Connection c, List<Ticket> xs) throws SQLException {
-		deferAll(c); delete(c);
+		SqlOps.deferAll(c); delete(c);
 		for (Ticket x : xs) {
 			insert(c, x);
 		}
-	}
-
-	private void deferAll(Connection c) throws SQLException {
-		c.createStatement().execute("SET CONSTRAINTS ALL DEFERRED;");
 	}
 
 	private void delete(Connection connection) throws SQLException {
@@ -103,8 +99,8 @@ public class TicketsSql {
 		try (PreparedStatement ps = connection.prepareStatement(sql)) {
 			ps.setString(1, ticket.ticket.ticketName);
 			ps.setString(2, ticket.productText);
-			ps.setBigDecimal(2, ticket.price);
-			ps.setInt(3, ticket.seats);
+			ps.setBigDecimal(3, ticket.price);
+			ps.setInt(4, ticket.seats);
 			ps.executeUpdate();
 		}
 	}

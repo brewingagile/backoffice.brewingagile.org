@@ -1,5 +1,6 @@
 package org.brewingagile.backoffice.db.operations;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,5 +31,9 @@ public class SqlOps {
 
 	public static <T> Set<T> set(PreparedStatement ps, Ord<T> ord, Try1<ResultSet, T, SQLException> f) throws SQLException {
 		return Set.iterableSet(ord, list(ps, f));
+	}
+
+	static void deferAll(Connection c) throws SQLException {
+		c.createStatement().execute("SET CONSTRAINTS ALL DEFERRED;");
 	}
 }

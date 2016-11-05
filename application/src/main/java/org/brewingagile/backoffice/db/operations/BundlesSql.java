@@ -9,7 +9,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
@@ -64,15 +63,11 @@ public class BundlesSql {
 	}
 
 	public void replace(Connection c, List<Bucket> bs) throws SQLException {
-		deferAll(c); delete(c);
+		SqlOps.deferAll(c); delete(c);
 		for (Bucket b : bs) {
 			insert(c, b);
 			if (b.deal.isSome()) insert(c, b, b.deal.some());
 		}
-	}
-
-	private void deferAll(Connection c) throws SQLException {
-		c.createStatement().execute("SET CONSTRAINTS ALL DEFERRED;");
 	}
 
 	private void delete(Connection connection) throws SQLException {

@@ -19,6 +19,7 @@
 	<script src="views/paid.js?v=##version##"></script>
 	<script src="views/registration.js?v=##version##"></script>
 	<script src="views/buckets.js?v=##version##"></script>
+	<script src="views/tickets.js?v=##version##"></script>
 	<script src="views/budget.js?v=##version##"></script>
 	<script src="views/overview.js?v=##version##"></script>
 	<script src="index.js?v=##version##"></script>
@@ -50,6 +51,7 @@
 			<br>
 			<legend>Other</legend>
 			<ul class="nav nav-pills nav-stacked">
+				<li ng-class="getClass('/tickets')"><a href="#/tickets">Tickets</a></li>
 				<li ng-class="getClass('/overview')"><a href="#/overview">Bundle Overview</a></li>
 				<li ng-class="getClass('/buckets')"><a href="#/buckets">Bundle Admin</a></li>
 				<li><a target="_blank" href="nametags/">Name Tags <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a></li>

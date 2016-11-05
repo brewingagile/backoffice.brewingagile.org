@@ -10,4 +10,4 @@ INSERT INTO ticket (ticket, product_text, price, seats) VALUES
     ('workshop1', 'Workshop: "#NoEstimates" with Vasco Duarte (Thursday, all day).', 3500, 22),
     ('workshop2', 'Workshop: "Agile Retrospectives" with Luis Goncalves (Friday morning).', 1750, 20);
 
-ALTER TABLE registration_ticket ADD CONSTRAINT registration_ticket_ticket FOREIGN KEY (ticket) REFERENCES ticket (ticket) ON UPDATE CASCADE;
+ALTER TABLE registration_ticket ADD CONSTRAINT registration_ticket_ticket FOREIGN KEY (ticket) REFERENCES ticket (ticket) ON UPDATE CASCADE DEFERRABLE;

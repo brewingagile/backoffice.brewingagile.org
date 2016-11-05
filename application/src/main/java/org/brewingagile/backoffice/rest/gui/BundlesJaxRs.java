@@ -8,6 +8,7 @@ import fj.data.List;
 import fj.data.Option;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BundlesSql;
+import org.brewingagile.backoffice.rest.json.FromJson;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
@@ -98,14 +99,9 @@ public class BundlesJaxRs {
 			new BigInteger(node.getNumberValue("conference")).intValue(),
 			new BigInteger(node.getNumberValue("workshop1")).intValue(),
 			new BigInteger(node.getNumberValue("workshop2")).intValue(),
-			Option.fromNull(getNullableNode(node, "deal")).map(x -> new BundlesSql.Deal(
+			Option.fromNull(FromJson.getNullableNode(node, "deal")).map(x -> new BundlesSql.Deal(
 				new BigDecimal(x.getNumberValue("price"))
 			))
 		);
-	}
-
-	private static JsonNode getNullableNode(JsonNode node, String f) {
-		if (node.isNullNode("deal")) return null;
-		return node.getNode(f);
 	}
 }

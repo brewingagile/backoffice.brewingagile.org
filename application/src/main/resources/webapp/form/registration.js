@@ -26,7 +26,7 @@ function RegistrationController($scope, $resource, $window, $timeout, $window) {
 	};
 
     $scope.selectedTickets = function() {
-        return _.filter($scope.r.tickets, function(x) { return x != "" });
+        return _.filter($scope.r.tickets, function(x) { return x != "" && x != null });
     };
 
 	$scope.submit = function() {

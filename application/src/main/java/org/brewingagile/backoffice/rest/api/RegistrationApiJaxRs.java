@@ -110,6 +110,8 @@ public class RegistrationApiJaxRs {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response post(@Context HttpServletRequest request,  String body) throws  URISyntaxException, SQLException {
 		try {
+			System.out.println(body);
+
 			fj.data.Either<String, JsonRootNode> parseEither = ArgoUtils.parseEither(body);
 
 			if (parseEither.isLeft())
@@ -216,7 +218,7 @@ public class RegistrationApiJaxRs {
 			case "conference": return total.conference;
 			case "workshop1": return total.workshop1;
 			case "workshop2": return total.workshop2;
-			default: throw new IllegalArgumentException();
+			default: return 0;
 		}
 	}
 
@@ -243,13 +245,6 @@ public class RegistrationApiJaxRs {
 			tickets,
 			ArgoUtils.stringOrEmpty(body, "twitter".trim())
 		);
-	}
-
-	private static Set<String> tickets(JsonRootNode body) {
-		Option<String> conference1 = Option.iif(body.getBooleanValue("tickets", "conference"), "conference");
-		Option<String> workshop1 = Option.iif(body.getBooleanValue("tickets", "workshop1"), "workshop1");
-		Option<String> workshop2 = Option.iif(body.getBooleanValue("tickets", "workshop2"), "workshop2");
-		return Set.iterableSet(Ord.stringOrd, Option.somes(List.list(conference1, workshop1, workshop2)));
 	}
 
 	private static BillingMethod billingMethod(String billingMethod) {

@@ -1,0 +1,45 @@
+<div class="col-lg-10">
+	<div class="row">
+		<div class="col-lg-10">
+			<legend>Tickets</legend>
+		</div>
+	</div>
+	<form role="form" name="myForm" ng-submit="save(tickets)">
+		<div class="row">
+			<div class="col-xs-3">Name</div>
+			<div class="col-xs-5">Product Text</div>
+			<div class="col-xs-1">Price</div>
+			<div class="col-xs-1">Seats</div>
+		</div>
+		<div class="row" ng-repeat="t in tickets">
+			<div class="col-xs-3"><input type="text" class="form-control" ng-model="t.ticket" required/></div>
+			<div class="col-xs-5"><input type="text" class="form-control" ng-model="t.productText" required/></div>
+			<div class="col-xs-1"><input type="number" class="form-control" ng-model="t.price" required/></div>
+			<div class="col-xs-1"><input type="number" class="form-control" ng-model="t.seats" required/></div>
+			<div class="col-xs-1"><button type="button" class="btn btn-danger" title="ta bort" ng-click="remove(t)">&#x2715;</button></div>
+		</div>
+		<div class="row">
+			<div class="col-lg-10">
+				<hr style="border-top: 1px solid #ddd;">
+				<div class="pull-left">
+					<button type="button" class="btn btn-link" ng-click="add()">Lägg till rad</button>
+				</div>
+				<div class="pull-right">
+					<button type="submit" class="btn btn-primary" ng-disabled="!myForm.$valid">Spara</button>
+				</div>
+			</div>
+		</div>
+		<div class="row" style="margin-top: 1em;">
+			<div class="col-lg-10">
+				<div class="alert alert-success" role="alert" ng-show="success">
+					<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+					<strong>{{success}}</strong>
+				</div>
+				<div class="alert alert-danger" role="alert" ng-show="error">
+					<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+					<strong>{{error}}</strong>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>

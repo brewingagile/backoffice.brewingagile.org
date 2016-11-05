@@ -31,7 +31,7 @@ import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
 import org.brewingagile.backoffice.integrations.SlackBotHook;
 import org.brewingagile.backoffice.pure.BundleLogic;
-import org.brewingagile.backoffice.utils.ToJson;
+import org.brewingagile.backoffice.rest.json.ToJson;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
 

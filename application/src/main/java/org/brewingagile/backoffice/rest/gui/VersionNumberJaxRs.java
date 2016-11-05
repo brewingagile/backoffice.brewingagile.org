@@ -16,10 +16,10 @@ import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
 @Path("/versionnumber")
 @NeverCache
-public class VersionNumberRestService {
+public class VersionNumberJaxRs {
 	private final GitPropertiesDescribeVersionNumberProvider versionNumberProvider;
 
-	public VersionNumberRestService(GitPropertiesDescribeVersionNumberProvider versionNumberProvider) {
+	public VersionNumberJaxRs(GitPropertiesDescribeVersionNumberProvider versionNumberProvider) {
 		this.versionNumberProvider = versionNumberProvider;
 	}
 	

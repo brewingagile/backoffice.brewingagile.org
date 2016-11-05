@@ -25,7 +25,7 @@ import java.sql.SQLException;
 import static argo.jdom.JsonNodeFactories.*;
 
 import static org.brewingagile.backoffice.db.operations.BundlesSql.Bucket;
-import static org.brewingagile.backoffice.rest.gui.ToJson.nullable;
+import static org.brewingagile.backoffice.utils.ToJson.nullable;
 
 @Path("buckets")
 @NeverCache

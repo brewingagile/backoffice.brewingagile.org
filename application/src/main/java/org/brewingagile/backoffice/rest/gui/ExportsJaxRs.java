@@ -26,12 +26,12 @@ import java.util.UUID;
 
 @Path("/exports")
 @NeverCache
-public class ExportsRestService {
+public class ExportsJaxRs {
 	private final DataSource dataSource;
 	private final AuthService authService;
 	private final RegistrationsSqlMapper registrationsSqlMapper;
 
-	public ExportsRestService(
+	public ExportsJaxRs(
 		DataSource dataSource,
 		AuthService authService,
 		RegistrationsSqlMapper registrationsSqlMapper

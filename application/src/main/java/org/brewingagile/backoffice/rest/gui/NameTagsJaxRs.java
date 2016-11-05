@@ -8,7 +8,6 @@ import fj.data.Option;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
-import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
@@ -31,12 +30,12 @@ import static org.brewingagile.backoffice.db.operations.TicketsSql.TicketName.ti
 
 @Path("/nametags/")
 @NeverCache
-public class NameTagsRestService {
+public class NameTagsJaxRs {
 	private final DataSource dataSource;
 	private final AuthService authService;
 	private final RegistrationsSqlMapper registrationsSqlMapper;
 
-	public NameTagsRestService(
+	public NameTagsJaxRs(
 		DataSource dataSource,
 		AuthService authService,
 		RegistrationsSqlMapper registrationsSqlMapper
@@ -55,7 +54,7 @@ public class NameTagsRestService {
 		try (Connection c = dataSource.getConnection()) {
 			List<UUID> registrationTuples = registrationsSqlMapper.unprintedNametags(c);
 			List<Registration> somes = Option.somes(registrationTuples.traverseIO(ioify(c)).run());
-			return Response.ok(ArgoUtils.format(array(somes.map(NameTagsRestService::json)))).build();
+			return Response.ok(ArgoUtils.format(array(somes.map(NameTagsJaxRs::json)))).build();
 		}
 	}
 

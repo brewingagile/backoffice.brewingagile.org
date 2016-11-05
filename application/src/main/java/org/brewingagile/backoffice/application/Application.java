@@ -9,12 +9,12 @@ import org.brewingagile.backoffice.db.operations.BudgetSql;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.integrations.*;
-import org.brewingagile.backoffice.rest.api.RegistrationApiRestService;
+import org.brewingagile.backoffice.rest.api.RegistrationApiJaxRs;
 import org.brewingagile.backoffice.rest.gui.*;
-import org.brewingagile.backoffice.services.DismissRegistrationService;
-import org.brewingagile.backoffice.services.MarkAsCompleteService;
-import org.brewingagile.backoffice.services.MarkAsPaidService;
-import org.brewingagile.backoffice.services.SendInvoiceService;
+import org.brewingagile.backoffice.io.DismissRegistrationService;
+import org.brewingagile.backoffice.io.MarkAsCompleteService;
+import org.brewingagile.backoffice.io.MarkAsPaidService;
+import org.brewingagile.backoffice.io.SendInvoiceService;
 import org.brewingagile.backoffice.utils.GitPropertiesDescribeVersionNumberProvider;
 
 import javax.sql.DataSource;
@@ -47,18 +47,18 @@ public class Application {
 		SlackBotHook slackBotHook = new SlackBotHook(new OkHttpClient(), config.slackBotHookUrl, config.slackBotName, config.slackBotChannel);
 
 		this.apiRestServices = List.list(
-			new RegistrationApiRestService(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql, slackBotHook, ticketsSql)
+			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql, slackBotHook, ticketsSql)
 		);
 
 		this.guiRestServices = List.list(
-			new LoggedInRestService(authService),
-			new VersionNumberRestService(versionNumberProvider),
-			new RegistrationsRestService(dataSource, authService, registrationsSqlMapper, sendInvoiceService, dismissRegistrationService, markAsCompleteService, markAsPaidService, outvoicePaidClient),
-			new NameTagsRestService(dataSource, authService, registrationsSqlMapper),
+			new LoggedInJaxRs(authService),
+			new VersionNumberJaxRs(versionNumberProvider),
+			new RegistrationsJaxRs(dataSource, authService, registrationsSqlMapper, sendInvoiceService, dismissRegistrationService, markAsCompleteService, markAsPaidService, outvoicePaidClient),
+			new NameTagsJaxRs(dataSource, authService, registrationsSqlMapper),
 			new BundlesJaxRs(dataSource, authService, bundlesSql),
 			new BudgetJaxRs(dataSource, authService, budgetSql, registrationsSqlMapper, bundlesSql),
-			new ReportsRestService(dataSource, authService, bundlesSql),
-			new ExportsRestService(dataSource, authService,registrationsSqlMapper)
+			new ReportsJaxRs(dataSource, authService, bundlesSql),
+			new ExportsJaxRs(dataSource, authService,registrationsSqlMapper)
 		);
 	}
 }

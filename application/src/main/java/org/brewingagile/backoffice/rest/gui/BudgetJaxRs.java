@@ -9,6 +9,7 @@ import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.BudgetSql;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
+import org.brewingagile.backoffice.pure.BundleLogic;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 

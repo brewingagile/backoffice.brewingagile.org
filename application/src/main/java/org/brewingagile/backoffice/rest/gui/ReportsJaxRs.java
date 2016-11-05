@@ -4,6 +4,7 @@ import argo.jdom.JsonRootNode;
 import fj.data.List;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BundlesSql;
+import org.brewingagile.backoffice.pure.BundleLogic;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
@@ -24,12 +25,12 @@ import static org.brewingagile.backoffice.db.operations.BundlesSql.Individuals;
 
 @Path("/reports/")
 @NeverCache
-public class ReportsRestService {
+public class ReportsJaxRs {
 	private final DataSource dataSource;
 	private final AuthService authService;
 	private final BundlesSql bundlesSql;
 
-	public ReportsRestService(DataSource dataSource, AuthService authService, BundlesSql bundlesSql) {
+	public ReportsJaxRs(DataSource dataSource, AuthService authService, BundlesSql bundlesSql) {
 		this.dataSource = dataSource;
 		this.authService = authService;
 		this.bundlesSql = bundlesSql;
@@ -44,7 +45,7 @@ public class ReportsRestService {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
 			return Response.ok(ArgoUtils.format(
-				array(bundlesSql.bundles(c).map(ReportsRestService::json))
+				array(bundlesSql.bundles(c).map(ReportsJaxRs::json))
 			)).build();
 		}
 	}

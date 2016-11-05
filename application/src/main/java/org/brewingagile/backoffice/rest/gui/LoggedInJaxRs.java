@@ -18,10 +18,10 @@ import static argo.jdom.JsonNodeFactories.*;
 
 @Path("/loggedin")
 @NeverCache
-public class LoggedInRestService {
+public class LoggedInJaxRs {
 	private final AuthService authService;
 
-	public LoggedInRestService(AuthService authService) {
+	public LoggedInJaxRs(AuthService authService) {
 		this.authService = authService;
 	}
 	

@@ -1,8 +1,6 @@
-package org.brewingagile.backoffice.services;
+package org.brewingagile.backoffice.io;
 
 import org.brewingagile.backoffice.db.operations.RegistrationState;
-import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
-import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.RegistrationTuple;
 
 public class NextStateHelper {

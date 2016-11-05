@@ -1,4 +1,4 @@
-package org.brewingagile.backoffice.rest.gui;
+package org.brewingagile.backoffice.pure;
 
 import fj.data.List;
 import org.brewingagile.backoffice.db.operations.BundlesSql;

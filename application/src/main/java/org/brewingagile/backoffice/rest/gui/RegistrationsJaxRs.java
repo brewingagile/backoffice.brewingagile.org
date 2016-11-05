@@ -3,7 +3,6 @@ package org.brewingagile.backoffice.rest.gui;
 import argo.jdom.JsonNode;
 import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
-import com.squareup.okhttp.OkHttpClient;
 import fj.F;
 import fj.Function;
 import fj.P2;
@@ -17,12 +16,14 @@ import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Badge;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingCompany;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.PrintedNametag;
 import org.brewingagile.backoffice.integrations.OutvoicePaidClient;
-import org.brewingagile.backoffice.services.DismissRegistrationService;
-import org.brewingagile.backoffice.services.MarkAsCompleteService;
-import org.brewingagile.backoffice.services.MarkAsPaidService;
-import org.brewingagile.backoffice.services.SendInvoiceService;
+import org.brewingagile.backoffice.rest.json.ToJson;
+import org.brewingagile.backoffice.io.DismissRegistrationService;
+import org.brewingagile.backoffice.io.MarkAsCompleteService;
+import org.brewingagile.backoffice.io.MarkAsPaidService;
+import org.brewingagile.backoffice.io.SendInvoiceService;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
+import org.brewingagile.backoffice.utils.ToJson;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
 import javax.servlet.http.HttpServletRequest;
@@ -41,7 +42,7 @@ import static argo.jdom.JsonNodeFactories.*;
 
 @Path("/registrations/")
 @NeverCache
-public class RegistrationsRestService {
+public class RegistrationsJaxRs {
 	private final DataSource dataSource;
 	private final AuthService authService;
 	private final RegistrationsSqlMapper registrationsSqlMapper;
@@ -51,7 +52,7 @@ public class RegistrationsRestService {
 	private final MarkAsPaidService markAsPaidService;
 	private final OutvoicePaidClient outvoicePaidClient;
 
-	public RegistrationsRestService(
+	public RegistrationsJaxRs(
 		DataSource dataSource,
 		AuthService authService,
 		RegistrationsSqlMapper registrationsSqlMapper,
@@ -80,9 +81,9 @@ public class RegistrationsRestService {
 			List<UUID> ids = registrationsSqlMapper.all(c).map(x -> x.fst());
 			List<RegistrationsSqlMapper.Registration> all = Option.somes(ids.traverseIO(ioify(c)).run());
 			JsonRootNode overview = object(
-				field("received", array(all.filter(x -> x.tuple.state == RegistrationState.RECEIVED).map(RegistrationsRestService::json))),
-				field("invoicing", array(all.filter(x -> x.tuple.state == RegistrationState.INVOICING).map(RegistrationsRestService::json))),
-				field("paid", array(all.filter(x -> x.tuple.state == RegistrationState.PAID).map(RegistrationsRestService::json)))
+				field("received", array(all.filter(x -> x.tuple.state == RegistrationState.RECEIVED).map(RegistrationsJaxRs::json))),
+				field("invoicing", array(all.filter(x -> x.tuple.state == RegistrationState.INVOICING).map(RegistrationsJaxRs::json))),
+				field("paid", array(all.filter(x -> x.tuple.state == RegistrationState.PAID).map(RegistrationsJaxRs::json)))
 			);
 			return Response.ok(ArgoUtils.format(overview)).build();
 		}
@@ -106,7 +107,7 @@ public class RegistrationsRestService {
 		try {
 			try (Connection c = dataSource.getConnection()) {
 				return registrationsSqlMapper.one(c, id)
-					.map(RegistrationsRestService::json)
+					.map(RegistrationsJaxRs::json)
 					.map(ArgoUtils::format)
 					.map(Response::ok)
 					.orSome(Response.status(Status.NOT_FOUND))
@@ -192,7 +193,7 @@ public class RegistrationsRestService {
 		Either<String, RegistrationsUpdate> map =
 			ArgoUtils.parseEither(body)
 				.right().map(x -> x.getNode("tuple"))
-				.right().bind(RegistrationsRestService::registrationsUpdate);
+				.right().bind(RegistrationsJaxRs::registrationsUpdate);
 
 		if (map.isLeft()) return Response.serverError().build();
 		RegistrationsUpdate ru = map.right().value();
@@ -355,7 +356,7 @@ public class RegistrationsRestService {
 		return ArgoUtils.parse(body)
 			.getArrayNode("registrations")
 			.stream()
-			.map(RegistrationsRestService::uuid)
+			.map(RegistrationsJaxRs::uuid)
 			.collect(Collectors.toList());
 	}
 

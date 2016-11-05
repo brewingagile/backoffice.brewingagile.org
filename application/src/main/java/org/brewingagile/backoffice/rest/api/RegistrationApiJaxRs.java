@@ -30,15 +30,15 @@ import org.brewingagile.backoffice.db.operations.TicketsSql.TicketName;
 import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
 import org.brewingagile.backoffice.integrations.SlackBotHook;
-import org.brewingagile.backoffice.rest.gui.BundleLogic;
-import org.brewingagile.backoffice.rest.gui.ToJson;
+import org.brewingagile.backoffice.pure.BundleLogic;
+import org.brewingagile.backoffice.utils.ToJson;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
 
 import static argo.jdom.JsonNodeFactories.*;
 
 @Path("/registration/1/")
-public class RegistrationApiRestService {
+public class RegistrationApiJaxRs {
 	private final DataSource dataSource;
 	private final RegistrationsSqlMapper registrationsSqlMapper;
 	private final ConfirmationEmailSender confirmationEmailSender;
@@ -47,7 +47,7 @@ public class RegistrationApiRestService {
 	private final SlackBotHook slackBotHook;
 	private final TicketsSql ticketsSql;
 
-	public RegistrationApiRestService(
+	public RegistrationApiJaxRs(
 		DataSource dataSource,
 		RegistrationsSqlMapper registrationsSqlMapper,
 		ConfirmationEmailSender confirmationEmailSender,

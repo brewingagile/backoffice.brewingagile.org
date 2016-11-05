@@ -1,4 +1,4 @@
-package org.brewingagile.backoffice.rest.gui;
+package org.brewingagile.backoffice.rest.json;
 
 import argo.jdom.JsonNode;
 import fj.F;

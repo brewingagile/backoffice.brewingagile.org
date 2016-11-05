@@ -26,10 +26,12 @@ import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
+import org.brewingagile.backoffice.db.operations.TicketsSql.TicketName;
 import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
 import org.brewingagile.backoffice.integrations.SlackBotHook;
 import org.brewingagile.backoffice.rest.gui.BundleLogic;
+import org.brewingagile.backoffice.rest.gui.ToJson;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
 
@@ -43,6 +45,7 @@ public class RegistrationApiRestService {
 	private final MailchimpSubscribeClient mailchimpSubscribeClient;
 	private final BundlesSql bundlesSql;
 	private final SlackBotHook slackBotHook;
+	private final TicketsSql ticketsSql;
 
 	public RegistrationApiRestService(
 		DataSource dataSource,
@@ -50,7 +53,8 @@ public class RegistrationApiRestService {
 		ConfirmationEmailSender confirmationEmailSender,
 		MailchimpSubscribeClient mailchimpSubscribeClient,
 		BundlesSql bundlesSql,
-		SlackBotHook slackBotHook
+		SlackBotHook slackBotHook,
+		TicketsSql ticketsSql
 	) {
 		this.dataSource = dataSource;
 		this.registrationsSqlMapper = registrationsSqlMapper;
@@ -58,6 +62,7 @@ public class RegistrationApiRestService {
 		this.mailchimpSubscribeClient = mailchimpSubscribeClient;
 		this.bundlesSql = bundlesSql;
 		this.slackBotHook = slackBotHook;
+		this.ticketsSql = ticketsSql;
 	}
 
 	public static final class RegistrationRequest {
@@ -67,7 +72,7 @@ public class RegistrationApiRestService {
 		public final String billingAddress;
 		public final String billingMethod;
 		public final String dietaryRequirements;
-		public final Set<TicketsSql.TicketName> tickets;
+		public final Set<TicketName> tickets;
 		public final String twitter;
 
 		public RegistrationRequest(
@@ -77,7 +82,7 @@ public class RegistrationApiRestService {
 			String billingAddress,
 			String billingMethod,
 			String dietaryRequirements,
-			Set<TicketsSql.TicketName> tickets,
+			Set<TicketName> tickets,
 			String twitter
 		) {
 			this.participantName = participantName;
@@ -185,28 +190,39 @@ public class RegistrationApiRestService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response get(@Context HttpServletRequest request) throws Exception {
 		BundleLogic.Total logic;
+		Array<TicketsSql.Ticket> tickets;
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			List<BundlesSql.BucketSummary> bundles = bundlesSql.bundles(c);
 			BundlesSql.Individuals individuals = bundlesSql.individuals(c);
 			logic = BundleLogic.logic(bundles, individuals);
+			tickets = ticketsSql.all(c).toArray();
 		}
 
 		BundleLogic.Total2 total = logic.total;
 		return Response.ok(ArgoUtils.format(
 			object(
-				field("tickets", array(
-					ticketJson("conference", "Conference: You go to the conference on Friday afternoon and the discussion groups on Saturday. Starts at 13:00.", total.conference < 110, BigDecimal.valueOf(1200)),
-					ticketJson("workshop1", "Workshop: \"#NoEstimates\" with Vasco Duarte (Thursday, all day).", total.workshop1 < 22, BigDecimal.valueOf(3500)),
-					ticketJson("workshop2", "Workshop: \"Agile Retrospectives\" with Luis Goncalves (Friday morning).", total.workshop2 < 20, BigDecimal.valueOf(1750))
-				))
+				field("tickets",
+					array(
+						tickets.map(x -> ticketJson(x.ticket, x.productText, usedSeats(total, x.ticket.ticketName) < x.seats, x.price))
+					)
+				)
 			)
 		)).build();
 	}
 
-	private static JsonRootNode ticketJson(String conference, String description, boolean value, BigDecimal price) {
+	private static int usedSeats(BundleLogic.Total2 total, String ticket) {
+		switch (ticket) {
+			case "conference": return total.conference;
+			case "workshop1": return total.workshop1;
+			case "workshop2": return total.workshop2;
+			default: throw new IllegalArgumentException();
+		}
+	}
+
+	private static JsonRootNode ticketJson(TicketName ticketName, String description, boolean value, BigDecimal price) {
 		return object(
-			field("ticket", string(conference)),
+			field("ticket", ToJson.json(ticketName)),
 			field("description", string(description)),
 			field("available", booleanNode(value)),
 			field("price", number(price))
@@ -216,7 +232,7 @@ public class RegistrationApiRestService {
 
 	private RegistrationRequest fromJson(JsonRootNode body) {
 		Array<String> a = Array.iterableArray(body.getArrayNode("tickets")).map(x -> x.getStringValue());
-		Set<TicketsSql.TicketName> tickets = Set.iterableSet(Ord.stringOrd, a).map(Ord.hashEqualsOrd(), x -> TicketsSql.TicketName.ticketName(x));
+		Set<TicketName> tickets = Set.iterableSet(Ord.stringOrd, a).map(Ord.hashEqualsOrd(), x -> TicketName.ticketName(x));
 		return new RegistrationRequest(
 			ArgoUtils.stringOrEmpty(body, "participantName").trim(),
 			ArgoUtils.stringOrEmpty(body, "participantEmail").trim().toLowerCase(),

@@ -48,15 +48,18 @@ public class TicketsSql {
 
 	public final static class Ticket {
 		public final TicketName ticket;
+		public final String productText;
 		public final BigDecimal price;
 		public final int seats;
 
 		public Ticket(
 			TicketName ticket,
+			String productText,
 			BigDecimal price,
 			int seats
 		) {
 			this.ticket = requireNonNull(ticket);
+			this.productText = requireNonNull(productText);
 			this.price = requireNonNull(price);
 			this.seats = seats;
 		}
@@ -72,6 +75,7 @@ public class TicketsSql {
 	private static Ticket rsTicket(ResultSet rs) throws SQLException {
 		return new Ticket(
 			TicketName.ticketName(rs.getString("ticket")),
+			rs.getString("product_text"),
 			rs.getBigDecimal("price"),
 			rs.getInt("seats")
 		);
@@ -95,12 +99,13 @@ public class TicketsSql {
 	}
 
 	private void insert(Connection connection, Ticket ticket) throws SQLException {
-		String sql = "INSERT INTO ticket (ticket, price, seats) VALUES (?,?,?);";
-		try (PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.setString(1, ticket.ticket.ticketName);
-			statement.setBigDecimal(2, ticket.price);
-			statement.setInt(3, ticket.seats);
-			statement.executeUpdate();
+		String sql = "INSERT INTO ticket (ticket, product_text, price, seats) VALUES (?,?,?,?);";
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
+			ps.setString(1, ticket.ticket.ticketName);
+			ps.setString(2, ticket.productText);
+			ps.setBigDecimal(2, ticket.price);
+			ps.setInt(3, ticket.seats);
+			ps.executeUpdate();
 		}
 	}
 }

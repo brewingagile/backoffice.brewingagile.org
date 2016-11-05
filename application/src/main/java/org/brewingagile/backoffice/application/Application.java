@@ -7,6 +7,7 @@ import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.BudgetSql;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
+import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.integrations.*;
 import org.brewingagile.backoffice.rest.api.RegistrationApiRestService;
 import org.brewingagile.backoffice.rest.gui.*;
@@ -29,10 +30,14 @@ public class Application {
 		AuthService authService = new AuthService(new SummerAuthenticatedUser());
 		OutvoiceInvoiceClient outvoiceInvoiceClient = new OutvoiceInvoiceClient(ClientBuilder.newClient(), config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 		OutvoicePaidClient outvoicePaidClient = new OutvoicePaidClient(new OkHttpClient(), config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
+
 		BudgetSql budgetSql = new BudgetSql();
 		BundlesSql bundlesSql = new BundlesSql();
 		RegistrationsSqlMapper registrationsSqlMapper = new RegistrationsSqlMapper();
+		TicketsSql ticketsSql = new TicketsSql();
+
 		SendInvoiceService sendInvoiceService = new SendInvoiceService(dataSource, registrationsSqlMapper, outvoiceInvoiceClient);
+
 		DismissRegistrationService dismissRegistrationService = new DismissRegistrationService(dataSource, registrationsSqlMapper);
 		MarkAsCompleteService markAsCompleteService = new MarkAsCompleteService(dataSource, registrationsSqlMapper);
 		MarkAsPaidService markAsPaidService = new MarkAsPaidService(dataSource, registrationsSqlMapper);
@@ -42,7 +47,7 @@ public class Application {
 		SlackBotHook slackBotHook = new SlackBotHook(new OkHttpClient(), config.slackBotHookUrl, config.slackBotName, config.slackBotChannel);
 
 		this.apiRestServices = List.list(
-			new RegistrationApiRestService(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql, slackBotHook)
+			new RegistrationApiRestService(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql, slackBotHook, ticketsSql)
 		);
 
 		this.guiRestServices = List.list(

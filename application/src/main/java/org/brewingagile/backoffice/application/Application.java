@@ -7,10 +7,7 @@ import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.BudgetSql;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
-import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
-import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
-import org.brewingagile.backoffice.integrations.OutvoiceInvoiceClient;
-import org.brewingagile.backoffice.integrations.OutvoicePaidClient;
+import org.brewingagile.backoffice.integrations.*;
 import org.brewingagile.backoffice.rest.api.RegistrationApiRestService;
 import org.brewingagile.backoffice.rest.gui.*;
 import org.brewingagile.backoffice.services.DismissRegistrationService;
@@ -42,8 +39,10 @@ public class Application {
 		ConfirmationEmailSender confirmationEmailSender = new ConfirmationEmailSender(config);
 		MailchimpSubscribeClient mailchimpSubscribeClient = new MailchimpSubscribeClient(ClientBuilder.newClient(), config.mailchimpEndpoint, config.mailchimpApikey);
 
+		SlackBotHook slackBotHook = new SlackBotHook(new OkHttpClient(), config.slackBotHookUrl, config.slackBotName, config.slackBotChannel);
+
 		this.apiRestServices = List.list(
-			new RegistrationApiRestService(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql)
+			new RegistrationApiRestService(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql, slackBotHook)
 		);
 
 		this.guiRestServices = List.list(

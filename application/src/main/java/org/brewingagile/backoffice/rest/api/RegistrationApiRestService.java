@@ -1,5 +1,6 @@
 package org.brewingagile.backoffice.rest.api;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -14,7 +15,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import argo.jdom.JsonNode;
 import argo.jdom.JsonRootNode;
 import fj.Ord;
 import fj.data.*;
@@ -28,6 +28,7 @@ import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingM
 import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
+import org.brewingagile.backoffice.integrations.SlackBotHook;
 import org.brewingagile.backoffice.rest.gui.BundleLogic;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
@@ -41,19 +42,22 @@ public class RegistrationApiRestService {
 	private final ConfirmationEmailSender confirmationEmailSender;
 	private final MailchimpSubscribeClient mailchimpSubscribeClient;
 	private final BundlesSql bundlesSql;
+	private final SlackBotHook slackBotHook;
 
 	public RegistrationApiRestService(
 		DataSource dataSource,
 		RegistrationsSqlMapper registrationsSqlMapper,
 		ConfirmationEmailSender confirmationEmailSender,
 		MailchimpSubscribeClient mailchimpSubscribeClient,
-		BundlesSql bundlesSql
+		BundlesSql bundlesSql,
+		SlackBotHook slackBotHook
 	) {
 		this.dataSource = dataSource;
 		this.registrationsSqlMapper = registrationsSqlMapper;
 		this.confirmationEmailSender = confirmationEmailSender;
 		this.mailchimpSubscribeClient = mailchimpSubscribeClient;
 		this.bundlesSql = bundlesSql;
+		this.slackBotHook = slackBotHook;
 	}
 
 	public static final class RegistrationRequest {
@@ -152,6 +156,13 @@ public class RegistrationApiRestService {
 			Either<String, String> emailResult = confirmationEmailSender.email(rr.participantEmail);
 			if (emailResult.isLeft()) {
 				System.err.println("We couldn't send an email to " + rr.participantName + "(" + rr.participantEmail + "). Cause: " + emailResult.left().value());
+			}
+
+			try {
+				String s = rr.tickets.toList().map(x -> x.ticketName).foldLeft1((l, r) -> l + ", " + r);
+				slackBotHook.post("*" + rr.participantName + "* just signed up for *" + s +"*");
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 
 			Either<String, Effect> subscribeResult = mailchimpSubscribeClient.subscribe(rr.participantEmail, "da90a13118");

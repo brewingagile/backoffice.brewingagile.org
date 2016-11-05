@@ -1,5 +1,6 @@
 package org.brewingagile.backoffice.application;
 
+import com.squareup.okhttp.HttpUrl;
 import org.brewingagile.backoffice.utils.EtcPropertyFile;
 
 public class Configuration {
@@ -19,6 +20,9 @@ public class Configuration {
 	public final String gmailPassword;
 	public final String mailchimpEndpoint;
 	public final String mailchimpApikey;
+	public final HttpUrl slackBotHookUrl;
+	public final String slackBotName;
+	public final String slackBotChannel;
 
 	public Configuration(
 		String dbName, String dbHost, int dbPort, String dbUsername, String dbPassword,
@@ -29,7 +33,11 @@ public class Configuration {
 		String gmailUser,
 		String gmailPassword,
 		String mailchimpEndpoint,
-		String mailchimpApikey
+		String mailchimpApikey,
+		HttpUrl slackBotHookUrl,
+		String slackBotName,
+		String slackBotChannel
+
 	) {
 		this.dbName = dbName;
 		this.dbHost = dbHost;
@@ -47,6 +55,9 @@ public class Configuration {
 		this.gmailPassword = gmailPassword;
 		this.mailchimpEndpoint = mailchimpEndpoint;
 		this.mailchimpApikey = mailchimpApikey;
+		this.slackBotHookUrl = slackBotHookUrl;
+		this.slackBotName = slackBotName;
+		this.slackBotChannel = slackBotChannel;
 	}
 	
 	public static Configuration from(EtcPropertyFile etc) {
@@ -66,7 +77,10 @@ public class Configuration {
 			etc.string("gmail.user"),
 			etc.string("gmail.password"),
 			etc.string("mailchimp.endpoint"),
-			etc.string("mailchimp.apikey")
+			etc.string("mailchimp.apikey"),
+			HttpUrl.parse(etc.string("slackbot.hookurl")),
+			etc.string("slackbot.name"),
+			etc.string("slackbot.channel")
 		);
 	}
 }

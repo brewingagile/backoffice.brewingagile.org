@@ -36,7 +36,7 @@ public class Application {
 		RegistrationsSqlMapper registrationsSqlMapper = new RegistrationsSqlMapper();
 		TicketsSql ticketsSql = new TicketsSql();
 
-		SendInvoiceService sendInvoiceService = new SendInvoiceService(dataSource, registrationsSqlMapper, outvoiceInvoiceClient);
+		SendInvoiceService sendInvoiceService = new SendInvoiceService(dataSource, registrationsSqlMapper, outvoiceInvoiceClient, ticketsSql);
 
 		DismissRegistrationService dismissRegistrationService = new DismissRegistrationService(dataSource, registrationsSqlMapper);
 		MarkAsCompleteService markAsCompleteService = new MarkAsCompleteService(dataSource, registrationsSqlMapper);

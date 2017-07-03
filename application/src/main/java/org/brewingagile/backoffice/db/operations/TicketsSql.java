@@ -1,6 +1,8 @@
 package org.brewingagile.backoffice.db.operations;
 
+import fj.Ord;
 import fj.data.List;
+import fj.data.Set;
 import org.brewingagile.backoffice.utils.Strings;
 
 import java.math.BigDecimal;
@@ -9,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.UUID;
 
 import static java.util.Objects.requireNonNull;
 
@@ -44,6 +47,8 @@ public class TicketsSql {
 		public String toString() {
 			return "(TicketName " + ticketName + ")";
 		}
+
+		public static Ord<TicketName> Ord = fj.Ord.ord(l -> r -> fj.Ord.stringOrd.compare(l.ticketName, r.ticketName));
 	}
 
 	public final static class Ticket {
@@ -102,6 +107,14 @@ public class TicketsSql {
 			ps.setBigDecimal(3, ticket.price);
 			ps.setInt(4, ticket.seats);
 			ps.executeUpdate();
+		}
+	}
+
+	public Set<Ticket> by(Connection c, UUID id) throws SQLException {
+		String sql = "SELECT ticket.* FROM registration_ticket JOIN ticket USING (ticket) WHERE registration_id = ?";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			ps.setObject(1, id);
+			return SqlOps.set(ps, Ord.hashEqualsOrd(), TicketsSql::rsTicket);
 		}
 	}
 }

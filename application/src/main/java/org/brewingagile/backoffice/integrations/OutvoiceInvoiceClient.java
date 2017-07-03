@@ -1,7 +1,12 @@
 package org.brewingagile.backoffice.integrations;
 
-import java.math.BigDecimal;
-import java.util.UUID;
+import argo.jdom.JsonRootNode;
+import fj.F;
+import fj.data.Either;
+import fj.data.Set;
+import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
+import org.brewingagile.backoffice.db.operations.TicketsSql;
+import org.brewingagile.backoffice.utils.ArgoUtils;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
@@ -9,17 +14,10 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.math.BigDecimal;
+import java.util.UUID;
 
 import static argo.jdom.JsonNodeFactories.*;
-
-import argo.jdom.JsonRootNode;
-import fj.F;
-import fj.data.Either;
-import fj.data.Set;
-import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
-import org.brewingagile.backoffice.db.operations.TicketsSql;
-import org.brewingagile.backoffice.db.operations.TicketsSql.TicketName;
-import org.brewingagile.backoffice.utils.ArgoUtils;
 
 public class OutvoiceInvoiceClient {
 	private final Client client;
@@ -38,7 +36,7 @@ public class OutvoiceInvoiceClient {
 		String recipientEmailAddress,
 		String recipient,
 		String recipientBillingAddres,
-		Set<TicketName> tickets,
+		Set<TicketsSql.Ticket> tickets,
 		String participantName) {
 
 		JsonRootNode request = object(
@@ -47,7 +45,7 @@ public class OutvoiceInvoiceClient {
 			field("recipientEmailAddress", string(recipientEmailAddress)),
 			field("recipient", string(recipient)),
 			field("recipientBillingAddress", string(recipientBillingAddres)),
-			field("lines", tickets.toList().map(OutvoiceInvoiceClient.line(participantName)).toJavaList().stream().collect(ArgoUtils.toArray()))
+			field("lines", tickets.toList().map(OutvoiceInvoiceClient.line("Brewing Agile 2017: ", participantName)).toJavaList().stream().collect(ArgoUtils.toArray()))
 		);
 
 		Response post;
@@ -66,15 +64,8 @@ public class OutvoiceInvoiceClient {
 		return Either.right(registrationId);
 	}
 
-	private static F<TicketName, JsonRootNode> line(String participantName) {
-		return ticket -> {
-			switch (ticket.ticketName) {
-				case "conference": return line("Brewing Agile 2016: Konferens", "Avser konferens 4-5 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(960), BigDecimal.ONE);
-				case "workshop1": return line("Brewing Agile 2016: Workshop 1", "Avser workshop 3 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(2800), BigDecimal.ONE);
-				case "workshop2": return line("Brewing Agile 2016: Workshop 2", "Avser workshop 4 november.\nAvser deltagare: " + participantName, BigDecimal.valueOf(1400), BigDecimal.ONE);
-				default: throw new IllegalArgumentException("Unknown ticket: " + ticket+ ".");
-			}
-		};
+	private static F<TicketsSql.Ticket, JsonRootNode> line(String eventPrefix, String participantName) {
+		return ticket -> line(eventPrefix, ticket.productText + "\nAvser deltagare: " + participantName, ticket.price, BigDecimal.ONE);
 	}
 
 	private static JsonRootNode line(String text, String description, BigDecimal price, BigDecimal qty) {

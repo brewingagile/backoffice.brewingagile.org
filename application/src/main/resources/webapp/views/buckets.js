@@ -7,7 +7,7 @@ function BucketsController($scope, $window, $resource) {
     };
 
     $scope.add = function() {
-        $scope.buckets = _.union($scope.buckets, [{}]);
+        $scope.buckets = _.union($scope.buckets, [{deal: null}]);
     };
 
     $scope.toggleDeal = function(b) {

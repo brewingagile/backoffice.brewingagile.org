@@ -213,13 +213,17 @@ public class RegistrationsJaxRs {
 	public Response postSendInvoices(@Context HttpServletRequest request, String body) throws Exception {
 		authService.guardAuthenticatedUser(request);
 
-		int invoicesSent = 0;
-		for (UUID uuid : registrationListRequest(body)) {
-			sendInvoiceService.sendInvoice(uuid);
-			invoicesSent++;
+		try {
+			int invoicesSent = 0;
+			for (UUID uuid : registrationListRequest(body)) {
+				sendInvoiceService.sendInvoice(uuid);
+				invoicesSent++;
+			}
+			return Response.ok(ArgoUtils.format(Result.success(String.format("Skickade %s fakturor.", invoicesSent)))).build();
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			return Response.serverError().entity(ArgoUtils.format(Result.failure(e.getMessage()))).build();
 		}
-
-		return Response.ok(ArgoUtils.format(Result.success(String.format("Skickade %s fakturor.", invoicesSent)))).build();
 	}
 
 //		 curl -u admin:password -X POST -H "Content-Type: application/json" -H "Accept: application/json" http://localhost:9080/gui/registrations/mark-as-printed --data '{"registrations": ["f29651e0-c638-43d7-ace5-9dd7a07b1b78"]}'

@@ -1,7 +1,7 @@
 package org.brewingagile.backoffice.integrations;
 
 import argo.jdom.JsonRootNode;
-import com.squareup.okhttp.*;
+import okhttp3.*;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
 import java.io.IOException;
@@ -33,10 +33,10 @@ public class SlackBotHook {
 			.url(hookUrl)
 			.addHeader("Accept", "application/json")
 			.cacheControl(CacheControl.FORCE_NETWORK)
-			.post(RequestBody.create(com.squareup.okhttp.MediaType.parse("application/json"), ArgoUtils.format(request9)))
+			.post(RequestBody.create(MediaType.parse("application/json"), ArgoUtils.format(request9)))
 			.build();
 
-		com.squareup.okhttp.Response execute = client.newCall(request).execute();
+		Response execute = client.newCall(request).execute();
 		if (!execute.isSuccessful() || execute.isRedirect())
 			throw new IOException("Call to " + hookUrl + " failed unexpectedly: " + execute);
 	}

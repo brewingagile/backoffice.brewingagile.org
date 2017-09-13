@@ -1,6 +1,6 @@
 package org.brewingagile.backoffice.application;
 
-import com.squareup.okhttp.HttpUrl;
+import okhttp3.HttpUrl;
 import org.brewingagile.backoffice.utils.EtcPropertyFile;
 
 public class Configuration {

@@ -103,7 +103,7 @@ public class RegistrationApiJaxRs {
 		return accessControlHeaders(request, Response.noContent()).build();
 	}
 	
-//	curl  -v -X POST -H "Content-Type: application/json" http://localhost:9080/api/registration/1/  --data '{"participantName" : "participant name", "participantEmail":"participant@email", "billingCompany": "billing-company", "billingAddress": "billing address", "billingMethod": "EMAIL", "tickets": "conference", "dietaryRequirements": "", "twitter": "@meow" }'
+//	curl  -v -X POST -H "Content-Type: application/json" http://localhost:9080/api/registration/1/  --data '{"participantName" : "participant name", "participantEmail":"participant@email", "billingCompany": "billing-company", "billingAddress": "billing address", "billingMethod": "EMAIL", "tickets": ["conference"], "dietaryRequirements": "", "twitter": "@meow" }'
 	
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)

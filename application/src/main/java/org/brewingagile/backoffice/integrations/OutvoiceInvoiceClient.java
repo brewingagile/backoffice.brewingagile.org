@@ -4,28 +4,27 @@ import argo.jdom.JsonRootNode;
 import fj.F;
 import fj.data.Either;
 import fj.data.Set;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 import static argo.jdom.JsonNodeFactories.*;
 
 public class OutvoiceInvoiceClient {
-	private final Client client;
+	private final OkHttpClient okHttpClient;
 	private final String endpoint;
 	private final String apikey;
 
-	public OutvoiceInvoiceClient(Client client, String endpoint, String apikey) {
-		this.client = client;
+	public OutvoiceInvoiceClient(OkHttpClient okHttpClient, String endpoint, String apikey) {
+		this.okHttpClient = okHttpClient;
 		this.endpoint = endpoint;
 		this.apikey = apikey;
 	}
@@ -37,9 +36,9 @@ public class OutvoiceInvoiceClient {
 		String recipient,
 		String recipientBillingAddres,
 		Set<TicketsSql.Ticket> tickets,
-		String participantName) {
+		String participantName) throws IOException {
 
-		JsonRootNode request = object(
+		JsonRootNode jsonRequest = object(
 			field("apiClientReference", string(registrationId.toString())),
 			field("deliveryMethod", string(deliveryMethod.name())),
 			field("recipientEmailAddress", string(recipientEmailAddress)),
@@ -48,24 +47,23 @@ public class OutvoiceInvoiceClient {
 			field("lines", tickets.toList().map(OutvoiceInvoiceClient.line("Brewing Agile 2017: ", participantName)).toJavaList().stream().collect(ArgoUtils.toArray()))
 		);
 
-		Response post;
-		try {
-			post = client.target(endpoint).request()
-				.accept(MediaType.APPLICATION_JSON)
-				.header("X-API-KEY", apikey)
-				.post(Entity.entity(ArgoUtils.format(request), MediaType.APPLICATION_JSON));
-		} catch (ProcessingException | WebApplicationException e) {
-			return Either.left(e.getMessage());
+		Request httpRequest = new Request.Builder()
+			.url(endpoint)
+			.addHeader("Accept", "application/json")
+			.addHeader("X-API-KEY", apikey)
+			.post(RequestBody.create(okhttp3.MediaType.parse("application/json"), ArgoUtils.format(jsonRequest)))
+			.build();
+
+		try (Response r = okHttpClient.newCall(httpRequest).execute()) {
+			if (!(200 <= r.code() && r.code() < 300))
+				return Either.left("While sending invoice: Received HTTP Status " + r.code());
+
+			return Either.right(registrationId);
 		}
-
-		if (!(200 <= post.getStatus() && post.getStatus() < 300))
-			return Either.left("While sending invoice: Received HTTP Status " + post.getStatus());
-
-		return Either.right(registrationId);
 	}
 
 	private static F<TicketsSql.Ticket, JsonRootNode> line(String eventPrefix, String participantName) {
-		return ticket -> line(eventPrefix, ticket.productText + "\nAvser deltagare: " + participantName, ticket.price, BigDecimal.ONE);
+		return ticket -> line(eventPrefix + ticket.ticket.ticketName, ticket.productText + "\nAvser deltagare: " + participantName, ticket.price.multiply(BigDecimal.valueOf(0.8)), BigDecimal.ONE);
 	}
 
 	private static JsonRootNode line(String text, String description, BigDecimal price, BigDecimal qty) {

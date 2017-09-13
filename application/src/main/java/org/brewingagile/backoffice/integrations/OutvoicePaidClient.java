@@ -2,11 +2,11 @@ package org.brewingagile.backoffice.integrations;
 
 import argo.jdom.JsonNode;
 import argo.saj.InvalidSyntaxException;
-import com.squareup.okhttp.*;
 import fj.P;
 import fj.P2;
 import fj.data.Array;
 import fj.data.Option;
+import okhttp3.*;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
 import java.io.IOException;
@@ -32,9 +32,11 @@ public class OutvoicePaidClient {
 			.header("X-API-KEY", apikey)
 			.cacheControl(CacheControl.FORCE_NETWORK)
 			.build();
-		Response execute = okHttpClient.newCall(request).execute();
-		if (!execute.isSuccessful() || execute.isRedirect()) throw new IOException("Call to " + url + " failed unexpectedly: " + execute);
-		return execute.body().string();
+		try (Response execute = okHttpClient.newCall(request).execute()) {
+			if (!execute.isSuccessful() || execute.isRedirect())
+				throw new IOException("Call to " + url + " failed unexpectedly: " + execute);
+			return execute.body().string();
+		}
 	}
 
 	public static Array<P2<String, Option<UUID>>> parse(String json) throws InvalidSyntaxException {

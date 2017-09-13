@@ -1,8 +1,8 @@
 package org.brewingagile.backoffice.application;
 
 import com.hencjo.summer.security.SummerAuthenticatedUser;
-import com.squareup.okhttp.OkHttpClient;
 import fj.data.List;
+import okhttp3.OkHttpClient;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.BudgetSql;
@@ -28,8 +28,11 @@ public class Application {
 	Application(Configuration config, DataSource dataSource) {
 		this.versionNumberProvider = new GitPropertiesDescribeVersionNumberProvider(Application.class, "/resources/git.properties");
 		AuthService authService = new AuthService(new SummerAuthenticatedUser());
-		OutvoiceInvoiceClient outvoiceInvoiceClient = new OutvoiceInvoiceClient(ClientBuilder.newClient(), config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
-		OutvoicePaidClient outvoicePaidClient = new OutvoicePaidClient(new OkHttpClient(), config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
+		OkHttpClient okHttpClient = new OkHttpClient();
+		OkHttpClient unsafe = OkHttpHelper.getUnsafeOkHttpClient();
+
+		OutvoiceInvoiceClient outvoiceInvoiceClient = new OutvoiceInvoiceClient(unsafe, config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
+		OutvoicePaidClient outvoicePaidClient = new OutvoicePaidClient(okHttpClient, config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 
 		BudgetSql budgetSql = new BudgetSql();
 		BundlesSql bundlesSql = new BundlesSql();
@@ -44,7 +47,7 @@ public class Application {
 		ConfirmationEmailSender confirmationEmailSender = new ConfirmationEmailSender(config);
 		MailchimpSubscribeClient mailchimpSubscribeClient = new MailchimpSubscribeClient(ClientBuilder.newClient(), config.mailchimpEndpoint, config.mailchimpApikey);
 
-		SlackBotHook slackBotHook = new SlackBotHook(new OkHttpClient(), config.slackBotHookUrl, config.slackBotName, config.slackBotChannel);
+		SlackBotHook slackBotHook = new SlackBotHook(okHttpClient, config.slackBotHookUrl, config.slackBotName, config.slackBotChannel);
 
 		this.apiRestServices = List.list(
 			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql, slackBotHook, ticketsSql)

@@ -5,7 +5,7 @@ import fj.data.Either;
 import functional.Effect;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Hex;
-import org.glassfish.jersey.internal.util.Base64;
+import org.brewingagile.backoffice.utils.Http;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
@@ -32,7 +32,7 @@ public class MailchimpSubscribeClient {
 	public Either<String, Effect> subscribe(String emailAddress, String listUniqueId) {
 		try {
 			Response post = client.target(endpoint).path("3.0/lists/" + listUniqueId + "/members/" + md5Crap(emailAddress.toLowerCase())).request()
-				.header("Authorization", basic("anystring", apikey))
+				.header("Authorization", Http.basic("anystring", apikey))
 				.accept(MediaType.APPLICATION_JSON)
 				.put(Entity.entity(ArgoUtils.format(request(emailAddress)), MediaType.APPLICATION_JSON));
 			return response(post.readEntity(String.class));
@@ -47,10 +47,6 @@ public class MailchimpSubscribeClient {
 		} catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	private String basic(String username, String password) {
-		return "Basic " + Base64.encodeAsString(username + ":" + password);
 	}
 
 	private Either<String, Effect> response(String json) {

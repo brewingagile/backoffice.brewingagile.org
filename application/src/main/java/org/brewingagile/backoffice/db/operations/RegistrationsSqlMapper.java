@@ -1,15 +1,12 @@
 package org.brewingagile.backoffice.db.operations;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
-import fj.Ord;
-import fj.P;
-import fj.P2;
+import fj.*;
 
-import fj.P3;
 import fj.data.List;
 import fj.data.Option;
 import fj.data.Set;
@@ -17,6 +14,7 @@ import fj.function.Strings;
 import fj.function.Try1;
 import functional.Tuple2;
 import org.brewingagile.backoffice.db.operations.TicketsSql.TicketName;
+import org.brewingagile.backoffice.instances.ResultSets;
 
 public class RegistrationsSqlMapper {
 	public List<P2<String,String>> participantNameAndEmail(Connection c) throws SQLException {
@@ -352,4 +350,30 @@ public class RegistrationsSqlMapper {
 	}
 
 	public static final class PrintedNametag {}
+
+	public List<P4<String, TicketName, BigDecimal, String>> inBundle(Connection c, String bundle) throws SQLException {
+		String sql = "SELECT " +
+			"registration.participant_name " +
+			", registration_ticket.ticket " +
+			", ticket.price " +
+			", ticket.product_text " +
+			"FROM registration " +
+			"JOIN registration_bucket USING (registration_id) " +
+			"JOIN registration_ticket USING (registration_id) " +
+			"JOIN ticket USING (ticket) " +
+			"WHERE registration_bucket.bucket = ? " +
+			"ORDER BY participant_name, ticket";
+		System.out.println(sql);
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			ps.setString(1, bundle);
+			return SqlOps.list(ps,
+				rs -> P.p(
+					rs.getString("participant_name"),
+					ResultSets.ticketName(rs, "ticket"),
+					rs.getBigDecimal("price"),
+					rs.getString("product_text")
+				)
+			);
+		}
+	}
 }

@@ -1,9 +1,6 @@
 package org.brewingagile.backoffice.io;
 
-import com.sun.media.sound.SoftTuning;
-import fj.Unit;
 import fj.data.Either;
-import fj.data.IO;
 import fj.data.Set;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
@@ -12,7 +9,6 @@ import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.integrations.OutvoiceInvoiceClient;
 
 import javax.sql.DataSource;
-import java.io.PrintStream;
 import java.sql.Connection;
 import java.util.UUID;
 

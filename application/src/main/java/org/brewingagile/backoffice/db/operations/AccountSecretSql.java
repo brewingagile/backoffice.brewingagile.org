@@ -10,9 +10,11 @@ import java.sql.SQLException;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.brewingagile.backoffice.instances.PreparedStatements.set;
+
 public class AccountSecretSql {
 	@EqualsAndHashCode
-	@ToString
+	@ToString(includeFieldNames = false)
 	public final static class AccountSecret {
 		public final UUID value;
 
@@ -34,9 +36,11 @@ public class AccountSecretSql {
 	}
 
 	public Option<String> bundle(Connection c, AccountSecret x) throws SQLException {
-		String sql = "SELECT bundle FROM account_secret WHERE account_secret = ?;";
+		String sql = "SELECT bundle FROM account_secret WHERE account_secret.secret_id = ?;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			set(ps, 1, x);
 			return SqlOps.one(ps, rs -> rs.getString("bundle"));
 		}
 	}
+
 }

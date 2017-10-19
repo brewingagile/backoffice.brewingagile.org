@@ -25,8 +25,17 @@ function StripeController($scope, $window, $location, $http) {
                     },
                     amount: $scope.data.amountDueOre
                 }
-            ) .success(function(d) {
+            ).success(function() {
+                $scope.alert = {
+                    style: "success",
+                    message: "Payment was successful."
+                };
                 reload();
+            }).error(function(data, status, headers, config) {
+                $scope.alert = {
+                    style: "danger",
+                    message: "Payment was not successful. Error: "
+                };
             });
           }
         });

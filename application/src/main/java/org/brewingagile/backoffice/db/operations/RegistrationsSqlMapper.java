@@ -363,7 +363,6 @@ public class RegistrationsSqlMapper {
 			"JOIN ticket USING (ticket) " +
 			"WHERE registration_bucket.bucket = ? " +
 			"ORDER BY participant_name, ticket";
-		System.out.println(sql);
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setString(1, bundle);
 			return SqlOps.list(ps,

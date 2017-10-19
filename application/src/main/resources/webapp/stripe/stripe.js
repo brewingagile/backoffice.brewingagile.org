@@ -1,10 +1,5 @@
 function StripeController($scope, $window, $location, $http) {
-
-    //http://localhost:9080/stripe.html#?account_secret=0f6f369c-b3da-11e7-957f-bbf58cbe212a
-
     $scope.accountSecret = $location.search().account_secret;
-    console.log($scope.accountSecret);
-
 
     function reload() {
         $http.get('api/stripe/account/' + $scope.accountSecret)
@@ -41,7 +36,6 @@ function StripeController($scope, $window, $location, $http) {
         });
         e.preventDefault();
 
-        // Close Checkout on page navigation:
         $window.addEventListener('popstate', function() {
           handler.close();
         });

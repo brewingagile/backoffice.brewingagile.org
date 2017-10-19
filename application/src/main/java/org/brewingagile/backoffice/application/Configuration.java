@@ -1,6 +1,8 @@
 package org.brewingagile.backoffice.application;
 
 import okhttp3.HttpUrl;
+import org.brewingagile.backoffice.types.StripePrivateKey;
+import org.brewingagile.backoffice.types.StripePublishableKey;
 import org.brewingagile.backoffice.utils.EtcPropertyFile;
 
 public class Configuration {
@@ -23,6 +25,8 @@ public class Configuration {
 	public final HttpUrl slackBotHookUrl;
 	public final String slackBotName;
 	public final String slackBotChannel;
+	public final StripePublishableKey stripePublishableKey;
+	public final StripePrivateKey stripePrivateKey;
 
 	public Configuration(
 		String dbName, String dbHost, int dbPort, String dbUsername, String dbPassword,
@@ -36,8 +40,9 @@ public class Configuration {
 		String mailchimpApikey,
 		HttpUrl slackBotHookUrl,
 		String slackBotName,
-		String slackBotChannel
-
+		String slackBotChannel,
+		StripePublishableKey stripePublishableKey,
+		StripePrivateKey stripePrivateKey
 	) {
 		this.dbName = dbName;
 		this.dbHost = dbHost;
@@ -58,6 +63,8 @@ public class Configuration {
 		this.slackBotHookUrl = slackBotHookUrl;
 		this.slackBotName = slackBotName;
 		this.slackBotChannel = slackBotChannel;
+		this.stripePublishableKey = stripePublishableKey;
+		this.stripePrivateKey = stripePrivateKey;
 	}
 	
 	public static Configuration from(EtcPropertyFile etc) {
@@ -80,7 +87,9 @@ public class Configuration {
 			etc.string("mailchimp.apikey"),
 			HttpUrl.parse(etc.string("slackbot.hookurl")),
 			etc.string("slackbot.name"),
-			etc.string("slackbot.channel")
+			etc.string("slackbot.channel"),
+			StripePublishableKey.stripePublishableKey(etc.string("stripe.key.publishable")),
+			StripePrivateKey.stripePrivateKey(etc.string("stripe.key.secret"))
 		);
 	}
 }

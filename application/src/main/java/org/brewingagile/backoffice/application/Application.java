@@ -4,12 +4,10 @@ import com.hencjo.summer.security.SummerAuthenticatedUser;
 import fj.data.List;
 import okhttp3.OkHttpClient;
 import org.brewingagile.backoffice.auth.AuthService;
-import org.brewingagile.backoffice.db.operations.BundlesSql;
-import org.brewingagile.backoffice.db.operations.BudgetSql;
-import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
-import org.brewingagile.backoffice.db.operations.TicketsSql;
+import org.brewingagile.backoffice.db.operations.*;
 import org.brewingagile.backoffice.integrations.*;
 import org.brewingagile.backoffice.rest.api.RegistrationApiJaxRs;
+import org.brewingagile.backoffice.rest.api.StripeJaxRs;
 import org.brewingagile.backoffice.rest.gui.*;
 import org.brewingagile.backoffice.io.DismissRegistrationService;
 import org.brewingagile.backoffice.io.MarkAsCompleteService;
@@ -34,6 +32,7 @@ public class Application {
 		OutvoiceInvoiceClient outvoiceInvoiceClient = new OutvoiceInvoiceClient(unsafe, config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 		OutvoicePaidClient outvoicePaidClient = new OutvoicePaidClient(okHttpClient, config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 
+		AccountSecretSql accountSecretSql = new AccountSecretSql();
 		BudgetSql budgetSql = new BudgetSql();
 		BundlesSql bundlesSql = new BundlesSql();
 		RegistrationsSqlMapper registrationsSqlMapper = new RegistrationsSqlMapper();
@@ -48,9 +47,11 @@ public class Application {
 		MailchimpSubscribeClient mailchimpSubscribeClient = new MailchimpSubscribeClient(ClientBuilder.newClient(), config.mailchimpEndpoint, config.mailchimpApikey);
 
 		SlackBotHook slackBotHook = new SlackBotHook(okHttpClient, config.slackBotHookUrl, config.slackBotName, config.slackBotChannel);
+		StripeChargeClient stripeChargeClient = new StripeChargeClient(okHttpClient, config.stripePrivateKey);
 
 		this.apiRestServices = List.list(
-			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql, slackBotHook, ticketsSql)
+			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql, slackBotHook, ticketsSql),
+			new StripeJaxRs(dataSource, registrationsSqlMapper, accountSecretSql, stripeChargeClient, config.stripePublishableKey)
 		);
 
 		this.guiRestServices = List.list(

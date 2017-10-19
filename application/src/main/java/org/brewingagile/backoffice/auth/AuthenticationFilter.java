@@ -23,8 +23,10 @@ public class AuthenticationFilter extends AbstractFilter {
 			redirect("/login.html#?logout=true"), redirect("/login.html#?failure=true"), new RedirectToHashbang());
 
 		this.filterDelegate = summer(logger,
+			when(pathEquals("/stripe.html")).thenAllow(),
 			when(pathEquals("/form.html")).thenAllow(),
 			when(pathBeginsWith("/form/")).thenAllow(),
+			when(pathBeginsWith("/stripe/")).thenAllow(),
 			when(pathBeginsWith("/img/")).thenAllow(),
 			when(pathBeginsWith("/js-lib/")).thenAllow(),
 			when(pathBeginsWith("/lib/")).thenAllow(),

@@ -9,6 +9,7 @@ import fj.data.Option;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.brewingagile.backoffice.db.operations.AccountSecretSql;
+import org.brewingagile.backoffice.db.operations.StripeChargeSql;
 import org.brewingagile.backoffice.integrations.StripeChargeClient;
 import org.brewingagile.backoffice.types.AccountSecret;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
@@ -23,9 +24,11 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Connection;
+import java.time.Instant;
 
 import static argo.jdom.JsonNodeFactories.*;
 
@@ -36,19 +39,22 @@ public class StripeJaxRs {
 	private final AccountSecretSql accountSecretSql;
 	private final StripeChargeClient stripeChargeClient;
 	private final StripePublishableKey stripePublishableKey;
+	private final StripeChargeSql stripeChargeSql;
 
 	public StripeJaxRs(
 		DataSource dataSource,
 		RegistrationsSqlMapper registrationsSqlMapper,
 		AccountSecretSql accountSecretSql,
 		StripeChargeClient stripeChargeClient,
-		StripePublishableKey stripePublishableKey
+		StripePublishableKey stripePublishableKey,
+		StripeChargeSql stripeChargeSql
 	) {
 		this.dataSource = dataSource;
 		this.registrationsSqlMapper = registrationsSqlMapper;
 		this.accountSecretSql = accountSecretSql;
 		this.stripeChargeClient = stripeChargeClient;
 		this.stripePublishableKey = stripePublishableKey;
+		this.stripeChargeSql = stripeChargeSql;
 	}
 
 	//	curl "http://localhost:9080/api/stripe/account/0f6f369c-b3da-11e7-957f-bbf58cbe212a"
@@ -68,6 +74,7 @@ public class StripeJaxRs {
 			AccountSecret accountSecret = parse.some();
 
 			List<P4<String, TicketsSql.TicketName, BigDecimal, String>> tickets;
+			List<StripeChargeSql.Charge> charges;
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);
 
@@ -77,11 +84,12 @@ public class StripeJaxRs {
 
 				String bundle = maybeBundle.some();
 				tickets = registrationsSqlMapper.inBundle(c, bundle);
+				charges = stripeChargeSql.byBundle(c, bundle);
 			}
 
 			Monoid<BigDecimal> add = Monoid.bigdecimalAdditionMonoid;
 			BigDecimal total = tickets.map(P4::_3).foldLeft(add.sum(), add.zero());
-			BigDecimal paid = BigDecimal.ZERO;
+			BigDecimal paid = charges.map(x -> x.amount).foldLeft(add.sum(), add.zero());
 			BigDecimal due = total.subtract(paid);
 			return Response.ok(ArgoUtils.format(
 				object(
@@ -129,9 +137,20 @@ public class StripeJaxRs {
 			System.out.println(body);
 			System.out.println(unjson);
 
-			Either<String, StripeChargeClient.Charge> stringChargeEither = stripeChargeClient.postCharge(unjson.tokenId, unjson.amountInOre);
+			Either<String, StripeChargeClient.ChargeResponse> stringChargeEither = stripeChargeClient.postCharge(unjson.tokenId, unjson.amountInOre);
 			if (stringChargeEither.isLeft())
 				return Response.status(402).build();
+
+			try (Connection c = dataSource.getConnection()) {
+				c.setAutoCommit(false);
+				String bundle = accountSecretSql.bundle(c, accountSecret).some();
+				stripeChargeSql.insertCharge(c, bundle, new StripeChargeSql.Charge(
+					stringChargeEither.right().value().id,
+					new BigDecimal(unjson.amountInOre).divide(BigDecimal.valueOf(100)),
+					Instant.now()
+				));
+				c.commit();
+			}
 
 			return Response.ok().build();
 		} catch (Exception e) {

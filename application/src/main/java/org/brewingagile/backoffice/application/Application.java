@@ -36,6 +36,7 @@ public class Application {
 		BudgetSql budgetSql = new BudgetSql();
 		BundlesSql bundlesSql = new BundlesSql();
 		RegistrationsSqlMapper registrationsSqlMapper = new RegistrationsSqlMapper();
+		StripeChargeSql stripeChargeSql = new StripeChargeSql();
 		TicketsSql ticketsSql = new TicketsSql();
 
 		SendInvoiceService sendInvoiceService = new SendInvoiceService(dataSource, registrationsSqlMapper, outvoiceInvoiceClient, ticketsSql);
@@ -51,7 +52,7 @@ public class Application {
 
 		this.apiRestServices = List.list(
 			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql, slackBotHook, ticketsSql),
-			new StripeJaxRs(dataSource, registrationsSqlMapper, accountSecretSql, stripeChargeClient, config.stripePublishableKey)
+			new StripeJaxRs(dataSource, registrationsSqlMapper, accountSecretSql, stripeChargeClient, config.stripePublishableKey, stripeChargeSql)
 		);
 
 		this.guiRestServices = List.list(

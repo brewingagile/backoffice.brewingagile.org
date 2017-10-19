@@ -12,7 +12,6 @@ import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Http;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public class StripeChargeClient {
@@ -25,7 +24,7 @@ public class StripeChargeClient {
 		this.key = key;
 	}
 
-	public Either<String, Charge> postCharge(
+	public Either<String, ChargeResponse> postCharge(
 		String token,
 		BigInteger amountInOre
 	) throws IOException, InvalidSyntaxException {
@@ -49,21 +48,19 @@ public class StripeChargeClient {
 				return Either.left("While sending invoice: Received HTTP Status " + r.code());
 			}
 
-			return Either.right(Charge.unjson(ArgoUtils.parse(r.body().string())));
+			return Either.right(ChargeResponse.unjson(ArgoUtils.parse(r.body().string())));
 		}
 	}
 
-	@EqualsAndHashCode
-	@ToString
-	public static final class Charge {
+	public static final class ChargeResponse {
 		public final ChargeId id;
 
-		public Charge(ChargeId id) {
+		public ChargeResponse(ChargeId id) {
 			this.id = id;
 		}
 
-		public static Charge unjson(JsonRootNode x) {
-			return new Charge(
+		public static ChargeResponse unjson(JsonRootNode x) {
+			return new ChargeResponse(
 				ChargeId.chargeId(x.getStringValue("id"))
 			);
 		}

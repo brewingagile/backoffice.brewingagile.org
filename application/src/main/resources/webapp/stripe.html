@@ -68,7 +68,7 @@ input.textarea {
 			</tfoot>
 		</table>
 
-		<button id="customButton" class="btn btn-primary" ng-click="checkout()">Pay Remainder: {{data.amountDue}} SEK</button>
+		<button id="customButton" class="btn btn-primary" ng-click="checkout()" ng-disabled="!(data.amountDue > 0)">Pay Remainder: {{data.amountDue}} SEK</button>
 	</div>
 </div>
 

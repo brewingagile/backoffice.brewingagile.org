@@ -9,12 +9,12 @@ import fj.data.Option;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.brewingagile.backoffice.db.operations.AccountSecretSql;
-import org.brewingagile.backoffice.db.operations.StripeChargeSql;
-import org.brewingagile.backoffice.integrations.StripeChargeClient;
-import org.brewingagile.backoffice.types.AccountSecret;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
+import org.brewingagile.backoffice.db.operations.StripeChargeSql;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
+import org.brewingagile.backoffice.integrations.StripeChargeClient;
 import org.brewingagile.backoffice.rest.json.ToJson;
+import org.brewingagile.backoffice.types.AccountSecret;
 import org.brewingagile.backoffice.types.StripePublishableKey;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
@@ -24,7 +24,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -139,7 +138,7 @@ public class StripeJaxRs {
 
 			Either<String, StripeChargeClient.ChargeResponse> stringChargeEither = stripeChargeClient.postCharge(unjson.tokenId, unjson.amountInOre);
 			if (stringChargeEither.isLeft())
-				return Response.status(402).build();
+				return Response.status(402).entity(errorJson(stringChargeEither.left().value())).build();
 
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);
@@ -157,6 +156,12 @@ public class StripeJaxRs {
 			e.printStackTrace();
 			throw e;
 		}
+	}
+
+	private static String errorJson(String message) {
+		return ArgoUtils.format(object(
+			field("message", string(message))
+		));
 	}
 
 	@EqualsAndHashCode

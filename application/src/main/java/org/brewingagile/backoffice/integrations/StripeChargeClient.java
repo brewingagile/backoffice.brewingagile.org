@@ -3,8 +3,6 @@ package org.brewingagile.backoffice.integrations;
 import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
 import fj.data.Either;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 import okhttp3.*;
 import org.brewingagile.backoffice.types.ChargeId;
 import org.brewingagile.backoffice.types.StripePrivateKey;
@@ -44,8 +42,10 @@ public class StripeChargeClient {
 		try (Response r = okHttpClient.newCall(httpRequest).execute()) {
 			if (!r.isSuccessful()) {
 				System.out.println(r.code());
-				System.out.println(r.body().string());
-				return Either.left("While sending invoice: Received HTTP Status " + r.code());
+				String bodyString = r.body().string();
+				System.out.println(bodyString);
+				String s = unjsonErrorMessage(ArgoUtils.parse(bodyString));
+				return Either.left(s);
 			}
 
 			return Either.right(ChargeResponse.unjson(ArgoUtils.parse(r.body().string())));
@@ -65,4 +65,20 @@ public class StripeChargeClient {
 			);
 		}
 	}
+
+	public static String unjsonErrorMessage(JsonRootNode x) {
+		return x.getStringValue("error", "message");
+	}
+
+	/*
+	{
+  "error": {
+    "message": "Your card was declined.",
+    "type": "card_error",
+    "code": "card_declined",
+    "decline_code": "generic_decline",
+    "charge": "ch_1BEdrABG5kmo2d4yamtdIfV4"
+  }
+}
+	 */
 }

@@ -34,7 +34,7 @@ function StripeController($scope, $window, $location, $http) {
             }).error(function(data, status, headers, config) {
                 $scope.alert = {
                     style: "danger",
-                    message: "Payment was not successful. Error: "
+                    message: data.message
                 };
             });
           }

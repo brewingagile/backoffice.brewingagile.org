@@ -6,10 +6,12 @@ function StripeController($scope, $window, $location, $http) {
     console.log($scope.accountSecret);
 
 
-    $http.get('api/stripe/account/' + $scope.accountSecret)
-        .success(function(d) {
-            $scope.data = d;
-        });
+    function reload() {
+        $http.get('api/stripe/account/' + $scope.accountSecret)
+            .success(function(d) {
+                $scope.data = d;
+            });
+    }
 
     $scope.checkout = function() {
         var handler = StripeCheckout.configure({
@@ -28,7 +30,9 @@ function StripeController($scope, $window, $location, $http) {
                     },
                     amount: $scope.data.amountDueOre
                 }
-            );
+            ) .success(function(d) {
+                reload();
+            });
           }
         });
 
@@ -42,6 +46,8 @@ function StripeController($scope, $window, $location, $http) {
           handler.close();
         });
     }
+
+    reload();
 }
 
 StripeController.$inject = ['$scope', '$window', '$location', '$http'];

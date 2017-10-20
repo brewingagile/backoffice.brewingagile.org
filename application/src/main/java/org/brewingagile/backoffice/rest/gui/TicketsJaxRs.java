@@ -24,7 +24,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import static argo.jdom.JsonNodeFactories.*;
-import static org.brewingagile.backoffice.db.operations.TicketsSql.TicketName.ticketName;
+import static org.brewingagile.backoffice.types.TicketName.ticketName;
 
 @Path("tickets")
 @NeverCache

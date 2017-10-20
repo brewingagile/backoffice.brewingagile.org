@@ -3,53 +3,18 @@ package org.brewingagile.backoffice.db.operations;
 import fj.Ord;
 import fj.data.List;
 import fj.data.Set;
-import org.brewingagile.backoffice.utils.Strings;
+import org.brewingagile.backoffice.types.TicketName;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Objects;
 import java.util.UUID;
 
 import static java.util.Objects.requireNonNull;
 
 public class TicketsSql {
-	public final static class TicketName {
-		public final String ticketName;
-
-		private TicketName(String ticketName) {
-			this.ticketName = Objects.requireNonNull(Strings.emptyToNull(ticketName));
-		}
-
-		public static TicketName ticketName(String s) {
-			return new TicketName(s);
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-
-			TicketName that = (TicketName) o;
-
-			return ticketName.equals(that.ticketName);
-
-		}
-
-		@Override
-		public int hashCode() {
-			return ticketName.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return "(TicketName " + ticketName + ")";
-		}
-
-		public static Ord<TicketName> Ord = fj.Ord.ord(l -> r -> fj.Ord.stringOrd.compare(l.ticketName, r.ticketName));
-	}
 
 	public final static class Ticket {
 		public final TicketName ticket;

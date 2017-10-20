@@ -2,7 +2,6 @@ package org.brewingagile.backoffice.db.operations;
 
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.Objects;
 import java.util.UUID;
 
 import fj.*;
@@ -13,10 +12,9 @@ import fj.data.Set;
 import fj.function.Strings;
 import fj.function.Try1;
 import functional.Tuple2;
-import org.brewingagile.backoffice.db.operations.TicketsSql.TicketName;
 import org.brewingagile.backoffice.instances.PreparedStatements;
 import org.brewingagile.backoffice.instances.ResultSets;
-import org.brewingagile.backoffice.types.ParticipantOrganisation;
+import org.brewingagile.backoffice.types.*;
 
 public class RegistrationsSqlMapper {
 	public List<P2<String,String>> participantNameAndEmail(Connection c) throws SQLException {
@@ -49,24 +47,6 @@ public class RegistrationsSqlMapper {
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, apiClientReference);
 			return SqlOps.one(ps, rs -> (UUID)rs.getObject("registration_id"));
-		}
-	}
-
-	public enum BillingMethod {EMAIL, SNAILMAIL}
-
-	public static final class Badge {
-		public final String badge;
-
-		public Badge(String badge) {
-			this.badge = Objects.requireNonNull(badge);
-		}
-	}
-
-	public static final class BillingCompany {
-		public final String value;
-
-		public BillingCompany(String value) {
-			this.value = Objects.requireNonNull(value);
 		}
 	}
 

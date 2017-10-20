@@ -7,7 +7,7 @@ import fj.data.Option;
 import fj.function.Strings;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
-import org.brewingagile.backoffice.db.operations.TicketsSql.TicketName;
+import org.brewingagile.backoffice.types.TicketName;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
 import javax.servlet.http.HttpServletRequest;

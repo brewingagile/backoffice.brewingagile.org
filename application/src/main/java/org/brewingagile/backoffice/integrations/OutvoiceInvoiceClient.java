@@ -8,7 +8,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
+import org.brewingagile.backoffice.types.BillingMethod;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 

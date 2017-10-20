@@ -8,14 +8,12 @@ import fj.data.List;
 import fj.data.Option;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.brewingagile.backoffice.db.operations.AccountSecretSql;
-import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
-import org.brewingagile.backoffice.db.operations.StripeChargeSql;
-import org.brewingagile.backoffice.db.operations.TicketsSql;
+import org.brewingagile.backoffice.db.operations.*;
 import org.brewingagile.backoffice.integrations.StripeChargeClient;
 import org.brewingagile.backoffice.rest.json.ToJson;
 import org.brewingagile.backoffice.types.AccountSecret;
 import org.brewingagile.backoffice.types.StripePublishableKey;
+import org.brewingagile.backoffice.types.TicketName;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -72,7 +70,7 @@ public class StripeJaxRs {
 
 			AccountSecret accountSecret = parse.some();
 
-			List<P4<String, TicketsSql.TicketName, BigDecimal, String>> tickets;
+			List<P4<String, TicketName, BigDecimal, String>> tickets;
 			List<StripeChargeSql.Charge> charges;
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);

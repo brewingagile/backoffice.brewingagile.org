@@ -4,12 +4,10 @@ import argo.jdom.JsonRootNode;
 import fj.Ord;
 import fj.data.*;
 import functional.Effect;
-import org.brewingagile.backoffice.db.operations.BundlesSql;
-import org.brewingagile.backoffice.db.operations.RegistrationState;
-import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
-import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.BillingMethod;
-import org.brewingagile.backoffice.db.operations.TicketsSql;
-import org.brewingagile.backoffice.db.operations.TicketsSql.TicketName;
+import org.brewingagile.backoffice.db.operations.*;
+import org.brewingagile.backoffice.types.BillingMethod;
+import org.brewingagile.backoffice.types.Badge;
+import org.brewingagile.backoffice.types.TicketName;
 import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
 import org.brewingagile.backoffice.integrations.SlackBotHook;
@@ -152,7 +150,7 @@ public class RegistrationApiJaxRs {
 							rr.invoiceAddress,
 							billingMethod(rr.billingMethod),
 							rr.dietaryRequirements,
-							new RegistrationsSqlMapper.Badge(""),
+							new Badge(""),
 							rr.twitter,
 							Option.none(),
 							rr.organisation

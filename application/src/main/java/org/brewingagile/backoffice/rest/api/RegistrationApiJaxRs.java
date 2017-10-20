@@ -68,27 +68,30 @@ public class RegistrationApiJaxRs {
 	public static final class RegistrationRequest {
 		public final String participantName;
 		public final String participantEmail;
-		public final String billingCompany;
-		public final String billingAddress;
-		public final String billingMethod;
 		public final String dietaryRequirements;
-		public final Set<TicketName> tickets;
 		public final String twitter;
+		public final String lanyardCompany;
+		public final Set<TicketName> tickets;
+		public final String invoiceRecipient;
+		public final String invoiceAddress;
+		public final String billingMethod;
 
 		public RegistrationRequest(
 			String participantName,
 			String participantEmail,
-			String billingCompany,
-			String billingAddress,
-			String billingMethod,
 			String dietaryRequirements,
+			String twitter,
+			String lanyardCompany,
 			Set<TicketName> tickets,
-			String twitter
+			String invoiceRecipient,
+			String invoiceAddress,
+			String billingMethod
 		) {
 			this.participantName = participantName;
 			this.participantEmail = participantEmail;
-			this.billingCompany = billingCompany;
-			this.billingAddress = billingAddress;
+			this.lanyardCompany = lanyardCompany;
+			this.invoiceRecipient = invoiceRecipient;
+			this.invoiceAddress = invoiceAddress;
 			this.billingMethod = billingMethod;
 			this.dietaryRequirements = dietaryRequirements;
 			this.tickets = tickets;
@@ -102,9 +105,9 @@ public class RegistrationApiJaxRs {
 	public Response options(@Context HttpServletRequest request,  String body) throws  URISyntaxException {
 		return accessControlHeaders(request, Response.noContent()).build();
 	}
-	
-//	curl  -v -X POST -H "Content-Type: application/json" http://localhost:9080/api/registration/1/  --data '{"participantName" : "participant name", "participantEmail":"participant@email", "billingCompany": "billing-company", "billingAddress": "billing address", "billingMethod": "EMAIL", "tickets": ["conference"], "dietaryRequirements": "", "twitter": "@meow" }'
-	
+
+//	curl  -v -X POST -H "Content-Type: application/json" http://localhost:9080/api/registration/1/  --data '{"participantName":"Henrik Test 1","participantEmail":"henrik@sjostrand.at","dietaryRequirements":"Nötter. Mandel, kokos och pinjenöt går bra.","lanyardCompany":"Lanyard Company","twitter":"@hencjo","tickets":["conference","workshop1"],"invoiceRecipient":"Hencjo AB","invoiceAddress":"A\nB\nC","billingMethod":"EMAIL"}'
+
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -123,12 +126,13 @@ public class RegistrationApiJaxRs {
 			System.out.println("============================");
 			System.out.println("participantName: " + rr.participantName);
 			System.out.println("participantEmail: " + rr.participantEmail);
-			System.out.println("billingCompany: " + rr.billingCompany);
-			System.out.println("billingAddress: " + rr.billingAddress);
-			System.out.println("billingMethod: " + rr.billingMethod);
-			System.out.println("tickets: " + rr.tickets);
 			System.out.println("dietaryRequirements: " + rr.dietaryRequirements);
 			System.out.println("twitter: " + rr.twitter);
+			System.out.println("lanyardCompany: " + rr.lanyardCompany);
+			System.out.println("tickets: " + rr.tickets);
+			System.out.println("invoiceRecipient: " + rr.invoiceRecipient);
+			System.out.println("invoiceAddress: " + rr.invoiceAddress);
+			System.out.println("billingMethod: " + rr.billingMethod);
 
 			if ("fel".equals(rr.participantName)) {
 				ResponseBuilder ok = Response.ok(ArgoUtils.format(Result.failure("Registrering misslyckades: Du är inte cool nog.")));
@@ -146,8 +150,8 @@ public class RegistrationApiJaxRs {
 							RegistrationState.RECEIVED,
 							rr.participantName,
 							rr.participantEmail,
-							rr.billingCompany,
-							rr.billingAddress,
+							rr.invoiceRecipient,
+							rr.invoiceAddress,
 							billingMethod(rr.billingMethod),
 							rr.dietaryRequirements,
 							new RegistrationsSqlMapper.Badge(""),
@@ -232,18 +236,21 @@ public class RegistrationApiJaxRs {
 	}
 
 
+//{"participantName":"Henrik Test 1","participantEmail":"henrik@sjostrand.at","dietaryRequirements":"Nötter. Mandel, kokos och pinjenöt går bra.","lanyardCompany":"Lanyard Company","twitter":"@hencjo","tickets":["conference","workshop1"],"invoiceRecipient":"Hencjo AB","invoiceAddress":"A\nB\nC","billingMethod":"EMAIL"}
+
 	private RegistrationRequest fromJson(JsonRootNode body) {
 		Array<String> a = Array.iterableArray(body.getArrayNode("tickets")).map(x -> x.getStringValue());
 		Set<TicketName> tickets = Set.iterableSet(Ord.stringOrd, a).map(Ord.hashEqualsOrd(), x -> TicketName.ticketName(x));
 		return new RegistrationRequest(
 			ArgoUtils.stringOrEmpty(body, "participantName").trim(),
 			ArgoUtils.stringOrEmpty(body, "participantEmail").trim().toLowerCase(),
-			ArgoUtils.stringOrEmpty(body, "billingCompany").trim(),
-			ArgoUtils.stringOrEmpty(body, "billingAddress").trim(),
-			ArgoUtils.stringOrEmpty(body, "billingMethod").trim(),
 			ArgoUtils.stringOrEmpty(body, "dietaryRequirements".trim()),
+			ArgoUtils.stringOrEmpty(body, "twitter".trim()),
+			ArgoUtils.stringOrEmpty(body, "lanyardCompany").trim(),
 			tickets,
-			ArgoUtils.stringOrEmpty(body, "twitter".trim())
+			ArgoUtils.stringOrEmpty(body, "invoiceRecipient").trim(),
+			ArgoUtils.stringOrEmpty(body, "invoiceAddress").trim(),
+			ArgoUtils.stringOrEmpty(body, "billingMethod").trim()
 		);
 	}
 

@@ -11,11 +11,12 @@ function RegistrationController($scope, $resource, $window, $timeout, $window) {
 	$scope.r = {
 		participantName: "",
 		participantEmail: "",
-		billingCompany: "",
-		billingAddress: "",
 		dietaryRequirements: "",
+		lanyardCompany: "",
+		twitter: "",
 		tickets: [],
-		twitter: ""
+		invoiceRecipient: "",
+		invoiceAddress: ""
 	};
 
 	$scope.reset = function() {	
@@ -38,12 +39,13 @@ function RegistrationController($scope, $resource, $window, $timeout, $window) {
 		    {
         		participantName: r.participantName,
         		participantEmail: r.participantEmail,
-        		billingCompany: r.billingCompany,
-        		billingAddress: r.billingAddress,
-        		billingMethod: "EMAIL", //EMAIL or SNAILMAIL
         		dietaryRequirements: r.dietaryRequirements,
+        		lanyardCompany: r.lanyardCompany,
+        		twitter: r.twitter,
         		tickets: $scope.selectedTickets(),
-        		twitter: r.twitter
+        		invoiceRecipient: r.invoiceRecipient,
+        		invoiceAddress: r.invoiceAddress,
+        		billingMethod: "EMAIL" //EMAIL or SNAILMAIL
         	}
 		, function(p) {
 			if (p.success) $scope.lastRegisteredName = $scope.r.participantName;

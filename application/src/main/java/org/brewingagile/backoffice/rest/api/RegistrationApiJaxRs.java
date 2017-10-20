@@ -1,25 +1,8 @@
 package org.brewingagile.backoffice.rest.api;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URISyntaxException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.sql.DataSource;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-
 import argo.jdom.JsonRootNode;
 import fj.Ord;
 import fj.data.*;
-import fj.data.List;
-import fj.data.Set;
 import functional.Effect;
 import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
@@ -32,8 +15,23 @@ import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
 import org.brewingagile.backoffice.integrations.SlackBotHook;
 import org.brewingagile.backoffice.pure.BundleLogic;
 import org.brewingagile.backoffice.rest.json.ToJson;
+import org.brewingagile.backoffice.types.ParticipantOrganisation;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URISyntaxException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.UUID;
 
 import static argo.jdom.JsonNodeFactories.*;
 
@@ -70,7 +68,7 @@ public class RegistrationApiJaxRs {
 		public final String participantEmail;
 		public final String dietaryRequirements;
 		public final String twitter;
-		public final String lanyardCompany;
+		public final ParticipantOrganisation organisation;
 		public final Set<TicketName> tickets;
 		public final String invoiceRecipient;
 		public final String invoiceAddress;
@@ -81,7 +79,7 @@ public class RegistrationApiJaxRs {
 			String participantEmail,
 			String dietaryRequirements,
 			String twitter,
-			String lanyardCompany,
+			ParticipantOrganisation organisation,
 			Set<TicketName> tickets,
 			String invoiceRecipient,
 			String invoiceAddress,
@@ -89,7 +87,7 @@ public class RegistrationApiJaxRs {
 		) {
 			this.participantName = participantName;
 			this.participantEmail = participantEmail;
-			this.lanyardCompany = lanyardCompany;
+			this.organisation = organisation;
 			this.invoiceRecipient = invoiceRecipient;
 			this.invoiceAddress = invoiceAddress;
 			this.billingMethod = billingMethod;
@@ -128,7 +126,7 @@ public class RegistrationApiJaxRs {
 			System.out.println("participantEmail: " + rr.participantEmail);
 			System.out.println("dietaryRequirements: " + rr.dietaryRequirements);
 			System.out.println("twitter: " + rr.twitter);
-			System.out.println("lanyardCompany: " + rr.lanyardCompany);
+			System.out.println("lanyardCompany: " + rr.organisation);
 			System.out.println("tickets: " + rr.tickets);
 			System.out.println("invoiceRecipient: " + rr.invoiceRecipient);
 			System.out.println("invoiceAddress: " + rr.invoiceAddress);
@@ -156,7 +154,8 @@ public class RegistrationApiJaxRs {
 							rr.dietaryRequirements,
 							new RegistrationsSqlMapper.Badge(""),
 							rr.twitter,
-							Option.none()
+							Option.none(),
+							rr.organisation
 						),
 						rr.tickets,
 						Option.none()
@@ -246,7 +245,7 @@ public class RegistrationApiJaxRs {
 			ArgoUtils.stringOrEmpty(body, "participantEmail").trim().toLowerCase(),
 			ArgoUtils.stringOrEmpty(body, "dietaryRequirements".trim()),
 			ArgoUtils.stringOrEmpty(body, "twitter".trim()),
-			ArgoUtils.stringOrEmpty(body, "lanyardCompany").trim(),
+			ParticipantOrganisation.participantOrganisation(ArgoUtils.stringOrEmpty(body, "lanyardCompany").trim()),
 			tickets,
 			ArgoUtils.stringOrEmpty(body, "invoiceRecipient").trim(),
 			ArgoUtils.stringOrEmpty(body, "invoiceAddress").trim(),

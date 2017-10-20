@@ -33,7 +33,8 @@ public class DbUpgrader {
 			migration("budget-fixed-costs").installsThrough(script("018-budget-fixed-costs.sql")),
 			migration("bundle-deal").installsThrough(script("019-bundle-deal.sql")),
 			migration("tickets").installsThrough(script("020-tickets.sql")),
-			migration("account-secret").installsThrough(script("021-account-secret.sql"))
+			migration("account-secret").installsThrough(script("021-account-secret.sql")),
+			migration("lanyard-organisation").installsThrough(script("022-lanyard-organisation.sql"))
 		);
 	}
 

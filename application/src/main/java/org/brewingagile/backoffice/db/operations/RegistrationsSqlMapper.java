@@ -14,7 +14,9 @@ import fj.function.Strings;
 import fj.function.Try1;
 import functional.Tuple2;
 import org.brewingagile.backoffice.db.operations.TicketsSql.TicketName;
+import org.brewingagile.backoffice.instances.PreparedStatements;
 import org.brewingagile.backoffice.instances.ResultSets;
+import org.brewingagile.backoffice.types.ParticipantOrganisation;
 
 public class RegistrationsSqlMapper {
 	public List<P2<String,String>> participantNameAndEmail(Connection c) throws SQLException {
@@ -95,6 +97,7 @@ public class RegistrationsSqlMapper {
 		public final Badge badge;
 		public final String twitter;
 		public final Option<String> bundle;
+		public final ParticipantOrganisation organisation;
 
 		public RegistrationTuple(
 			RegistrationState state,
@@ -105,7 +108,8 @@ public class RegistrationsSqlMapper {
 			String dietaryRequirements,
 			Badge badge,
 			String twitter,
-			Option<String> bundle
+			Option<String> bundle,
+			ParticipantOrganisation organisation
 		) {
 			this.state = state;
 			this.participantName = participantName;
@@ -117,6 +121,7 @@ public class RegistrationsSqlMapper {
 			this.badge = badge;
 			this.twitter = twitter;
 			this.bundle = bundle;
+			this.organisation = organisation;
 		}
 	}
 
@@ -234,8 +239,9 @@ public class RegistrationsSqlMapper {
 	}
 
 	private void insertRegistrationTuple(Connection c, UUID id, RegistrationTuple rt) throws SQLException {
-		String sql = "INSERT INTO registration (registration_id, state, participant_name, participant_email, billing_company, billing_address, billing_method, dietary_requirements, twitter) " +
-				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO registration " +
+			"(registration_id, state, participant_name, participant_email, billing_company, billing_address, billing_method, dietary_requirements, twitter, organisation) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
 			ps.setString(2, rt.state.name());
@@ -246,10 +252,11 @@ public class RegistrationsSqlMapper {
 			ps.setString(7, rt.billingMethod.name());
 			ps.setString(8, rt.dietaryRequirements);
 			ps.setString(9, rt.twitter);
+			PreparedStatements.set(ps, 10, rt.organisation);
 			ps.execute();
 		}
 	}
-	
+
 	public static RegistrationTuple toRegistrationTuple(ResultSet rs) throws SQLException {
 		return new RegistrationTuple(
 			RegistrationState.valueOf(rs.getString("state")),
@@ -261,7 +268,8 @@ public class RegistrationsSqlMapper {
 			rs.getString("dietary_requirements"),
 			new Badge(rs.getString("badge")),
 			rs.getString("twitter"),
-			Option.fromNull(rs.getString("bucket")).filter(Strings.isNotNullOrEmpty)
+			Option.fromNull(rs.getString("bucket")).filter(Strings.isNotNullOrEmpty),
+			ResultSets.participantOrganisation(rs, "organisation")
 		);
 	}
 

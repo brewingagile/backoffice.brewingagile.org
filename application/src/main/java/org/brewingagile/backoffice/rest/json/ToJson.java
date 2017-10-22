@@ -15,4 +15,5 @@ public class ToJson {
 	}
 	public static JsonNode json(TicketName x) { return string(x.ticketName); }
 	public static JsonNode account(Account x) { return string(x.value); }
+	public static JsonNode ticketName(TicketName x) { return string(x.ticketName); }
 }

@@ -108,3 +108,4 @@ SELECT
     FROM old_stripe_charge;
 DROP TABLE old_stripe_charge;
 
+DROP TABLE registration_bucket;

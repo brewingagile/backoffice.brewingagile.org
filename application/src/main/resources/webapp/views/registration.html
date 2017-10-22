@@ -75,9 +75,9 @@
 			</div>
 		</div>
 		<div class="form-group">
-			<label for="inputBundle" class="col-lg-4 control-label">Bundle</label>
+			<label for="inputAccount" class="col-lg-4 control-label">Account</label>
 			<div class="col-lg-6">
-				<select id="inputBundle" class="form-control" ng-model="registration.tuple.bundle" ng-options="b.bucket as b.bucket for b in bundles" nulltoemptystring>
+				<select id="inputAccount" class="form-control" ng-model="registration.tuple.bundle" ng-options="a for a in accounts" nulltoemptystring>
 					<option value="">(none) - Individual Participant</option>
 				</select>
 			</div>
@@ -90,7 +90,7 @@
 			</div>
 		</div>
 	</form>
-		
+
 	<div class="alert alert-{{alert.style}}" ng-show="alert" style="margin-top: 1em;">
 		<button type="button" class="close" data-dismiss="alert">&times;</button>
 		{{alert.message}}

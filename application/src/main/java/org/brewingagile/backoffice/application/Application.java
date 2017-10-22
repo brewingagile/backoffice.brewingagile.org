@@ -67,7 +67,7 @@ public class Application {
 			new NameTagsJaxRs(dataSource, authService, registrationsSqlMapper),
 			new BudgetJaxRs(dataSource, authService, budgetSql, registrationsSqlMapper, bundlesSql),
 			new TicketsJaxRs(dataSource, authService, ticketsSql),
-			new ReportsJaxRs(dataSource, authService, bundlesSql, accountIO),
+			new ReportsJaxRs(dataSource, authService, accountIO),
 			new ExportsJaxRs(dataSource, authService,registrationsSqlMapper)
 		);
 	}

@@ -86,3 +86,4 @@ SELECT COALESCE(
     bundle),
     secret_id
     FROM old_account_secret;
+DROP TABLE old_account_secret;

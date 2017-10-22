@@ -1,5 +1,6 @@
 package org.brewingagile.backoffice.instances;
 
+import org.brewingagile.backoffice.types.Account;
 import org.brewingagile.backoffice.types.TicketName;
 import org.brewingagile.backoffice.types.ChargeId;
 import org.brewingagile.backoffice.types.ParticipantOrganisation;
@@ -18,5 +19,9 @@ public class ResultSets {
 
 	public static ParticipantOrganisation participantOrganisation(ResultSet rs, String organisation) throws SQLException {
 		return ParticipantOrganisation.participantOrganisation(rs.getString(organisation));
+	}
+
+	public static Account account(ResultSet rs, String x) throws SQLException {
+		return Account.account(rs.getString(x));
 	}
 }

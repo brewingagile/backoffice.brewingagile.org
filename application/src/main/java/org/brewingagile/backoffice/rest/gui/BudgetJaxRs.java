@@ -108,7 +108,7 @@ public class BudgetJaxRs {
 
 		try (Connection c = dataSource.getConnection()) {
 			List<BundlesSql.BucketSummary> bundles = bundlesSql.bundles(c);
-			BundlesSql.Individuals individuals = bundlesSql.individuals(c);
+			RegistrationsSqlMapper.Individuals individuals = registrationsSqlMapper.individuals(c);
 			BundleLogic.Total logic = BundleLogic.logic(bundles, individuals);
 
 			List<BudgetItem> costsWorkshop1 = List.list(

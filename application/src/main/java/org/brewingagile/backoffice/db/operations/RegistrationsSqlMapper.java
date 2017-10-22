@@ -1,6 +1,7 @@
 package org.brewingagile.backoffice.db.operations;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.*;
 import java.util.UUID;
 
@@ -9,6 +10,7 @@ import fj.*;
 import fj.data.List;
 import fj.data.Option;
 import fj.data.Set;
+import fj.data.TreeMap;
 import fj.function.Strings;
 import fj.function.Try1;
 import functional.Tuple2;
@@ -16,6 +18,7 @@ import org.brewingagile.backoffice.instances.ResultSets;
 import org.brewingagile.backoffice.types.*;
 
 import static org.brewingagile.backoffice.instances.PreparedStatements.set;
+import static org.brewingagile.backoffice.types.TicketName.ticketName;
 
 public class RegistrationsSqlMapper {
 	public List<P2<String,String>> participantNameAndEmail(Connection c) throws SQLException {
@@ -137,7 +140,7 @@ public class RegistrationsSqlMapper {
 		String sql = "SELECT ticket FROM registration_ticket WHERE registration_id = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
-			return SqlOps.set(ps, Ord.hashEqualsOrd(), rs -> TicketName.ticketName(rs.getString("ticket")));
+			return SqlOps.set(ps, Ord.hashEqualsOrd(), rs -> ticketName(rs.getString("ticket")));
 		}
 	}
 
@@ -361,6 +364,42 @@ public class RegistrationsSqlMapper {
 					rs.getString("product_text")
 				)
 			);
+		}
+	}
+
+		public static final class Individuals {
+		public final int conference;
+		public final int workshop1;
+		public final int workshop2;
+
+		public Individuals(int conference, int workshop1, int workshop2) {
+			this.conference = conference;
+			this.workshop1 = workshop1;
+			this.workshop2 = workshop2;
+		}
+	}
+
+	public Individuals individuals(Connection c) throws SQLException {
+		TreeMap<TicketName, BigInteger> map = individuals2(c).groupBy(x -> x._1(), x -> x._2()).map(x -> x.head());
+
+		return new Individuals(
+			(int)map.get(ticketName("conference")).orSome(BigInteger.ZERO).longValue(),
+			(int)map.get(ticketName("workshop1")).orSome(BigInteger.ZERO).longValue(),
+			(int)map.get(ticketName("workshop2")).orSome(BigInteger.ZERO).longValue()
+		);
+	}
+
+	public List<P2<TicketName, BigInteger>> individuals2(Connection c) throws SQLException {
+		String sql = "SELECT ticket, count(1) as c FROM registration " +
+			"JOIN registration_ticket USING (registration_id) " +
+			"LEFT JOIN registration_account USING (registration_id) " +
+			"WHERE registration_account IS NULL " +
+			"GROUP BY ticket;";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			return SqlOps.list(ps, rs -> P.p(
+				ResultSets.ticketName(rs, "ticket"),
+				rs.getBigDecimal("c").toBigInteger()
+			));
 		}
 	}
 }

@@ -2,9 +2,10 @@ package org.brewingagile.backoffice.pure;
 
 import fj.data.List;
 import org.brewingagile.backoffice.db.operations.BundlesSql;
+import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 
 public class BundleLogic {
-	public static Total logic(List<BundlesSql.BucketSummary> bundles, BundlesSql.Individuals individuals) {
+	public static Total logic(List<BundlesSql.BucketSummary> bundles, RegistrationsSqlMapper.Individuals individuals) {
 		Total2 actual = new Total2(
 			bundles.foldLeft((l,r) -> l + r.actualConference, 0),
 			bundles.foldLeft((l,r) -> l + r.actualWorkshop1, 0),

@@ -24,18 +24,15 @@ public class AccountIO {
 	private final AccountsSql accountsSql;
 	private final RegistrationsSqlMapper registrationsSqlMapper;
 	private final TicketsSql ticketsSql;
-	private final BundlesSql bundlesSql;
 
 	public AccountIO(
 		AccountsSql accountsSql,
 		RegistrationsSqlMapper registrationsSqlMapper,
-		TicketsSql ticketsSql,
-		BundlesSql bundlesSql
+		TicketsSql ticketsSql
 	) {
 		this.accountsSql = accountsSql;
 		this.registrationsSqlMapper = registrationsSqlMapper;
 		this.ticketsSql = ticketsSql;
-		this.bundlesSql = bundlesSql;
 	}
 
 	public AccountLogic.Total total(Connection c, Account account) throws SQLException {
@@ -67,7 +64,7 @@ public class AccountIO {
 		List<P5<TicketName, BigInteger, BigInteger, BigInteger, BigInteger>> join = List.join(p3s.map(x -> x._3().tickets));
 		TreeMap<TicketName, BigInteger> accounts = join.groupBy(x -> x._1(), x -> x._5(), Monoid.bigintAdditionMonoid, TicketName.Ord);
 
-		TreeMap<TicketName, BigInteger> individuals = bundlesSql.individuals2(c).groupBy(x -> x._1(), x -> x._2(), Monoid.bigintAdditionMonoid, TicketName.Ord);
+		TreeMap<TicketName, BigInteger> individuals = registrationsSqlMapper.individuals2(c).groupBy(x -> x._1(), x -> x._2(), Monoid.bigintAdditionMonoid, TicketName.Ord);
 		Set<TicketName> keys = Set.iterableSet(TicketName.Ord, List.join(List.list(accounts.keys(), individuals.keys())));
 		return keys.toList().map(x -> {
 			BigInteger a = accounts.get(x).orSome(BigInteger.ZERO);

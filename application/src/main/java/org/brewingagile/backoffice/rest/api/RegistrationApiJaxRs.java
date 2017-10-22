@@ -5,6 +5,7 @@ import fj.Ord;
 import fj.data.*;
 import functional.Effect;
 import org.brewingagile.backoffice.db.operations.*;
+import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Individuals;
 import org.brewingagile.backoffice.types.BillingMethod;
 import org.brewingagile.backoffice.types.Badge;
 import org.brewingagile.backoffice.types.TicketName;
@@ -197,7 +198,7 @@ public class RegistrationApiJaxRs {
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			List<BundlesSql.BucketSummary> bundles = bundlesSql.bundles(c);
-			BundlesSql.Individuals individuals = bundlesSql.individuals(c);
+			Individuals individuals = registrationsSqlMapper.individuals(c);
 			logic = BundleLogic.logic(bundles, individuals);
 			tickets = ticketsSql.all(c).toArray();
 		}

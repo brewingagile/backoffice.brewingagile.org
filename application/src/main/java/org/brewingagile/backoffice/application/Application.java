@@ -52,7 +52,7 @@ public class Application {
 		SlackBotHook slackBotHook = new SlackBotHook(okHttpClient, config.slackBotHookUrl, config.slackBotName, config.slackBotChannel);
 		StripeChargeClient stripeChargeClient = new StripeChargeClient(okHttpClient, config.stripePrivateKey);
 
-		AccountIO accountIO = new AccountIO(accountsSql, registrationsSqlMapper, ticketsSql, bundlesSql);
+		AccountIO accountIO = new AccountIO(accountsSql, registrationsSqlMapper, ticketsSql);
 
 		this.apiRestServices = List.list(
 			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, bundlesSql, slackBotHook, ticketsSql),

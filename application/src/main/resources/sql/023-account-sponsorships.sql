@@ -74,3 +74,15 @@ SELECT registration_id, COALESCE(
 FROM registration_bucket
 JOIN bucket USING (bucket);
 
+ALTER TABLE account_secret RENAME TO old_account_secret;
+CREATE TABLE account_secret (
+    account text NOT NULL PRIMARY KEY REFERENCES account (account) ON UPDATE CASCADE,
+    secret_id uuid NOT NULL
+);
+INSERT INTO account_secret (account, secret_id)
+SELECT COALESCE(
+    NULLIF(substring(bundle FROM 'Sponsor: (.+)'), ''),
+    NULLIF(substring(bundle FROM 'Invoice: (.+)'), ''),
+    bundle),
+    secret_id
+    FROM old_account_secret;

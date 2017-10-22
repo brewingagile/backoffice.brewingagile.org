@@ -60,3 +60,19 @@ INSERT INTO account_package (account, package_number, description, price) VALUES
 INSERT INTO account_package_ticket (account, package_number, ticket, qty) VALUES
 ('Brewing Agile', 1, 'conference', 5),
 ('Brewing Agile', 2, 'conference', 4);
+
+CREATE TABLE registration_account (
+    registration_id uuid NOT NULL
+        UNIQUE
+        PRIMARY KEY
+        REFERENCES registration (registration_id),
+    account text NOT NULL REFERENCES account (account)
+);
+INSERT INTO registration_account (registration_id, account)
+SELECT registration_id, COALESCE(
+    NULLIF(substring(bucket FROM 'Sponsor: (.+)'), ''),
+    NULLIF(substring(bucket FROM 'Invoice: (.+)'), ''),
+    bucket)
+FROM registration_bucket
+JOIN bucket USING (bucket);
+

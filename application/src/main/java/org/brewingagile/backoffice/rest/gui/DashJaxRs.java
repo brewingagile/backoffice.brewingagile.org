@@ -21,12 +21,12 @@ import static argo.jdom.JsonNodeFactories.*;
 
 @Path("/reports/")
 @NeverCache
-public class ReportsJaxRs {
+public class DashJaxRs {
 	private final DataSource dataSource;
 	private final AuthService authService;
 	private final AccountIO accountIO;
 
-	public ReportsJaxRs(
+	public DashJaxRs(
 		DataSource dataSource,
 		AuthService authService,
 		AccountIO accountIO

@@ -11,7 +11,6 @@ import org.brewingagile.backoffice.db.operations.AccountsSql.AccountData;
 import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
-import org.brewingagile.backoffice.rest.gui.ReportsJaxRs;
 import org.brewingagile.backoffice.types.Account;
 import org.brewingagile.backoffice.types.AccountPackage;
 import org.brewingagile.backoffice.types.TicketName;

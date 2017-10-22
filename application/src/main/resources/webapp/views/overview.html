@@ -1,78 +1,20 @@
 <div class="col-lg-10">
-<table class="table">
-	<thead>
-	<tr>
-		<th class="col-lg-6"><h3>Individual Signups</h3></th>
-		<th class="col-lg-2">Conference</th>
-		<th class="col-lg-2">Workshop 1</th>
-		<th class="col-lg-2">Workshop 2</th>
-	</tr>
-	</thead>
-	<tr>
-		<td></td>
-		<td><span title="Actual">{{i.conference}}</span></td>
-		<td><span title="Actual">{{i.workshop1}}</span></td>
-		<td><span title="Actual">{{i.workshop2}}</span></td>
-	</tr>
-</table>
-
-
-<table class="table">
-	<thead>
-	<tr>
-		<th class="col-lg-6"><h3>Bundles</h3></th>
-		<th class="col-lg-2">Conference</th>
-		<th class="col-lg-2">Workshop 1</th>
-		<th class="col-lg-2">Workshop 2</th>
-	</tr>
-	</thead>
-	<tr ng-repeat="b in bs">
-		<td>{{b.bundle}}</td>
-		<td ng-class="{'bg-success': (b.actual.conference == b.planned.conference)}">
-			<span title="Actual">{{b.actual.conference}}</span> 
-			<span class="text-muted" title="Planned, according to bundle">({{b.planned.conference}})</span>
-			<strong ng-show="b.actual.conference != b.planned.conference" class="text-danger">{{b.actual.conference - b.planned.conference}}</strong>
-			<span ng-show="b.actual.conference > b.planned.conference" class="glyphicon glyphicon-warning-sign" aria-hidden="true" title="More actual registrations than bundle is for!"></span>
-		</td>
-		<td ng-class="{'bg-success': (b.actual.workshop1 == b.planned.workshop1)}">
-			<span title="Actual">{{b.actual.workshop1}}</span> 
-			<span class="text-muted" title="Planned, according to bundle">({{b.planned.workshop1}})</span>
-			<strong ng-show="b.actual.workshop1 != b.planned.workshop1" class="text-danger">{{b.actual.workshop1 - b.planned.workshop1}}</strong>
-			<span ng-show="b.actual.workshop1 > b.planned.workshop1" class="glyphicon glyphicon-warning-sign" aria-hidden="true" title="More actual registrations than bundle is for!"></span>
-		</td>
-		<td ng-class="{'bg-success': (b.actual.workshop2 == b.planned.workshop2)}">
-			<span title="Actual">{{b.actual.workshop2}}</span>
-			<span class="text-muted" title="Planned, according to bundle">({{b.planned.workshop2}})</span>
-			<strong ng-show="b.actual.workshop2 != b.planned.workshop2" class="text-danger">{{b.actual.workshop2 - b.planned.workshop2}}</strong>
-			<span ng-show="b.actual.workshop2 > b.planned.workshop2" class="glyphicon glyphicon-warning-sign" aria-hidden="true" title="More actual registrations than bundle is for!"></span>
-		</td>
-	</tr>
-	<tfoot>
-	<tr>
-		<th></th>
-		<th><span title="Actual">{{totals.actual.conference}}</span> <span class="text-muted" title="Planned, according to bundle">({{totals.planned.conference}})</span></th>
-		<th><span title="Actual">{{totals.actual.workshop1}}</span> <span class="text-muted" title="Planned, according to bundle">({{totals.planned.workshop1}})</span></th>
-		<th><span title="Actual">{{totals.actual.workshop2}}</span> <span class="text-muted" title="Planned, according to bundle">({{totals.planned.workshop2}})</span></th>
-	</tr>
-	</tfoot>
-</table>
-
-<table class="table">
-	<thead>
-	<tr>
-		<th class="col-lg-6"><h3>Total</h3></th>
-		<th class="col-lg-2">Conference</th>
-		<th class="col-lg-2">Workshop 1</th>
-		<th class="col-lg-2">Workshop 2</th>
-	</tr>
-	</thead>
-	<tfoot>
-	<tr>
-		<th>All Individuals + Planned Bundles</th>
-		<th><span title="Planned Bundle + Actual Individuals">{{totals.planned.conference + i.conference}}</span></th>
-		<th><span title="Planned Bundle + Actual Individuals">{{totals.planned.workshop1 + i.workshop1}}</span></th>
-		<th><span title="Planned Bundle + Actual Individuals">{{totals.planned.workshop2 + i.workshop2}}</span></th>
-	</tr>
-	</tfoot>
-</table>
+	<table class="table" ng-repeat="a in accounts">
+		<thead>
+		<tr>
+			<th class="col-lg-6">{{a.account}}: {{a.totalExVat | number}} SEK</th>
+			<th class="col-lg-2">Signups</th>
+			<th class="col-lg-2">Missing</th>
+		</tr>
+		</thead>
+		<tr ng-repeat="t in a.tickets">
+			<td>{{t.ticket}}</td>
+			<td ng-class="{'bg-success': (t.missing == 0), 'bg-danger': (t.missing > 0)}">
+				<span title="Total # participants">{{t.signups}}</span>
+			</td>
+			<td ng-class="{'bg-success': (t.missing == 0), 'bg-danger': (t.missing > 0)}">
+				<span title="# participants not yet signed up.">{{t.missing}}</span>
+			</td>
+		</tr>
+	</table>
 </div>

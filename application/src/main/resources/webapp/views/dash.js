@@ -1,4 +1,4 @@
-function OverviewController($scope, $http, $resource) {
+function DashController($scope, $http, $resource) {
     $http.get('gui/accounts/2/')
         .success(function(d) {
             $scope.accounts = d;

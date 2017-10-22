@@ -111,18 +111,18 @@ public class BundlesSql {
 	public Individuals individuals(Connection c) throws SQLException {
 		String sql = "SELECT (\n" +
 			"\tSELECT count(1) FROM registration_ticket rt\n" +
-			"\tLEFT JOIN registration_bucket rb USING (registration_id) \n" +
-			"\tWHERE ticket = 'conference' AND rb.bucket IS NULL\n" +
+			"\tLEFT JOIN registration_account USING (registration_id) \n" +
+			"\tWHERE ticket = 'conference' AND registration_account IS NULL\n" +
 			") as conference,\n" +
 			"(\n" +
 			"\tSELECT count(1) FROM registration_ticket rt\n" +
-			"\tLEFT JOIN registration_bucket rb USING (registration_id) \n" +
-			"\tWHERE ticket = 'workshop1' AND rb.bucket IS NULL\n" +
+			"\tLEFT JOIN registration_account USING (registration_id) \n" +
+			"\tWHERE ticket = 'workshop1' AND registration_account IS NULL\n" +
 			") as workshop1,\n" +
 			"(\n" +
 			"\tSELECT count(1) FROM registration_ticket rt\n" +
-			"\tLEFT JOIN registration_bucket rb USING (registration_id) \n" +
-			"\tWHERE ticket = 'workshop2' AND rb.bucket IS NULL\n" +
+			"\tLEFT JOIN registration_account USING (registration_id) \n" +
+			"\tWHERE ticket = 'workshop2' AND registration_account IS NULL\n" +
 			") as workshop2 ";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			return SqlOps.one(ps, rs -> new Individuals(

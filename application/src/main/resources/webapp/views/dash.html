@@ -1,0 +1,64 @@
+Borde ha:
+* Biljett-totaler
+	* Separat: Accounts
+ 	* Separat: Individuals
+* # received, med länk länk till received
+
+<div class="col-lg-10">
+	<table class="table">
+		<thead>
+		<tr>
+			<th class="col-lg-6"><h3>Individual Signups</h3></th>
+			<th class="col-lg-2">Conference</th>
+			<th class="col-lg-2">Workshop 1</th>
+			<th class="col-lg-2">Workshop 2</th>
+		</tr>
+		</thead>
+		<tr>
+			<td></td>
+			<td><span title="Actual">{{i.conference}}</span></td>
+			<td><span title="Actual">{{i.workshop1}}</span></td>
+			<td><span title="Actual">{{i.workshop2}}</span></td>
+		</tr>
+	</table>
+</div>
+
+<div class="col-lg-10">
+	<table class="table" ng-repeat="a in accounts">
+		<thead>
+		<tr>
+			<th class="col-lg-6">{{a.account}}: {{a.totalExVat}} SEK</th>
+			<th class="col-lg-2">Signups</th>
+			<th class="col-lg-2">Missing</th>
+		</tr>
+		</thead>
+		<tr ng-repeat="t in a.tickets">
+			<td>{{t.ticket}}</td>
+			<td ng-class="{'bg-success': (t.missing == 0), 'bg-danger': (t.missing > 0)}">
+				<span title="Total # participants">{{t.signups}}</span>
+			</td>
+			<td ng-class="{'bg-success': (t.missing == 0), 'bg-danger': (t.missing > 0)}">
+				<span title="# participants not yet signed up.">{{t.missing}}</span>
+			</td>
+		</tr>
+	</table>
+
+	<table class="table">
+		<thead>
+		<tr>
+			<th class="col-lg-6"><h3>Total</h3></th>
+			<th class="col-lg-2">Conference</th>
+			<th class="col-lg-2">Workshop 1</th>
+			<th class="col-lg-2">Workshop 2</th>
+		</tr>
+		</thead>
+		<tfoot>
+		<tr>
+			<th>All Individuals + Planned Bundles</th>
+			<th><span title="Planned Bundle + Actual Individuals">{{totals.planned.conference + i.conference}}</span></th>
+			<th><span title="Planned Bundle + Actual Individuals">{{totals.planned.workshop1 + i.workshop1}}</span></th>
+			<th><span title="Planned Bundle + Actual Individuals">{{totals.planned.workshop2 + i.workshop2}}</span></th>
+		</tr>
+		</tfoot>
+	</table>
+</div>

@@ -12,6 +12,7 @@ import functional.Tuple2;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
+import org.brewingagile.backoffice.types.Account;
 import org.brewingagile.backoffice.types.Badge;
 import org.brewingagile.backoffice.types.BillingCompany;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.PrintedNametag;
@@ -145,7 +146,7 @@ public class RegistrationsJaxRs {
 			field("twitter", string(r.twitter)),
 			field("dietaryRequirements", string(r.dietaryRequirements)),
 			field("badge", string(r.badge.badge)),
-			field("bundle", string(r.bundle.orSome("")))
+			field("bundle", r.account.map(ToJson::account).orSome(string("")))
 		);
 	}
 
@@ -153,18 +154,18 @@ public class RegistrationsJaxRs {
 		public final BillingCompany billingCompany;
 		public final Badge badge;
 		public final String dietaryRequirements;
-		public final Option<String> bundle;
+		public final Option<Account> account;
 
 		public RegistrationsUpdate(
 			BillingCompany billingCompany,
 			Badge badge,
 			String dietaryRequirements,
-			Option<String> bundle
+			Option<Account> account
 		) {
 			this.billingCompany = billingCompany;
 			this.badge = badge;
 			this.dietaryRequirements = dietaryRequirements;
-			this.bundle = bundle;
+			this.account = account;
 		}
 	}
 
@@ -172,9 +173,10 @@ public class RegistrationsJaxRs {
 		Either<String, BillingCompany> billingCompany = ArgoUtils.stringValue(jsonNode, "billingCompany").right().map(BillingCompany::new);
 		Either<String, Badge> badge = ArgoUtils.stringValue(jsonNode, "badge").right().map(Badge::new);
 		Either<String, String> dietaryRequirements = ArgoUtils.stringValue(jsonNode, "dietaryRequirements");
-		Either<String, Option<String>> bundle = ArgoUtils.stringValue(jsonNode, "bundle")
+		Either<String, Option<Account>> bundle = ArgoUtils.stringValue(jsonNode, "bundle")
 			.right().map(Option::fromNull)
-			.right().map(r -> r.filter(Strings.isNotNullOrEmpty));
+			.right().map(r -> r.filter(Strings.isNotNullOrEmpty))
+			.right().map(x -> x.map(Account::account));
 
 		return bundle.right()
 			.apply(dietaryRequirements.right()
@@ -200,7 +202,7 @@ public class RegistrationsJaxRs {
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			if (!registrationsSqlMapper.one(c, id).isSome()) return Response.status(Status.NOT_FOUND).build();
-			registrationsSqlMapper.update(c, id, ru.billingCompany, ru.badge, ru.dietaryRequirements, ru.bundle);
+			registrationsSqlMapper.update(c, id, ru.billingCompany, ru.badge, ru.dietaryRequirements, ru.account);
 			c.commit();
 		}
 		return Response.ok().build();

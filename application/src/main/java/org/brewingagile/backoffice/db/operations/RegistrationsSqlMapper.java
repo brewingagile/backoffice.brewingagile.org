@@ -12,9 +12,10 @@ import fj.data.Set;
 import fj.function.Strings;
 import fj.function.Try1;
 import functional.Tuple2;
-import org.brewingagile.backoffice.instances.PreparedStatements;
 import org.brewingagile.backoffice.instances.ResultSets;
 import org.brewingagile.backoffice.types.*;
+
+import static org.brewingagile.backoffice.instances.PreparedStatements.set;
 
 public class RegistrationsSqlMapper {
 	public List<P2<String,String>> participantNameAndEmail(Connection c) throws SQLException {
@@ -76,7 +77,7 @@ public class RegistrationsSqlMapper {
 		public final String dietaryRequirements;
 		public final Badge badge;
 		public final String twitter;
-		public final Option<String> bundle;
+		public final Option<Account> account;
 		public final ParticipantOrganisation organisation;
 
 		public RegistrationTuple(
@@ -88,7 +89,7 @@ public class RegistrationsSqlMapper {
 			String dietaryRequirements,
 			Badge badge,
 			String twitter,
-			Option<String> bundle,
+			Option<Account> account,
 			ParticipantOrganisation organisation
 		) {
 			this.state = state;
@@ -100,7 +101,7 @@ public class RegistrationsSqlMapper {
 			this.dietaryRequirements = dietaryRequirements;
 			this.badge = badge;
 			this.twitter = twitter;
-			this.bundle = bundle;
+			this.account = account;
 			this.organisation = organisation;
 		}
 	}
@@ -141,8 +142,8 @@ public class RegistrationsSqlMapper {
 	}
 
 	private Option<RegistrationTuple> registration(Connection c, UUID id) throws SQLException {
-		String sql = "SELECT *, rb.bucket FROM registration r " +
-			"LEFT JOIN registration_bucket rb USING (registration_id) " +
+		String sql = "SELECT *, account FROM registration " +
+			"LEFT JOIN registration_account USING (registration_id) " +
 			"WHERE registration_id = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
@@ -158,8 +159,8 @@ public class RegistrationsSqlMapper {
 	}
 
 	public List<Tuple2<UUID, RegistrationTuple>> all(Connection c) throws SQLException {
-		String sql = "SELECT *, rb.bucket FROM registration r " +
-			"LEFT JOIN registration_bucket rb USING (registration_id) " +
+		String sql = "SELECT *, account FROM registration " +
+			"LEFT JOIN registration_account USING (registration_id) " +
 			"ORDER BY participant_name";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			return SqlOps.list(ps,
@@ -172,10 +173,9 @@ public class RegistrationsSqlMapper {
 	}
 
 	public List<UUID> unprintedNametags(Connection c) throws SQLException {
-		String sql = "SELECT *, rb.bucket FROM registration r " +
-			"LEFT JOIN registration_bucket rb USING (registration_id) " +
-			"LEFT JOIN printed_nametags pn USING (registration_id) " +
-			"WHERE pn.registration_id IS NULL " +
+		String sql = "SELECT registration_id FROM registration " +
+			"LEFT JOIN printed_nametags USING (registration_id) " +
+			"WHERE printed_nametags.registration_id IS NULL " +
 			"ORDER BY participant_name";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			return SqlOps.list(ps,  rs -> (UUID) rs.getObject("registration_id"));
@@ -232,7 +232,7 @@ public class RegistrationsSqlMapper {
 			ps.setString(7, rt.billingMethod.name());
 			ps.setString(8, rt.dietaryRequirements);
 			ps.setString(9, rt.twitter);
-			PreparedStatements.set(ps, 10, rt.organisation);
+			set(ps, 10, rt.organisation);
 			ps.execute();
 		}
 	}
@@ -248,7 +248,7 @@ public class RegistrationsSqlMapper {
 			rs.getString("dietary_requirements"),
 			new Badge(rs.getString("badge")),
 			rs.getString("twitter"),
-			Option.fromNull(rs.getString("bucket")).filter(Strings.isNotNullOrEmpty),
+			Option.fromNull(rs.getString("account")).map(Account::account),
 			ResultSets.participantOrganisation(rs, "organisation")
 		);
 	}
@@ -293,8 +293,8 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	public void update(Connection c, UUID id, BillingCompany billingCompany, Badge badge, String diet, Option<String> bundle) throws SQLException {
-		replaceRegistrationBundle(c, id, bundle);
+	public void update(Connection c, UUID id, BillingCompany billingCompany, Badge badge, String diet, Option<Account> account) throws SQLException {
+		replaceRegistrationAccount(c, id, account);
 		updateRegistration(c, id, billingCompany, badge, diet);
 	}
 
@@ -315,24 +315,24 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	private void replaceRegistrationBundle(Connection c, UUID id, Option<String> bundle) throws SQLException {
-		deleteRegistrationBundle(c, id);
-		if (bundle.isSome()) insertRegistrationBundle(c, id, bundle.some());
+	private void replaceRegistrationAccount(Connection c, UUID id, Option<Account> bundle) throws SQLException {
+		deleteRegistrationAccount(c, id);
+		if (bundle.isSome()) insertRegistrationAccount(c, id, bundle.some());
 	}
 
-	private void deleteRegistrationBundle(Connection c, UUID id) throws SQLException {
-		String sql = "DELETE FROM registration_bucket WHERE registration_id = ?;";
+	private void deleteRegistrationAccount(Connection c, UUID id) throws SQLException {
+		String sql = "DELETE FROM registration_account WHERE registration_id = ?;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
 			ps.execute();
 		}
 	}
 
-	private void insertRegistrationBundle(Connection c, UUID registrationId, String bucket) throws SQLException {
-		String sql = "INSERT INTO registration_bucket (registration_id, bucket) VALUES (?, ?);";
+	private void insertRegistrationAccount(Connection c, UUID registrationId, Account account) throws SQLException {
+		String sql = "INSERT INTO registration_account (registration_id, account) VALUES (?, ?);";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, registrationId);
-			ps.setString(2, bucket);
+			set(ps, 2, account);
 			ps.execute();
 		}
 	}
@@ -352,7 +352,7 @@ public class RegistrationsSqlMapper {
 			"WHERE account = ? " +
 			"ORDER BY participant_name, ticket";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			PreparedStatements.set(ps, 1, account);
+			set(ps, 1, account);
 			return SqlOps.list(ps,
 				rs -> P.p(
 					rs.getString("participant_name"),

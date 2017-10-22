@@ -23,50 +23,48 @@ CREATE TABLE account_package_ticket (
 );
 
 INSERT INTO account (account, billing_recipient, billing_address)
-SELECT substring(bucket FROM 'Sponsor: (.+)'), '', '' FROM bucket
-WHERE bucket ILIKE 'Sponsor: %'
-UNION
-SELECT substring(bucket FROM 'Invoice: (.+)'), '', '' FROM bucket
-WHERE bucket ILIKE 'Invoice: %';
+SELECT DISTINCT COALESCE(
+    NULLIF(substring(bucket FROM 'Sponsor: (.+)'), ''),
+    NULLIF(substring(bucket FROM 'Invoice: (.+)'), ''),
+    bucket),
+    '',
+    ''
+FROM bucket;
 
 INSERT INTO account_package (account, package_number, description, price)
-SELECT substring(bucket FROM 'Sponsor: (.+)'), 1, CASE
+SELECT
+    COALESCE(
+        NULLIF(substring(bucket FROM 'Sponsor: (.+)'), ''),
+        NULLIF(substring(bucket FROM 'Invoice: (.+)'), ''),
+        bucket),
+    1,
+    CASE
     WHEN price = 5000 THEN 'Sponsor: Bottle'
     WHEN price = 10000 THEN 'Sponsor: On Tap'
+    ELSE 'Other'
     END,
     bundle_deal.price
 FROM bucket
-JOIN bundle_deal ON (bundle_deal.bundle = bucket.bucket)
-WHERE bucket ILIKE 'Sponsor: %';
+JOIN bundle_deal ON (bundle_deal.bundle = bucket.bucket);
 
 INSERT INTO account_package_ticket (account, package_number, ticket, qty)
 SELECT
-    substring(bucket FROM 'Sponsor: (.+)'),
+    COALESCE(
+        NULLIF(substring(bucket FROM 'Sponsor: (.+)'), ''),
+        NULLIF(substring(bucket FROM 'Invoice: (.+)'), ''),
+        bucket),
     1,
     'conference',
-    CASE
-    WHEN bundle_deal.price = 5000 THEN 1
-    WHEN bundle_deal.price = 10000 THEN 2
-    END
+    bucket.conference
 FROM bucket
-JOIN bundle_deal ON (bundle_deal.bundle = bucket.bucket)
-WHERE bucket ILIKE 'Sponsor: %';
-
-INSERT INTO account (account, billing_recipient, billing_address) VALUES
-('Brewing Agile', '', '');
-INSERT INTO account_package (account, package_number, description, price) VALUES
-('Brewing Agile', 1, 'Organisers', 0),
-('Brewing Agile', 2, 'Speakers', 0);
-INSERT INTO account_package_ticket (account, package_number, ticket, qty) VALUES
-('Brewing Agile', 1, 'conference', 5),
-('Brewing Agile', 2, 'conference', 4);
+JOIN bundle_deal ON (bundle_deal.bundle = bucket.bucket);
 
 CREATE TABLE registration_account (
     registration_id uuid NOT NULL
         UNIQUE
         PRIMARY KEY
         REFERENCES registration (registration_id),
-    account text NOT NULL REFERENCES account (account)
+    account text NOT NULL REFERENCES account (account) ON UPDATE CASCADE
 );
 INSERT INTO registration_account (registration_id, account)
 SELECT registration_id, COALESCE(

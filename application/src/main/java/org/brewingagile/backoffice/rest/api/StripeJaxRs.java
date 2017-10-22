@@ -11,6 +11,7 @@ import lombok.ToString;
 import org.brewingagile.backoffice.db.operations.*;
 import org.brewingagile.backoffice.integrations.StripeChargeClient;
 import org.brewingagile.backoffice.rest.json.ToJson;
+import org.brewingagile.backoffice.types.Account;
 import org.brewingagile.backoffice.types.AccountSecret;
 import org.brewingagile.backoffice.types.StripePublishableKey;
 import org.brewingagile.backoffice.types.TicketName;
@@ -75,13 +76,13 @@ public class StripeJaxRs {
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);
 
-				Option<String> maybeBundle = accountSecretSql.bundle(c, accountSecret);
+				Option<Account> maybeBundle = accountSecretSql.bundle(c, accountSecret);
 				if (maybeBundle.isNone())
 					return Response.status(Response.Status.NOT_FOUND).build();
 
-				String bundle = maybeBundle.some();
-				tickets = registrationsSqlMapper.inBundle(c, bundle);
-				charges = stripeChargeSql.byBundle(c, bundle);
+				Account account = maybeBundle.some();
+				tickets = registrationsSqlMapper.inAccount(c, account);
+				charges = stripeChargeSql.byAccount(c, account);
 			}
 
 			Monoid<BigDecimal> add = Monoid.bigdecimalAdditionMonoid;
@@ -140,8 +141,8 @@ public class StripeJaxRs {
 
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);
-				String bundle = accountSecretSql.bundle(c, accountSecret).some();
-				stripeChargeSql.insertCharge(c, bundle, new StripeChargeSql.Charge(
+				Account account = accountSecretSql.bundle(c, accountSecret).some();
+				stripeChargeSql.insertCharge(c, account, new StripeChargeSql.Charge(
 					stringChargeEither.right().value().id,
 					new BigDecimal(unjson.amountInOre).divide(BigDecimal.valueOf(100)),
 					Instant.now()

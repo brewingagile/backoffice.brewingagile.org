@@ -339,20 +339,20 @@ public class RegistrationsSqlMapper {
 
 	public static final class PrintedNametag {}
 
-	public List<P4<String, TicketName, BigDecimal, String>> inBundle(Connection c, String bundle) throws SQLException {
+	public List<P4<String, TicketName, BigDecimal, String>> inAccount(Connection c, Account account) throws SQLException {
 		String sql = "SELECT " +
 			"registration.participant_name " +
 			", registration_ticket.ticket " +
 			", ticket.price " +
 			", ticket.product_text " +
 			"FROM registration " +
-			"JOIN registration_bucket USING (registration_id) " +
+			"JOIN registration_account USING (registration_id) " +
 			"JOIN registration_ticket USING (registration_id) " +
 			"JOIN ticket USING (ticket) " +
-			"WHERE registration_bucket.bucket = ? " +
+			"WHERE account = ? " +
 			"ORDER BY participant_name, ticket";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			ps.setString(1, bundle);
+			PreparedStatements.set(ps, 1, account);
 			return SqlOps.list(ps,
 				rs -> P.p(
 					rs.getString("participant_name"),

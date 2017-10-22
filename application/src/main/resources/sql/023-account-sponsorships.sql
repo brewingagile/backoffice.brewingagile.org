@@ -87,3 +87,24 @@ SELECT COALESCE(
     secret_id
     FROM old_account_secret;
 DROP TABLE old_account_secret;
+
+ALTER TABLE stripe_charge RENAME TO old_stripe_charge;
+CREATE TABLE stripe_charge (
+    charge_id text NOT NULL UNIQUE PRIMARY KEY,
+    account text NOT NULL REFERENCES account (account) ON UPDATE CASCADE,
+    amount NUMERIC (12,2) NOT NULL,
+    "when" timestamp NOT NULL
+);
+INSERT INTO stripe_charge (charge_id, account, amount, "when")
+SELECT
+    charge_id,
+    COALESCE(
+        NULLIF(substring(bundle FROM 'Sponsor: (.+)'), ''),
+        NULLIF(substring(bundle FROM 'Invoice: (.+)'), ''),
+        bundle
+    ),
+    amount,
+    "when"
+    FROM old_stripe_charge;
+DROP TABLE old_stripe_charge;
+

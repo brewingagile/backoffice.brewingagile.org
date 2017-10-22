@@ -1,31 +1,23 @@
 package org.brewingagile.backoffice.rest.gui;
 
-import argo.jdom.JsonNode;
-import argo.jdom.JsonRootNode;
-import argo.saj.InvalidSyntaxException;
 import fj.Monoid;
 import fj.P;
 import fj.P2;
 import fj.P3;
-import fj.data.Collectors;
 import fj.data.List;
-import fj.data.Option;
 import fj.data.TreeMap;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.AccountsSql;
 import org.brewingagile.backoffice.db.operations.AccountsSql.AccountData;
-import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.pure.AccountLogic;
-import org.brewingagile.backoffice.rest.json.FromJson;
 import org.brewingagile.backoffice.rest.json.ToJson;
 import org.brewingagile.backoffice.types.Account;
 import org.brewingagile.backoffice.types.AccountPackage;
 import org.brewingagile.backoffice.types.TicketName;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
-import sun.awt.X11.XBaseMenuWindow;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
@@ -40,8 +32,6 @@ import java.math.BigInteger;
 import java.sql.Connection;
 
 import static argo.jdom.JsonNodeFactories.*;
-import static org.brewingagile.backoffice.db.operations.BundlesSql.Bucket;
-import static org.brewingagile.backoffice.rest.json.ToJson.nullable;
 
 @Path("accounts")
 @NeverCache
@@ -92,7 +82,7 @@ public class AccountsJaxRs {
 			List.Buffer<P3<Account, AccountData, AccountLogic.Total>> buffer = List.Buffer.empty();
 			for (Account account : accounts) {
 				AccountData accountData = accountsSql.accountData(c, account);
-				List<AccountPackage> packages = accountsSql.packages(c, account);
+				List<AccountPackage> packages = accountsSql.accountPackages(c, account);
 				List<P2<TicketName, BigInteger>> signups = registrationsSqlMapper.inAccount(c, account)
 					.groupBy(x -> x._2(), x -> BigInteger.ONE, Monoid.bigintAdditionMonoid, TicketName.Ord)
 					.toList();
@@ -124,37 +114,5 @@ public class AccountsJaxRs {
 			e.printStackTrace();
 			throw e;
 		}
-	}
-
-	private static JsonRootNode json(Bucket b) {
-		return object(
-			field("bucket" ,string(b.bucket)),
-			field("conference", number(b.conference)),
-			field("workshop1", number(b.workshop1)),
-			field("workshop2", number(b.workshop2)),
-			field("deal", nullable(b.deal, x ->
-				object(field("price", number(x.price)))
-			))
-		);
-	}
-
-	private static List<Bucket> unJson(String json) throws InvalidSyntaxException {
-		return ArgoUtils.parse(json)
-			.getArrayNode()
-			.stream()
-			.map(AccountsJaxRs::unbucket)
-			.collect(Collectors.toList());
-	}
-
-	private static Bucket unbucket(JsonNode node) {
-		return new Bucket(
-			node.getStringValue("bucket"),
-			new BigInteger(node.getNumberValue("conference")).intValue(),
-			new BigInteger(node.getNumberValue("workshop1")).intValue(),
-			new BigInteger(node.getNumberValue("workshop2")).intValue(),
-			Option.fromNull(FromJson.getNullableNode(node, "deal")).map(x -> new BundlesSql.Deal(
-				new BigDecimal(x.getNumberValue("price"))
-			))
-		);
 	}
 }

@@ -42,7 +42,7 @@
 <div class="container-fluid" ng-controller="StateListsController">
 	<div class="row" style="margin-top: 60px;">
 		<div class="col-lg-2">
-			<legend>Registrations</legend>
+			<legend><a href="#/dash">Registrations</a></legend>
 			<ul class="nav nav-pills nav-stacked">
 			  <li ng-class="getClass('/received')"><a href="#/received">Received <span class="badge" ng-show="m.received.length > 0">{{m.received.length}}</span></a></li>
 			  <li ng-class="getClass('/invoicing')"><a href="#/invoicing">Invoicing <span class="badge" ng-show="m.invoicing.length > 0">{{m.invoicing.length}}</span></a></li>

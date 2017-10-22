@@ -1,10 +1,6 @@
-function OverviewController($scope, $http, $resource) {
+function OverviewController($scope, $http) {
     $http.get('gui/accounts/2/')
         .success(function(d) {
             $scope.accounts = d;
         });
-
-    $scope.bs = $resource('gui/reports/bundles', {}).query();
-	$scope.i = $resource('gui/reports/individuals', {}).get();
-	$scope.totals = $resource('gui/reports/totals', {}).get();
 }

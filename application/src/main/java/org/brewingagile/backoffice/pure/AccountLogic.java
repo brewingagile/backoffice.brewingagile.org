@@ -30,11 +30,11 @@ public class AccountLogic {
 			debitedTickets.get(x).orSome(BigInteger.ZERO)
 		));
 
-		List<P4<TicketName, BigInteger, BigInteger, BigInteger>> totalTickets = map.map(x -> {
+		List<P5<TicketName, BigInteger, BigInteger, BigInteger, BigInteger>> totalTickets = map.map(x -> {
 			BigInteger signups = x._3();
 			BigInteger ticketNeedOverPackages = signups.subtract(x._2()).max(BigInteger.ZERO);
 			BigInteger missingSignups = x._2().subtract(x._3()).max(BigInteger.ZERO);
-			return P.p(x._1(), ticketNeedOverPackages, signups, missingSignups);
+			return P.p(x._1(), ticketNeedOverPackages, signups, missingSignups, signups.add(missingSignups));
 		});
 
 		BigDecimal extraTicketsAmountExVat = totalTickets.map(x -> {
@@ -55,12 +55,12 @@ public class AccountLogic {
 
 	public static final class Total {
 		public final BigDecimal totalAmountExVat;
-		//need, signups, missingSignups
-		public final List<P4<TicketName, BigInteger, BigInteger, BigInteger>> tickets;
+		//need, signups, missingSignups, total reserved (signups + missing)
+		public final List<P5<TicketName, BigInteger, BigInteger, BigInteger, BigInteger>> tickets;
 
 		public Total(
 			BigDecimal totalAmountExVat,
-			List<P4<TicketName, BigInteger, BigInteger, BigInteger>> tickets
+			List<P5<TicketName, BigInteger, BigInteger, BigInteger, BigInteger>> tickets
 		) {
 			this.totalAmountExVat = totalAmountExVat;
 			this.tickets = tickets;

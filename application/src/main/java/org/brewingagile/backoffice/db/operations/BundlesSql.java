@@ -1,16 +1,25 @@
 package org.brewingagile.backoffice.db.operations;
 
+import fj.P;
+import fj.P2;
 import fj.data.List;
 import fj.data.Option;
+import fj.data.TreeMap;
 import fj.function.Try1;
+import org.brewingagile.backoffice.instances.PreparedStatements;
+import org.brewingagile.backoffice.instances.ResultSets;
+import org.brewingagile.backoffice.pure.AccountLogic;
+import org.brewingagile.backoffice.types.TicketName;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static java.util.Objects.requireNonNull;
+import static org.brewingagile.backoffice.types.TicketName.ticketName;
 
 public class BundlesSql {
 	public final static class Deal {
@@ -40,15 +49,6 @@ public class BundlesSql {
 			this.workshop1 = workshop1;
 			this.workshop2 = workshop2;
 			this.deal = requireNonNull(deal);
-		}
-	}
-
-	public List<Bucket> all(Connection c) throws SQLException {
-		String sql = "SELECT * FROM bucket b " +
-			"LEFT JOIN bundle_deal bd ON (b.bucket = bd.bundle) " +
-			"ORDER BY bucket;";
-		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			return SqlOps.list(ps, BundlesSql::rsBucket);
 		}
 	}
 
@@ -109,27 +109,26 @@ public class BundlesSql {
 	}
 
 	public Individuals individuals(Connection c) throws SQLException {
-		String sql = "SELECT (\n" +
-			"\tSELECT count(1) FROM registration_ticket rt\n" +
-			"\tLEFT JOIN registration_account USING (registration_id) \n" +
-			"\tWHERE ticket = 'conference' AND registration_account IS NULL\n" +
-			") as conference,\n" +
-			"(\n" +
-			"\tSELECT count(1) FROM registration_ticket rt\n" +
-			"\tLEFT JOIN registration_account USING (registration_id) \n" +
-			"\tWHERE ticket = 'workshop1' AND registration_account IS NULL\n" +
-			") as workshop1,\n" +
-			"(\n" +
-			"\tSELECT count(1) FROM registration_ticket rt\n" +
-			"\tLEFT JOIN registration_account USING (registration_id) \n" +
-			"\tWHERE ticket = 'workshop2' AND registration_account IS NULL\n" +
-			") as workshop2 ";
+		TreeMap<TicketName, BigInteger> map = individuals2(c).groupBy(x -> x._1(), x -> x._2()).map(x -> x.head());
+
+		return new Individuals(
+			(int)map.get(ticketName("conference")).orSome(BigInteger.ZERO).longValue(),
+			(int)map.get(ticketName("workshop1")).orSome(BigInteger.ZERO).longValue(),
+			(int)map.get(ticketName("workshop2")).orSome(BigInteger.ZERO).longValue()
+		);
+	}
+
+	public List<P2<TicketName, BigInteger>> individuals2(Connection c) throws SQLException {
+		String sql = "SELECT ticket, count(1) as c FROM registration " +
+			"JOIN registration_ticket USING (registration_id) " +
+			"LEFT JOIN registration_account USING (registration_id) " +
+			"WHERE registration_account IS NULL " +
+			"GROUP BY ticket;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			return SqlOps.one(ps, rs -> new Individuals(
-				rs.getInt("conference"),
-				rs.getInt("workshop1"),
-				rs.getInt("workshop2")
-			)).some();
+			return SqlOps.list(ps, rs -> P.p(
+				ResultSets.ticketName(rs, "ticket"),
+				rs.getBigDecimal("c").toBigInteger()
+			));
 		}
 	}
 

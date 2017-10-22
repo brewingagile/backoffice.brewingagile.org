@@ -1,15 +1,17 @@
 package org.brewingagile.backoffice.rest.gui;
 
 import argo.jdom.JsonRootNode;
+import fj.Ord;
+import fj.P2;
 import fj.data.List;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.BundlesSql;
-import org.brewingagile.backoffice.pure.BundleLogic;
+import org.brewingagile.backoffice.pure.AccountIO;
+import org.brewingagile.backoffice.rest.json.ToJson;
+import org.brewingagile.backoffice.types.TicketName;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
-
-import static argo.jdom.JsonNodeFactories.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 import javax.ws.rs.GET;
@@ -18,8 +20,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.math.BigInteger;
 import java.sql.Connection;
 
+import static argo.jdom.JsonNodeFactories.*;
 import static org.brewingagile.backoffice.db.operations.BundlesSql.BucketSummary;
 import static org.brewingagile.backoffice.db.operations.BundlesSql.Individuals;
 
@@ -29,19 +33,26 @@ public class ReportsJaxRs {
 	private final DataSource dataSource;
 	private final AuthService authService;
 	private final BundlesSql bundlesSql;
+	private final AccountIO accountIO;
 
-	public ReportsJaxRs(DataSource dataSource, AuthService authService, BundlesSql bundlesSql) {
+	public ReportsJaxRs(
+		DataSource dataSource,
+		AuthService authService,
+		BundlesSql bundlesSql,
+		AccountIO accountIO
+	) {
 		this.dataSource = dataSource;
 		this.authService = authService;
 		this.bundlesSql = bundlesSql;
+		this.accountIO = accountIO;
 	}
 
-	//curl -u admin:password http://localhost:9080/gui/reports/bundles  | jq .
+//curl -u admin:password http://localhost:9080/gui/reports/bundles  | jq .
 
 	@GET
 	@Path("/bundles")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response bundless(@Context HttpServletRequest request) throws Exception {
+	public Response bundles(@Context HttpServletRequest request) throws Exception {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
 			return Response.ok(ArgoUtils.format(
@@ -50,6 +61,8 @@ public class ReportsJaxRs {
 		}
 	}
 
+	//curl -u admin:password http://localhost:9080/gui/reports/individuals  | jq .
+
 	@GET
 	@Path("/individuals")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -57,7 +70,11 @@ public class ReportsJaxRs {
 		authService.guardAuthenticatedUser(request);
 		try {
 			try (Connection c = dataSource.getConnection()) {
-				return Response.ok(ArgoUtils.format(json(bundlesSql.individuals(c)))).build();
+				List<P2<TicketName, BigInteger>> individuals = bundlesSql.individuals2(c).sort(Ord.p2Ord1(TicketName.Ord));
+				return Response.ok(ArgoUtils.format(array(individuals.map(x -> object(
+					field("ticket", ToJson.ticketName(x._1())),
+					field("qty", number(x._2()))
+				))))).build();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -73,32 +90,18 @@ public class ReportsJaxRs {
 		authService.guardAuthenticatedUser(request);
 		try {
 			try (Connection c = dataSource.getConnection()) {
-				List<BucketSummary> bundles = bundlesSql.bundles(c);
-				Individuals individuals = bundlesSql.individuals(c);
-				return Response.ok(ArgoUtils.format(json(
-					BundleLogic.logic(bundles, individuals)))).build();
+				List<P2<TicketName, AccountIO.TicketSales>> map = accountIO.ticketSales(c);
+				return Response.ok(ArgoUtils.format(array(map.map(x -> object(
+					field("ticket", ToJson.ticketName(x._1())),
+					field("individuals", number(x._2().individuals)),
+					field("accounts", number(x._2().accounts)),
+					field("total", number(x._2().total))
+				))))).build();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return Response.serverError().build();
 		}
-	}
-
-	private static JsonRootNode json(BundleLogic.Total total) {
-		return object(
-			field("actual", row(total.bundlesActual)),
-			field("planned", row(total.bundlesPlanned)),
-			field("individuals", row(total.individuals)),
-			field("totals", row(total.total))
-		);
-	}
-
-	private static JsonRootNode row(BundleLogic.Total2 actual) {
-		return object(
-			field("conference", number(actual.conference)),
-			field("workshop1", number(actual.workshop1)),
-			field("workshop2", number(actual.workshop2))
-		);
 	}
 
 	public static JsonRootNode json(BucketSummary b) {

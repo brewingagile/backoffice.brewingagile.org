@@ -39,13 +39,13 @@ input.textarea {
 		<div class="form-group">
 			<label for="inputParticipantName" class="col-sm-3 control-label">Full Name</label>
 			<div class="col-sm-9">
-				<input type="text" class="form-control" id="inputParticipantName" ng-model="r.participantName" placeholder="participant name" required>
+				<input type="text" class="form-control" id="inputParticipantName" ng-model="r.participantName" placeholder="Participant's Firstname Surname" required>
 			</div>
 		</div>
 		<div class="form-group">
 			<label for="inputEmail" class="col-sm-3 control-label">Participant Email</label>
 			<div class="col-sm-9">
-				<input type="email" class="form-control" id="inputEmail" ng-model="r.participantEmail" placeholder="email address" required>
+				<input type="email" class="form-control" id="inputEmail" ng-model="r.participantEmail" placeholder="Participant's Email Address" required>
 			</div>
 		</div>
 		<div class="form-group">
@@ -70,7 +70,7 @@ input.textarea {
 		<div class="form-group">
 			<label for="inputLanyardCompany" class="col-sm-3 control-label">Organisation</label>
 			<div class="col-sm-9">
-				<input type="text" class="form-control" id="inputLanyardCompany" ng-model="r.lanyardCompany" placeholder="">
+				<input type="text" class="form-control" id="inputLanyardCompany" ng-model="r.lanyardCompany" placeholder="Shown on your Lanyard">
 			</div>
 		</div>
 
@@ -96,7 +96,7 @@ input.textarea {
 		<legend>
 			<h2>Payment</h2>
 		</legend>
-		<div class="row">
+		<div class="row" ng-if="!account">
 			<div class="form-group">
 				<label for="inputInvoiceRecipient" class="col-sm-3 control-label">Invoice Recipient</label>
 				<div class="col-sm-9">
@@ -113,7 +113,15 @@ input.textarea {
 				Invoice will be sent from Rebel Alliance AB as a PDF to Participant's Email address.
 			</em>
 		</div>
-
+		<div class="row" ng-if="account">
+			<div class="col-sm-9 col-sm-offset-2">
+				<strong>Account: {{account.account}}</strong>
+				<p>
+					Your Account holder has arranged payment details directly with Brewing Agile and Rebel Alliance.<br>
+					You don't need to do anything but come and enjoy the event!
+				</p>
+			</div>
+		</div>
 
 		<legend>
 			<h2>Terms</h2>

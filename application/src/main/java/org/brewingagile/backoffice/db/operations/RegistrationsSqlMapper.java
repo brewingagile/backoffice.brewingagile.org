@@ -6,6 +6,7 @@ import fj.data.Option;
 import fj.data.Set;
 import fj.function.Try1;
 import functional.Tuple2;
+import org.brewingagile.backoffice.instances.PreparedStatements;
 import org.brewingagile.backoffice.instances.ResultSets;
 import org.brewingagile.backoffice.types.*;
 
@@ -48,6 +49,20 @@ public class RegistrationsSqlMapper {
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, apiClientReference);
 			return SqlOps.one(ps, rs -> (UUID)rs.getObject("registration_id"));
+		}
+	}
+
+	public void replaceAccount(Connection c, UUID registrationId, Option<Account> account) throws SQLException {
+		try (PreparedStatement ps = c.prepareStatement("DELETE FROM registration_account WHERE registration_id = ?;")) {
+			ps.setObject(1, registrationId);
+			ps.execute();
+		}
+		if (account.isSome()) {
+			try (PreparedStatement ps = c.prepareStatement("INSERT INTO registration_account (registration_id, account) VALUES (?, ?);")) {
+				ps.setObject(1, registrationId);
+				PreparedStatements.set(ps, 2, account.some());
+				ps.execute();
+			}
 		}
 	}
 

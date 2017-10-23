@@ -3,23 +3,22 @@ package org.brewingagile.backoffice.rest.api;
 import argo.jdom.JsonRootNode;
 import fj.Monoid;
 import fj.Ord;
+import fj.Try;
+import fj.TryEffect;
 import fj.data.*;
 import functional.Effect;
-import org.brewingagile.backoffice.db.operations.RegistrationState;
-import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
-import org.brewingagile.backoffice.db.operations.TicketsSql;
+import org.brewingagile.backoffice.db.operations.*;
 import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
 import org.brewingagile.backoffice.integrations.SlackBotHook;
 import org.brewingagile.backoffice.pure.AccountIO;
 import org.brewingagile.backoffice.rest.json.ToJson;
-import org.brewingagile.backoffice.types.Badge;
-import org.brewingagile.backoffice.types.BillingMethod;
-import org.brewingagile.backoffice.types.ParticipantOrganisation;
-import org.brewingagile.backoffice.types.TicketName;
+import org.brewingagile.backoffice.types.*;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
+import org.brewingagile.backoffice.utils.Strings;
 
+import javax.security.auth.login.FailedLoginException;
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 import javax.ws.rs.*;
@@ -46,6 +45,7 @@ public class RegistrationApiJaxRs {
 	private final SlackBotHook slackBotHook;
 	private final TicketsSql ticketsSql;
 	private final AccountIO accountIO;
+	private final AccountSignupSecretSql accountSignupSecretSql;
 
 	public RegistrationApiJaxRs(
 		DataSource dataSource,
@@ -54,7 +54,8 @@ public class RegistrationApiJaxRs {
 		MailchimpSubscribeClient mailchimpSubscribeClient,
 		SlackBotHook slackBotHook,
 		TicketsSql ticketsSql,
-		AccountIO accountIO
+		AccountIO accountIO,
+		AccountSignupSecretSql accountSignupSecretSql
 	) {
 		this.dataSource = dataSource;
 		this.registrationsSqlMapper = registrationsSqlMapper;
@@ -63,6 +64,7 @@ public class RegistrationApiJaxRs {
 		this.slackBotHook = slackBotHook;
 		this.ticketsSql = ticketsSql;
 		this.accountIO = accountIO;
+		this.accountSignupSecretSql = accountSignupSecretSql;
 	}
 
 	public static final class RegistrationRequest {
@@ -75,6 +77,7 @@ public class RegistrationApiJaxRs {
 		public final String invoiceRecipient;
 		public final String invoiceAddress;
 		public final String billingMethod;
+		public final Option<AccountSignupSecret> accountSignupSecret;
 
 		public RegistrationRequest(
 			String participantName,
@@ -85,7 +88,8 @@ public class RegistrationApiJaxRs {
 			Set<TicketName> tickets,
 			String invoiceRecipient,
 			String invoiceAddress,
-			String billingMethod
+			String billingMethod,
+			Option<AccountSignupSecret> accountSignupSecret
 		) {
 			this.participantName = participantName;
 			this.participantEmail = participantEmail;
@@ -96,6 +100,7 @@ public class RegistrationApiJaxRs {
 			this.dietaryRequirements = dietaryRequirements;
 			this.tickets = tickets;
 			this.twitter = twitter;
+			this.accountSignupSecret = accountSignupSecret;
 		}
 	}
 	
@@ -133,6 +138,7 @@ public class RegistrationApiJaxRs {
 			System.out.println("invoiceRecipient: " + rr.invoiceRecipient);
 			System.out.println("invoiceAddress: " + rr.invoiceAddress);
 			System.out.println("billingMethod: " + rr.billingMethod);
+			System.out.println("accountSignupSecret: " + rr.accountSignupSecret);
 
 			if ("fel".equals(rr.participantName)) {
 				ResponseBuilder ok = Response.ok(ArgoUtils.format(Result.failure("Registrering misslyckades: Du är inte cool nog.")));
@@ -140,7 +146,10 @@ public class RegistrationApiJaxRs {
 			}
 
 			try (Connection c = dataSource.getConnection()) {
+				c.setAutoCommit(false);
 				UUID uuid = UUID.randomUUID();
+
+
 				registrationsSqlMapper.replace(
 					c,
 					uuid,
@@ -163,6 +172,13 @@ public class RegistrationApiJaxRs {
 						Option.none()
 					)
 				);
+
+				if (rr.accountSignupSecret.isSome()) {
+					Option<Account> account = accountSignupSecretSql.account(c, rr.accountSignupSecret.some());
+					registrationsSqlMapper.replaceAccount(c, uuid, account);
+				}
+
+				c.commit();
 			}
 
 			Either<String, String> emailResult = confirmationEmailSender.email(rr.participantEmail);
@@ -221,6 +237,45 @@ public class RegistrationApiJaxRs {
 		)).build();
 	}
 
+	//	curl "http://localhost:9080/api/registration/1/account/0f6f369c-b3da-11e7-957f-bbf58cbe212a"
+	@GET
+	@Path("account/{accountSignupSecret}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAccount(
+		@Context HttpServletRequest request,
+		@PathParam("accountSignupSecret") String a
+	) throws Exception {
+		try {
+			Option<AccountSignupSecret> parse = AccountSignupSecret.parse(a);
+
+			if (parse.isNone())
+				return Response.status(Response.Status.BAD_REQUEST).build();
+
+			AccountSignupSecret accountSecret = parse.some();
+
+			Account account;
+			try (Connection c = dataSource.getConnection()) {
+				c.setAutoCommit(false);
+
+				Option<Account> maybeBundle = accountSignupSecretSql.account(c, accountSecret);
+				if (maybeBundle.isNone())
+					return Response.status(Response.Status.NOT_FOUND).build();
+
+				account = maybeBundle.some();
+			}
+
+			return Response.ok(ArgoUtils.format(
+				object(
+					field("account", ToJson.account(account)),
+					field("accountSignupSecret", ToJson.accountSignupSecret(accountSecret))
+				)
+			)).build();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
 	private static JsonRootNode ticketJson(TicketName ticketName, String description, boolean value, BigDecimal price) {
 		return object(
 			field("ticket", ToJson.json(ticketName)),
@@ -245,7 +300,8 @@ public class RegistrationApiJaxRs {
 			tickets,
 			ArgoUtils.stringOrEmpty(body, "invoiceRecipient").trim(),
 			ArgoUtils.stringOrEmpty(body, "invoiceAddress").trim(),
-			ArgoUtils.stringOrEmpty(body, "billingMethod").trim()
+			ArgoUtils.stringOrEmpty(body, "billingMethod").trim(),
+			Option.fromNull(Strings.emptyToNull(ArgoUtils.stringOrEmpty(body, "accountSignupSecret"))).bind(AccountSignupSecret::parse)
 		);
 	}
 

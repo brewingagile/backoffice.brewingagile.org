@@ -36,8 +36,9 @@ public class SlackBotHook {
 			.post(RequestBody.create(MediaType.parse("application/json"), ArgoUtils.format(request9)))
 			.build();
 
-		Response execute = client.newCall(request).execute();
-		if (!execute.isSuccessful() || execute.isRedirect())
-			throw new IOException("Call to " + hookUrl + " failed unexpectedly: " + execute);
+		try (Response execute = client.newCall(request).execute()) {
+			if (!execute.isSuccessful() || execute.isRedirect())
+				throw new IOException("Call to " + hookUrl + " failed unexpectedly: " + execute);
+		}
 	}
 }

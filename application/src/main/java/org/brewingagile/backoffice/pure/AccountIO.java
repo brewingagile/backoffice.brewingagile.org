@@ -8,7 +8,6 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.brewingagile.backoffice.db.operations.AccountsSql;
 import org.brewingagile.backoffice.db.operations.AccountsSql.AccountData;
-import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.types.Account;

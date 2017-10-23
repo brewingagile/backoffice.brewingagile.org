@@ -36,7 +36,6 @@ public class Application {
 		AccountsSql accountsSql = new AccountsSql();
 		AccountSecretSql accountSecretSql = new AccountSecretSql();
 		BudgetSql budgetSql = new BudgetSql();
-		BundlesSql bundlesSql = new BundlesSql();
 		RegistrationsSqlMapper registrationsSqlMapper = new RegistrationsSqlMapper();
 		StripeChargeSql stripeChargeSql = new StripeChargeSql();
 		TicketsSql ticketsSql = new TicketsSql();

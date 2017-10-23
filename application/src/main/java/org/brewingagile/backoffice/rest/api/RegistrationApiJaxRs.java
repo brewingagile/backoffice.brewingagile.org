@@ -5,7 +5,6 @@ import fj.Monoid;
 import fj.Ord;
 import fj.data.*;
 import functional.Effect;
-import org.brewingagile.backoffice.db.operations.BundlesSql;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.TicketsSql;

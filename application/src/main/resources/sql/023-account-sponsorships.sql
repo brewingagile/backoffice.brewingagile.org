@@ -109,3 +109,5 @@ SELECT
 DROP TABLE old_stripe_charge;
 
 DROP TABLE registration_bucket;
+DROP TABLE bundle_deal;
+DROP TABLE bucket;

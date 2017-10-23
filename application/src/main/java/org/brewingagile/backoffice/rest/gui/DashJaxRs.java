@@ -19,7 +19,7 @@ import java.sql.Connection;
 
 import static argo.jdom.JsonNodeFactories.*;
 
-@Path("/reports/")
+@Path("/dash/")
 @NeverCache
 public class DashJaxRs {
 	private final DataSource dataSource;

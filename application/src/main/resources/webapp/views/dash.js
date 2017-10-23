@@ -1,5 +1,5 @@
 function DashController($scope, $http, $resource) {
-	$http.get('gui/reports/totals')
+	$http.get('gui/dash/totals')
 	    .success(function(d) {
 	        $scope.totals = d;
 	    });

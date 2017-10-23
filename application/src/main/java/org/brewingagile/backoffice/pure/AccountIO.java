@@ -61,8 +61,8 @@ public class AccountIO {
 
 	public List<P2<TicketName, TicketSales>> ticketSales(Connection c) throws SQLException {
 		List<P3<Account, AccountData, AccountLogic.Total>> p3s = allAccountTotals(c);
-		List<P5<TicketName, BigInteger, BigInteger, BigInteger, BigInteger>> join = List.join(p3s.map(x -> x._3().tickets));
-		TreeMap<TicketName, BigInteger> accounts = join.groupBy(x -> x._1(), x -> x._5(), Monoid.bigintAdditionMonoid, TicketName.Ord);
+		List<P2<TicketName, AccountLogic.TicketTotal>> join = List.join(p3s.map(x -> x._3().tickets));
+		TreeMap<TicketName, BigInteger> accounts = join.groupBy(x -> x._1(), x -> x._2().totalReserved, Monoid.bigintAdditionMonoid, TicketName.Ord);
 
 		TreeMap<TicketName, BigInteger> individuals = registrationsSqlMapper.individuals2(c).groupBy(x -> x._1(), x -> x._2(), Monoid.bigintAdditionMonoid, TicketName.Ord);
 		Set<TicketName> keys = Set.iterableSet(TicketName.Ord, List.join(List.list(accounts.keys(), individuals.keys())));

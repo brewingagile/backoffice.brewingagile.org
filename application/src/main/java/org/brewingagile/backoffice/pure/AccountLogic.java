@@ -30,15 +30,16 @@ public class AccountLogic {
 			debitedTickets.get(x).orSome(BigInteger.ZERO)
 		));
 
-		List<P5<TicketName, BigInteger, BigInteger, BigInteger, BigInteger>> totalTickets = map.map(x -> {
+		List<P2<TicketName, TicketTotal>> totalTickets = map.map(x -> {
 			BigInteger signups = x._3();
 			BigInteger ticketNeedOverPackages = signups.subtract(x._2()).max(BigInteger.ZERO);
 			BigInteger missingSignups = x._2().subtract(x._3()).max(BigInteger.ZERO);
-			return P.p(x._1(), ticketNeedOverPackages, signups, missingSignups, signups.add(missingSignups));
+			BigInteger totalReserved = signups.max(x._2());
+			return P.p(x._1(), new TicketTotal(ticketNeedOverPackages, signups, missingSignups, totalReserved));
 		});
 
 		BigDecimal extraTicketsAmountExVat = totalTickets.map(x -> {
-			BigDecimal bdNeed = new BigDecimal(x._2());
+			BigDecimal bdNeed = new BigDecimal(x._2().signupsNotPartOfPackage);
 			BigDecimal price = unvat(prices.get(x._1()).some());
 			return bdNeed.multiply(price);
 		}).foldLeft(add.sum(), add.zero());
@@ -53,14 +54,27 @@ public class AccountLogic {
 		return some.multiply(BigDecimal.valueOf(8, 1));
 	}
 
+	public static final class TicketTotal {
+		public final BigInteger signupsNotPartOfPackage;
+		public final BigInteger signups;
+		public final BigInteger missingSignups;
+		public final BigInteger totalReserved;
+
+		public TicketTotal(BigInteger signupsNotPartOfPackage, BigInteger signups, BigInteger missingSignups, BigInteger totalReserved) {
+			this.signupsNotPartOfPackage = signupsNotPartOfPackage;
+			this.signups = signups;
+			this.missingSignups = missingSignups;
+			this.totalReserved = totalReserved;
+		}
+	}
+
 	public static final class Total {
 		public final BigDecimal totalAmountExVat;
-		//need, signups, missingSignups, total reserved (signups + missing)
-		public final List<P5<TicketName, BigInteger, BigInteger, BigInteger, BigInteger>> tickets;
+		public final List<P2<TicketName, TicketTotal>> tickets;
 
 		public Total(
 			BigDecimal totalAmountExVat,
-			List<P5<TicketName, BigInteger, BigInteger, BigInteger, BigInteger>> tickets
+			List<P2<TicketName, TicketTotal>> tickets
 		) {
 			this.totalAmountExVat = totalAmountExVat;
 			this.tickets = tickets;

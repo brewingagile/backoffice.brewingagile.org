@@ -37,7 +37,7 @@ public class DashJaxRs {
 	}
 
 
-	//curl -u admin:password http://localhost:9080/gui/reports/totals  | jq .
+	//curl -u admin:password http://localhost:9080/gui/dash/totals  | jq .
 
 	@GET
 	@Path("/totals")

@@ -74,9 +74,10 @@ public class AccountsJaxRs {
 					field("totalExVat", number(x._3().totalAmountExVat)),
 					field("tickets", array(x._3().tickets.map(y -> object(
 						field("ticket", ToJson.ticketName(y._1())),
-						field("need", number(y._2())),
-						field("signups", number(y._3())),
-						field("missing", number(y._4()))
+						field("need", number(y._2().signupsNotPartOfPackage)),
+						field("signups", number(y._2().signups)),
+						field("missing", number(y._2().missingSignups)),
+						field("totalReserved", number(y._2().totalReserved))
 					))))
 				)
 			)))).build();

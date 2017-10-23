@@ -18,8 +18,8 @@
 				</thead>
 				<tr ng-repeat="c in report.costs">
 					<td>{{c.description}}</td>
-					<td>{{c.qty}}</td>
-					<td>{{c.amount | number: 2}}</td>
+					<td><span ng-hide="c.qty == 1">{{c.qty}}</span></td>
+					<td><span ng-hide="c.qty == 1">{{c.amount | number: 2}}</span></td>
 					<td>{{c.total | number: 2}}</td>
 				</tr>
 				<tr style="font-weight: bold;">
@@ -41,8 +41,8 @@
 				</thead>
 				<tr ng-repeat="r in report.revenues">
 					<td>{{r.description}}</td>
-					<td>{{r.qty}}</td>
-					<td>{{r.amount | number: 2}}</td>
+					<td><span ng-hide="r.qty == 1">{{r.qty}}</span></td>
+					<td><span ng-hide="r.qty == 1">{{r.amount | number: 2}}</span></td>
 					<td>{{r.total | number: 2}}</td>
 				</tr>
 				<tr style="font-weight: bold;">

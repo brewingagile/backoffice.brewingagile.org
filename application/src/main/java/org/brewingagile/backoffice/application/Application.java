@@ -65,7 +65,7 @@ public class Application {
 			new AccountsJaxRs(dataSource, authService, accountsSql, accountIO),
 			new RegistrationsJaxRs(dataSource, authService, registrationsSqlMapper, sendInvoiceService, dismissRegistrationService, markAsCompleteService, markAsPaidService, outvoicePaidClient),
 			new NameTagsJaxRs(dataSource, authService, registrationsSqlMapper),
-			new BudgetJaxRs(dataSource, authService, budgetSql, registrationsSqlMapper, bundlesSql),
+			new BudgetJaxRs(dataSource, authService, budgetSql, registrationsSqlMapper, accountIO, ticketsSql),
 			new TicketsJaxRs(dataSource, authService, ticketsSql),
 			new DashJaxRs(dataSource, authService, accountIO),
 			new ExportsJaxRs(dataSource, authService,registrationsSqlMapper)

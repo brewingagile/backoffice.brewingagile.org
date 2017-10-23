@@ -46,7 +46,9 @@ public class AccountLogic {
 
 		return new Total(
 			packagesAmountExVat.add(extraTicketsAmountExVat),
-			totalTickets
+			totalTickets,
+			packagesAmountExVat,
+			extraTicketsAmountExVat
 		);
 	}
 
@@ -71,13 +73,19 @@ public class AccountLogic {
 	public static final class Total {
 		public final BigDecimal totalAmountExVat;
 		public final List<P2<TicketName, TicketTotal>> tickets;
+		public final BigDecimal packagesAmountExVat;
+		public final BigDecimal extraTicketsAmountExVat;
 
 		public Total(
 			BigDecimal totalAmountExVat,
-			List<P2<TicketName, TicketTotal>> tickets
+			List<P2<TicketName, TicketTotal>> tickets,
+			BigDecimal packagesAmountExVat,
+			BigDecimal extraTicketsAmountExVat
 		) {
 			this.totalAmountExVat = totalAmountExVat;
 			this.tickets = tickets;
+			this.packagesAmountExVat = packagesAmountExVat;
+			this.extraTicketsAmountExVat = extraTicketsAmountExVat;
 		}
 	}
 }

@@ -1,21 +1,18 @@
 package org.brewingagile.backoffice.db.operations;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.*;
-import java.util.UUID;
-
 import fj.*;
-
 import fj.data.List;
 import fj.data.Option;
 import fj.data.Set;
-import fj.data.TreeMap;
-import fj.function.Strings;
 import fj.function.Try1;
 import functional.Tuple2;
 import org.brewingagile.backoffice.instances.ResultSets;
 import org.brewingagile.backoffice.types.*;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.*;
+import java.util.UUID;
 
 import static org.brewingagile.backoffice.instances.PreparedStatements.set;
 import static org.brewingagile.backoffice.types.TicketName.ticketName;
@@ -256,13 +253,6 @@ public class RegistrationsSqlMapper {
 		);
 	}
 
-	private static Set<String> tickets(Array a) throws SQLException {
-		ResultSet rs = a.getResultSet();
-		List.Buffer<String> buffer = List.Buffer.empty();
-		while(rs.next()) buffer.snoc(rs.getString(0));
-		return Set.iterableSet(Ord.stringOrd, buffer.toList());
-	}
-
 	public void insertInvoiceReference(Connection c, UUID registrationId, UUID invoiceReferenceId) throws SQLException {
 		String sql = "INSERT INTO registration_invoices (registration_id, invoice_reference_id) VALUES (?, ?)";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
@@ -318,9 +308,9 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	private void replaceRegistrationAccount(Connection c, UUID id, Option<Account> bundle) throws SQLException {
+	private void replaceRegistrationAccount(Connection c, UUID id, Option<Account> account) throws SQLException {
 		deleteRegistrationAccount(c, id);
-		if (bundle.isSome()) insertRegistrationAccount(c, id, bundle.some());
+		if (account.isSome()) insertRegistrationAccount(c, id, account.some());
 	}
 
 	private void deleteRegistrationAccount(Connection c, UUID id) throws SQLException {
@@ -365,28 +355,6 @@ public class RegistrationsSqlMapper {
 				)
 			);
 		}
-	}
-
-		public static final class Individuals {
-		public final int conference;
-		public final int workshop1;
-		public final int workshop2;
-
-		public Individuals(int conference, int workshop1, int workshop2) {
-			this.conference = conference;
-			this.workshop1 = workshop1;
-			this.workshop2 = workshop2;
-		}
-	}
-
-	public Individuals individuals(Connection c) throws SQLException {
-		TreeMap<TicketName, BigInteger> map = individuals2(c).groupBy(x -> x._1(), x -> x._2()).map(x -> x.head());
-
-		return new Individuals(
-			(int)map.get(ticketName("conference")).orSome(BigInteger.ZERO).longValue(),
-			(int)map.get(ticketName("workshop1")).orSome(BigInteger.ZERO).longValue(),
-			(int)map.get(ticketName("workshop2")).orSome(BigInteger.ZERO).longValue()
-		);
 	}
 
 	public List<P2<TicketName, BigInteger>> individuals2(Connection c) throws SQLException {

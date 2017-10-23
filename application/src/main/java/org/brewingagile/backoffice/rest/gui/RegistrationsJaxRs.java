@@ -173,12 +173,12 @@ public class RegistrationsJaxRs {
 		Either<String, BillingCompany> billingCompany = ArgoUtils.stringValue(jsonNode, "billingCompany").right().map(BillingCompany::new);
 		Either<String, Badge> badge = ArgoUtils.stringValue(jsonNode, "badge").right().map(Badge::new);
 		Either<String, String> dietaryRequirements = ArgoUtils.stringValue(jsonNode, "dietaryRequirements");
-		Either<String, Option<Account>> bundle = ArgoUtils.stringValue(jsonNode, "bundle")
+		Either<String, Option<Account>> account = ArgoUtils.stringValue(jsonNode, "bundle")
 			.right().map(Option::fromNull)
 			.right().map(r -> r.filter(Strings.isNotNullOrEmpty))
 			.right().map(x -> x.map(Account::account));
 
-		return bundle.right()
+		return account.right()
 			.apply(dietaryRequirements.right()
 				.apply(badge.right()
 					.apply(billingCompany.right()

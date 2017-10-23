@@ -76,7 +76,7 @@ public class StripeJaxRs {
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);
 
-				Option<Account> maybeBundle = accountSecretSql.bundle(c, accountSecret);
+				Option<Account> maybeBundle = accountSecretSql.account(c, accountSecret);
 				if (maybeBundle.isNone())
 					return Response.status(Response.Status.NOT_FOUND).build();
 
@@ -141,7 +141,7 @@ public class StripeJaxRs {
 
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);
-				Account account = accountSecretSql.bundle(c, accountSecret).some();
+				Account account = accountSecretSql.account(c, accountSecret).some();
 				stripeChargeSql.insertCharge(c, account, new StripeChargeSql.Charge(
 					stringChargeEither.right().value().id,
 					new BigDecimal(unjson.amountInOre).divide(BigDecimal.valueOf(100)),

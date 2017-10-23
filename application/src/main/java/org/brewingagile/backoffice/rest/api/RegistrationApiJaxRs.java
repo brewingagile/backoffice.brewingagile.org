@@ -1,20 +1,23 @@
 package org.brewingagile.backoffice.rest.api;
 
 import argo.jdom.JsonRootNode;
+import fj.Monoid;
 import fj.Ord;
 import fj.data.*;
 import functional.Effect;
-import org.brewingagile.backoffice.db.operations.*;
-import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Individuals;
-import org.brewingagile.backoffice.types.BillingMethod;
-import org.brewingagile.backoffice.types.Badge;
-import org.brewingagile.backoffice.types.TicketName;
+import org.brewingagile.backoffice.db.operations.BundlesSql;
+import org.brewingagile.backoffice.db.operations.RegistrationState;
+import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
+import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
 import org.brewingagile.backoffice.integrations.SlackBotHook;
-import org.brewingagile.backoffice.pure.BundleLogic;
+import org.brewingagile.backoffice.pure.AccountIO;
 import org.brewingagile.backoffice.rest.json.ToJson;
+import org.brewingagile.backoffice.types.Badge;
+import org.brewingagile.backoffice.types.BillingMethod;
 import org.brewingagile.backoffice.types.ParticipantOrganisation;
+import org.brewingagile.backoffice.types.TicketName;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
 
@@ -27,6 +30,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -40,26 +44,26 @@ public class RegistrationApiJaxRs {
 	private final RegistrationsSqlMapper registrationsSqlMapper;
 	private final ConfirmationEmailSender confirmationEmailSender;
 	private final MailchimpSubscribeClient mailchimpSubscribeClient;
-	private final BundlesSql bundlesSql;
 	private final SlackBotHook slackBotHook;
 	private final TicketsSql ticketsSql;
+	private final AccountIO accountIO;
 
 	public RegistrationApiJaxRs(
 		DataSource dataSource,
 		RegistrationsSqlMapper registrationsSqlMapper,
 		ConfirmationEmailSender confirmationEmailSender,
 		MailchimpSubscribeClient mailchimpSubscribeClient,
-		BundlesSql bundlesSql,
 		SlackBotHook slackBotHook,
-		TicketsSql ticketsSql
+		TicketsSql ticketsSql,
+		AccountIO accountIO
 	) {
 		this.dataSource = dataSource;
 		this.registrationsSqlMapper = registrationsSqlMapper;
 		this.confirmationEmailSender = confirmationEmailSender;
 		this.mailchimpSubscribeClient = mailchimpSubscribeClient;
-		this.bundlesSql = bundlesSql;
 		this.slackBotHook = slackBotHook;
 		this.ticketsSql = ticketsSql;
+		this.accountIO = accountIO;
 	}
 
 	public static final class RegistrationRequest {
@@ -193,35 +197,29 @@ public class RegistrationApiJaxRs {
 	@Path("tickets")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response get(@Context HttpServletRequest request) throws Exception {
-		BundleLogic.Total logic;
 		Array<TicketsSql.Ticket> tickets;
+		TreeMap<TicketName, BigInteger> sold;
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
-			List<BundlesSql.BucketSummary> bundles = bundlesSql.bundles(c);
-			Individuals individuals = registrationsSqlMapper.individuals(c);
-			logic = BundleLogic.logic(bundles, individuals);
+			sold = accountIO.ticketSales(c)
+				.groupBy(x -> x._1(), x -> x._2().total, Monoid.bigintAdditionMonoid, TicketName.Ord);
 			tickets = ticketsSql.all(c).toArray();
 		}
 
-		BundleLogic.Total2 total = logic.total;
 		return Response.ok(ArgoUtils.format(
 			object(
 				field("tickets",
 					array(
-						tickets.map(x -> ticketJson(x.ticket, x.productText, usedSeats(total, x.ticket.ticketName) < x.seats, x.price))
+						tickets.map(x -> {
+							BigInteger allTickets = BigInteger.valueOf(x.seats);
+							BigInteger usedTickets = sold.get(x.ticket).orSome(BigInteger.ZERO);
+							BigInteger availableTickets = allTickets.subtract(usedTickets);
+							return ticketJson(x.ticket, x.productText, availableTickets.longValue() > 0, x.price);
+						})
 					)
 				)
 			)
 		)).build();
-	}
-
-	private static int usedSeats(BundleLogic.Total2 total, String ticket) {
-		switch (ticket) {
-			case "conference": return total.conference;
-			case "workshop1": return total.workshop1;
-			case "workshop2": return total.workshop2;
-			default: return 0;
-		}
 	}
 
 	private static JsonRootNode ticketJson(TicketName ticketName, String description, boolean value, BigDecimal price) {

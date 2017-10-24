@@ -152,17 +152,20 @@ public class RegistrationsJaxRs {
 
 	public static final class RegistrationsUpdate {
 		public final BillingCompany billingCompany;
+		public final String billingAddress;
 		public final Badge badge;
 		public final String dietaryRequirements;
 		public final Option<Account> account;
 
 		public RegistrationsUpdate(
 			BillingCompany billingCompany,
+			String billingAddress,
 			Badge badge,
 			String dietaryRequirements,
 			Option<Account> account
 		) {
 			this.billingCompany = billingCompany;
+			this.billingAddress = billingAddress;
 			this.badge = badge;
 			this.dietaryRequirements = dietaryRequirements;
 			this.account = account;
@@ -171,6 +174,7 @@ public class RegistrationsJaxRs {
 
 	private static Either<String, RegistrationsUpdate> registrationsUpdate(JsonNode jsonNode) {
 		Either<String, BillingCompany> billingCompany = ArgoUtils.stringValue(jsonNode, "billingCompany").right().map(BillingCompany::new);
+		Either<String, String> billingAddress = ArgoUtils.stringValue(jsonNode, "billingAddress");
 		Either<String, Badge> badge = ArgoUtils.stringValue(jsonNode, "badge").right().map(Badge::new);
 		Either<String, String> dietaryRequirements = ArgoUtils.stringValue(jsonNode, "dietaryRequirements");
 		Either<String, Option<Account>> account = ArgoUtils.stringValue(jsonNode, "bundle")
@@ -181,8 +185,9 @@ public class RegistrationsJaxRs {
 		return account.right()
 			.apply(dietaryRequirements.right()
 				.apply(badge.right()
-					.apply(billingCompany.right()
-						.apply(Either.right(Function.curry(RegistrationsUpdate::new))))));
+					.apply(billingAddress.right()
+						.apply(billingCompany.right()
+							.apply(Either.right(Function.curry(RegistrationsUpdate::new)))))));
 	}
 
 	@POST
@@ -202,7 +207,7 @@ public class RegistrationsJaxRs {
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			if (!registrationsSqlMapper.one(c, id).isSome()) return Response.status(Status.NOT_FOUND).build();
-			registrationsSqlMapper.update(c, id, ru.billingCompany, ru.badge, ru.dietaryRequirements, ru.account);
+			registrationsSqlMapper.update(c, id, ru.billingCompany, ru.billingAddress, ru.badge, ru.dietaryRequirements, ru.account);
 			c.commit();
 		}
 		return Response.ok().build();

@@ -12,10 +12,12 @@ import org.brewingagile.backoffice.types.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 
-import static org.brewingagile.backoffice.instances.PreparedStatements.set;
 import static org.brewingagile.backoffice.types.TicketName.ticketName;
 
 public class RegistrationsSqlMapper {
@@ -247,7 +249,7 @@ public class RegistrationsSqlMapper {
 			ps.setString(7, rt.billingMethod.name());
 			ps.setString(8, rt.dietaryRequirements);
 			ps.setString(9, rt.twitter);
-			set(ps, 10, rt.organisation);
+			PreparedStatements.set(ps, 10, rt.organisation);
 			ps.execute();
 		}
 	}
@@ -301,24 +303,26 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	public void update(Connection c, UUID id, BillingCompany billingCompany, Badge badge, String diet, Option<Account> account) throws SQLException {
+	public void update(Connection c, UUID id, BillingCompany billingCompany, String billingAddress, Badge badge, String diet, Option<Account> account) throws SQLException {
 		replaceRegistrationAccount(c, id, account);
-		updateRegistration(c, id, billingCompany, badge, diet);
+		updateRegistration(c, id, billingCompany, billingAddress, badge, diet);
 	}
 
 	private void updateRegistration(
 		Connection c,
 		UUID id,
 		BillingCompany billingCompany,
+		String billingAddress,
 		Badge badge,
 		String diet
 	) throws SQLException {
-		String sql = "UPDATE registration SET billing_company = ?, badge = ?, dietary_requirements = ? WHERE registration_id = ?;";
+		String sql = "UPDATE registration SET billing_company = ?, billing_address = ?, badge = ?, dietary_requirements = ? WHERE registration_id = ?;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			ps.setString(1, billingCompany.value);
-			ps.setString(2, badge.badge);
-			ps.setString(3, diet);
-			ps.setObject(4, id);
+			PreparedStatements.set(ps, 1, billingCompany);
+			ps.setString(2, billingAddress);
+			PreparedStatements.set(ps, 3, badge);
+			ps.setString(4, diet);
+			ps.setObject(5, id);
 			ps.execute();
 		}
 	}
@@ -340,7 +344,7 @@ public class RegistrationsSqlMapper {
 		String sql = "INSERT INTO registration_account (registration_id, account) VALUES (?, ?);";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, registrationId);
-			set(ps, 2, account);
+			PreparedStatements.set(ps, 2, account);
 			ps.execute();
 		}
 	}
@@ -360,7 +364,7 @@ public class RegistrationsSqlMapper {
 			"WHERE account = ? " +
 			"ORDER BY participant_name, ticket";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			set(ps, 1, account);
+			PreparedStatements.set(ps, 1, account);
 			return SqlOps.list(ps,
 				rs -> P.p(
 					rs.getString("participant_name"),

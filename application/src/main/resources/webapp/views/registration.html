@@ -36,9 +36,9 @@
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="col-lg-4 control-label">Billing Address</label>
+			<label for="inputBillingAddress" class="col-lg-4 control-label">Billing Address</label>
 			<div class="col-lg-6">
-				<p class="form-control-static">{{registration.tuple.billingAddress}}</p>
+				<textarea class="form-control" id="inputBillingAddress" ng-model="registration.tuple.billingAddress"></textarea>
 			</div>
 		</div>
 		<div class="form-group">

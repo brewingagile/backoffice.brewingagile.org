@@ -54,7 +54,7 @@ public class AccountLogic {
 		));
 
 		List<Line> totalTickets = ticketLines.map(x -> new Line(
-			x._1().ticketName,
+			"Ticket: " + x._1().ticketName,
 			x._3().subtract(x._2()).max(BigInteger.ZERO),
 			unvat(prices.get(x._1()).some())
 		));

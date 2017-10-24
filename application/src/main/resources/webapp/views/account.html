@@ -1,0 +1,45 @@
+<div class="col-lg-5">
+	<legend>
+		<h3>Billing Address</h3>
+	</legend>
+	<address>
+		<strong>{{account.billingRecipient}}</strong><br>
+		<p style="white-space: pre;">{{account.billingAddress}}</p>
+		<!--<abbr title="Phone">P:</abbr> (123) 456-7890-->
+	</address>
+</div>
+<div class="col-lg-5">
+	<legend>
+		<h3>Distributable Links</h3>
+	</legend>
+	<a ng-href="{{account.accountSignupSecret}}">Signup into this Account</a><br>
+	<em>But don't hand it out to people who shouldn't sign up using it!</em>
+</div>
+<div class="col-lg-10">
+	<legend>
+		<h3>Order</h3>
+	</legend>
+	<table class="table">
+		<thead>
+		<tr>
+			<th class="col-lg-5"></th>
+			<th class="col-lg-2">Price</th>
+			<th class="col-lg-1">Qty</th>
+			<th class="col-lg-2">Total in SEK</th>
+		</tr>
+		</thead>
+		<tr ng-repeat="l in account.lines">
+			<td>{{l.description}}</td>
+			<td>{{l.price}}</td>
+			<td>{{l.qty}}</td>
+			<td>{{l.total | number}}</td>
+		</tr>
+		<tfoot>
+		<tr>
+			<th colspan="3">Total</th>
+			<th>{{account.total | number}}</th>
+		</tr>
+		</tfoot>
+	</table>
+	<em>Prices exclude VAT.</em>
+</div>

@@ -7,6 +7,7 @@ var app = angular.module('backoffice', ['ngResource', 'ngRoute', 'directives', '
 		$routeProvider.when('/paid', { templateUrl: 'views/paid.html'+nocache, controller: PaidController });
 		$routeProvider.when('/tickets', { templateUrl: 'views/tickets.html'+nocache, controller: TicketsController });
 		$routeProvider.when('/overview', { templateUrl: 'views/overview.html'+nocache, controller: OverviewController });
+		$routeProvider.when('/account/:account*', { templateUrl: 'views/account.html'+nocache, controller: AccountController });
 		$routeProvider.when('/dash', { templateUrl: 'views/dash.html'+nocache, controller: DashController });
 		$routeProvider.when('/registrations/:registrationId', { templateUrl: 'views/registration.html'+nocache, controller: RegistrationController });
 		$routeProvider.when('/budget', {templateUrl: 'views/budget.html'+nocache, controller: BudgetController });

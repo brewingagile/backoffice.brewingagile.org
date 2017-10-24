@@ -2,7 +2,7 @@
 	<table class="table" ng-repeat="a in accounts">
 		<thead>
 		<tr>
-			<th class="col-lg-6">{{a.account}}: {{a.totalExVat | number}} SEK</th>
+			<th class="col-lg-6"><a href="#/account/{{a.account}}">{{a.account}}</a>: {{a.totalExVat | number}} SEK</th>
 			<th class="col-lg-2">Signups</th>
 			<th class="col-lg-2">Missing</th>
 		</tr>

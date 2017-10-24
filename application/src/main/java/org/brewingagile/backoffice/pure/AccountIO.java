@@ -34,6 +34,19 @@ public class AccountIO {
 		this.ticketsSql = ticketsSql;
 	}
 
+	public AccountLogic.AccountStatement accountStatement(Connection c, Account account) throws SQLException {
+		List<AccountPackage> packages = accountsSql.accountPackages(c, account);
+		List<P2<TicketName, BigInteger>> signups = registrationsSqlMapper.inAccount(c, account)
+			.groupBy(x -> x._2(), x -> BigInteger.ONE, Monoid.bigintAdditionMonoid, TicketName.Ord)
+			.toList();
+		TreeMap<TicketName, BigDecimal> tickets = ticketsSql.all(c).groupBy(x -> x.ticket, x -> x.price).map(x -> x.head());
+		return AccountLogic.accountStatement(
+			packages,
+			signups,
+			tickets
+		);
+	}
+
 	public AccountLogic.Total total(Connection c, Account account) throws SQLException {
 		List<AccountPackage> packages = accountsSql.accountPackages(c, account);
 		List<P2<TicketName, BigInteger>> signups = registrationsSqlMapper.inAccount(c, account)

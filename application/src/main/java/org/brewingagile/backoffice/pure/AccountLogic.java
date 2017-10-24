@@ -4,6 +4,8 @@ import fj.*;
 import fj.data.List;
 import fj.data.Set;
 import fj.data.TreeMap;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.brewingagile.backoffice.types.AccountPackage;
 import org.brewingagile.backoffice.types.TicketName;
 
@@ -11,6 +13,61 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public class AccountLogic {
+	@EqualsAndHashCode
+	@ToString
+	public static final class Line {
+		public final String description;
+		public final BigInteger qty;
+		public final BigDecimal price;
+
+		public Line(String description, BigInteger qty, BigDecimal price) {
+			this.description = description;
+			this.qty = qty;
+			this.price = price;
+		}
+	}
+
+	@EqualsAndHashCode
+	@ToString
+	public static final class AccountStatement {
+		public final List<Line> lines;
+
+		public AccountStatement(List<Line> lines) {
+			this.lines = lines;
+		}
+	}
+
+	public static AccountStatement accountStatement(List<AccountPackage> packages, List<P2<TicketName, BigInteger>> signupsIn, TreeMap<TicketName, BigDecimal> prices) {
+		TreeMap<TicketName, BigInteger> creditedTickets = List.join(packages.map(x -> x.tickets))
+			.groupBy(x -> x._1(), x -> x._2(), Monoid.bigintAdditionMonoid, TicketName.Ord);
+
+		TreeMap<TicketName, BigInteger> debitedTickets = signupsIn.groupBy(x -> x._1(), x -> x._2(), Monoid.bigintAdditionMonoid, TicketName.Ord);
+
+		Set<TicketName> union = Set.<TicketName>union()
+			.f(Set.iterableSet(TicketName.Ord, creditedTickets.keys()))
+			.f(Set.iterableSet(TicketName.Ord, debitedTickets.keys()));
+
+		List<P3<TicketName, BigInteger, BigInteger>> ticketLines = union.toList().map(x -> P.p(
+			x,
+			creditedTickets.get(x).orSome(BigInteger.ZERO),
+			debitedTickets.get(x).orSome(BigInteger.ZERO)
+		));
+
+		List<Line> totalTickets = ticketLines.map(x -> new Line(
+			x._1().ticketName,
+			x._3().subtract(x._2()).max(BigInteger.ZERO),
+			unvat(prices.get(x._1()).some())
+		));
+		List<Line> packageLines = packages.map(x -> new Line(x.description, BigInteger.ONE, x.price));
+
+		List<Line> lines = List.join(List.list(
+			totalTickets,
+			packageLines
+		)).filter(x -> !x.qty.equals(BigInteger.ZERO));
+
+		return new AccountStatement( lines );
+	}
+
 	public static Total logic(List<AccountPackage> packages, List<P2<TicketName, BigInteger>> signupsIn, TreeMap<TicketName, BigDecimal> prices) {
 		Monoid<BigDecimal> add = Monoid.bigdecimalAdditionMonoid;
 		BigDecimal packagesAmountExVat = packages.map(x -> x.price).foldLeft(add.sum(), add.zero());

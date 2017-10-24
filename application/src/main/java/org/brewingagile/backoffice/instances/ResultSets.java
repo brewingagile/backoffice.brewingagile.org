@@ -1,12 +1,10 @@
 package org.brewingagile.backoffice.instances;
 
-import org.brewingagile.backoffice.types.Account;
-import org.brewingagile.backoffice.types.TicketName;
-import org.brewingagile.backoffice.types.ChargeId;
-import org.brewingagile.backoffice.types.ParticipantOrganisation;
+import org.brewingagile.backoffice.types.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 public class ResultSets {
 	public static TicketName ticketName(ResultSet rs, String field) throws SQLException {
@@ -23,5 +21,9 @@ public class ResultSets {
 
 	public static Account account(ResultSet rs, String x) throws SQLException {
 		return Account.account(rs.getString(x));
+	}
+
+	public static AccountSignupSecret accountSignupSecret(ResultSet rs, String f) throws SQLException {
+		return AccountSignupSecret.accountSignupSecret((UUID) rs.getObject(f));
 	}
 }

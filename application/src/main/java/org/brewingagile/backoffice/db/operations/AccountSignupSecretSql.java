@@ -16,8 +16,16 @@ public class AccountSignupSecretSql {
 	public Option<Account> account(Connection c, AccountSignupSecret x) throws SQLException {
 		String sql = "SELECT account FROM account_signup_secret WHERE account_signup_secret.account_signup_secret = ?;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			PreparedStatements.set(ps, 1, x);
+			set(ps, 1, x);
 			return SqlOps.one(ps, rs -> ResultSets.account(rs, "account"));
+		}
+	}
+
+	public Option<AccountSignupSecret> accountSignupSecret(Connection c, Account a) throws SQLException {
+		String sql = "SELECT account_signup_secret FROM account_signup_secret WHERE account = ?;";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			set(ps, 1, a);
+			return SqlOps.one(ps, rs -> ResultSets.accountSignupSecret(rs, "account_signup_secret"));
 		}
 	}
 }

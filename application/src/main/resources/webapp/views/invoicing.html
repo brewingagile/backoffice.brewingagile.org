@@ -19,10 +19,10 @@
 			</tbody>
 		</table>
 		<p class="muted" ng-show="registrations.length == 0">No registrations in state 'INVOICING'.</p>
-		<!--<div ng-hide="registrations.length == 0">-->
-			<!--<button class="btn btn-primary" confirmed-click="markAsPaid()" confirm-click="Marking Registrations as Paid will move theme to 'Complete'. Are you sure?" ng-disabled="checkedRegistrations().length == 0">Mark as Paid</button>-->
-		<!--</div>-->
-		<button class="btn btn-primary" ng-click="autoMarkAsPaid()">Auto: Mark as Paid</button>
+		<div ng-hide="registrations.length == 0">
+			<button class="btn btn-primary" confirmed-click="markAsPaid()" confirm-click="Marking Registrations as Paid will move theme to 'Complete'. Are you sure?" ng-disabled="checkedRegistrations().length == 0">Mark as Paid</button>
+		</div>
+		<!--<button class="btn btn-primary" ng-click="autoMarkAsPaid()">Auto: Mark as Paid</button>-->
 		<div class="alert alert-{{alert.style}}" ng-show="alert" style="margin-top: 1em;">
 			<button type="button" class="close" data-dismiss="alert">&times;</button>
 			{{alert.message}}

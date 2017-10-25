@@ -2,12 +2,15 @@ package org.brewingagile.backoffice.integrations;
 
 import argo.jdom.JsonRootNode;
 import fj.F;
+import fj.Unit;
 import fj.data.Either;
 import fj.data.Set;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.brewingagile.backoffice.pure.AccountLogic;
+import org.brewingagile.backoffice.types.Account;
 import org.brewingagile.backoffice.types.BillingMethod;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.utils.ArgoUtils;
@@ -28,25 +31,8 @@ public class OutvoiceInvoiceClient {
 		this.endpoint = endpoint;
 		this.apikey = apikey;
 	}
-	
-	public Either<String,UUID> postInvoice(
-		UUID registrationId,
-		BillingMethod deliveryMethod,
-		String recipientEmailAddress,
-		String recipient,
-		String recipientBillingAddres,
-		Set<TicketsSql.Ticket> tickets,
-		String participantName) throws IOException {
 
-		JsonRootNode jsonRequest = object(
-			field("apiClientReference", string(registrationId.toString())),
-			field("deliveryMethod", string(deliveryMethod.name())),
-			field("recipientEmailAddress", string(recipientEmailAddress)),
-			field("recipient", string(recipient)),
-			field("recipientBillingAddress", string(recipientBillingAddres)),
-			field("lines", tickets.toList().map(OutvoiceInvoiceClient.line("Brewing Agile 2017: ", participantName)).toJavaList().stream().collect(ArgoUtils.toArray()))
-		);
-
+	public Either<String, Unit> postInvoice(JsonRootNode jsonRequest) throws IOException {
 		Request httpRequest = new Request.Builder()
 			.url(endpoint)
 			.addHeader("Accept", "application/json")
@@ -58,8 +44,47 @@ public class OutvoiceInvoiceClient {
 			if (!(200 <= r.code() && r.code() < 300))
 				return Either.left("While sending invoice: Received HTTP Status " + r.code());
 
-			return Either.right(registrationId);
+			return Either.right(Unit.unit());
 		}
+	}
+
+	public static JsonRootNode mkAccountRequest(
+		BillingMethod deliveryMethod,
+		String recipientEmailAddress,
+		String recipient,
+		String recipientBillingAddres,
+		Account account,
+		AccountLogic.AccountStatement accountStatement
+	) {
+		return object(
+			field("apiClientReference", string(UUID.randomUUID().toString())),
+			field("accountKey", string("brewingagile-" + account.value)),
+			field("deliveryMethod", string(deliveryMethod.name())),
+			field("recipientEmailAddress", string(recipientEmailAddress)),
+			field("recipient", string(recipient)),
+			field("recipientBillingAddress", string(recipientBillingAddres)),
+			field("lines", array(accountStatement.lines.map(x -> line(x.description, "", x.price, new BigDecimal(x.qty)))))
+		);
+	}
+
+	public static JsonRootNode mkParticipantRequest(
+		UUID registrationId,
+		BillingMethod deliveryMethod,
+		String recipientEmailAddress,
+		String recipient,
+		String recipientBillingAddres,
+		Set<TicketsSql.Ticket> tickets,
+		String participantName
+	) {
+		return object(
+			field("apiClientReference", string(registrationId.toString())),
+			field("accountKey", string("brewingagile-" + registrationId.toString())),
+			field("deliveryMethod", string(deliveryMethod.name())),
+			field("recipientEmailAddress", string(recipientEmailAddress)),
+			field("recipient", string(recipient)),
+			field("recipientBillingAddress", string(recipientBillingAddres)),
+			field("lines", tickets.toList().map(OutvoiceInvoiceClient.line("Brewing Agile 2017: ", participantName)).toJavaList().stream().collect(ArgoUtils.toArray()))
+		);
 	}
 
 	private static F<TicketsSql.Ticket, JsonRootNode> line(String eventPrefix, String participantName) {

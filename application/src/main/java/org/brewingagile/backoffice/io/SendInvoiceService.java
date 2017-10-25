@@ -1,5 +1,8 @@
 package org.brewingagile.backoffice.io;
 
+import argo.jdom.JsonRootNode;
+import fj.Effect;
+import fj.Unit;
 import fj.data.Either;
 import fj.data.Set;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
@@ -45,9 +48,13 @@ public class SendInvoiceService {
 			if (!registrationsSqlMapper.invoiceReference(c, id).isSome()) {
 				Set<TicketsSql.Ticket> tickets = ticketsSql.by(c, id);
 				RegistrationsSqlMapper.RegistrationTuple rt = registration.tuple;
-				Either<String,UUID> invoiceReferenceId = outvoiceInvoiceClient.postInvoice(registration.id, rt.billingMethod, rt.participantEmail, rt.billingCompany, rt.billingAddress, tickets, rt.participantName);
-				if (invoiceReferenceId.isLeft()) System.err.println(invoiceReferenceId.left().value());
-				registrationsSqlMapper.insertInvoiceReference(c, registration.id, invoiceReferenceId.right().value());
+				JsonRootNode jsonRequest = OutvoiceInvoiceClient.mkParticipantRequest(registration.id, rt.billingMethod, rt.participantEmail, rt.billingCompany, rt.billingAddress, tickets, rt.participantName);
+				Either<String, Unit> invoiceReferenceId = outvoiceInvoiceClient.postInvoice(jsonRequest);
+				if (invoiceReferenceId.isLeft()) {
+					System.err.println(invoiceReferenceId.left().value());
+					return;
+				}
+				registrationsSqlMapper.insertInvoiceReference(c, registration.id, registration.id);
 				c.commit();
 			}
 		}

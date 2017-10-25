@@ -62,7 +62,7 @@ public class Application {
 		this.guiRestServices = List.list(
 			new LoggedInJaxRs(authService),
 			new VersionNumberJaxRs(versionNumberProvider),
-			new AccountsJaxRs(dataSource, authService, accountsSql, accountIO, accountSignupSecretSql),
+			new AccountsJaxRs(dataSource, authService, accountsSql, accountIO, accountSignupSecretSql, outvoiceInvoiceClient),
 			new RegistrationsJaxRs(dataSource, authService, registrationsSqlMapper, sendInvoiceService, dismissRegistrationService, markAsCompleteService, markAsPaidService, outvoicePaidClient),
 			new NameTagsJaxRs(dataSource, authService, registrationsSqlMapper),
 			new BudgetJaxRs(dataSource, authService, budgetSql, registrationsSqlMapper, accountIO, ticketsSql),

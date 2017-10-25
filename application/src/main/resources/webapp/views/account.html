@@ -43,3 +43,11 @@
 	</table>
 	<em>Prices exclude VAT.</em>
 </div>
+<div class="col-lg-10">
+	<legend><h3>Invoice</h3></legend>
+	<button class="btn btn-primary" confirmed-click="invoice()" confirm-click="Are you sure?">Send Invoice</button>
+	<div class="alert alert-{{invoiceAlert.style}}" ng-show="invoiceAlert" style="margin-top: 1em;">
+		<button type="button" class="close" data-dismiss="invoiceAlert">&times;</button>
+		{{invoiceAlert.message}}
+	</div>
+</div>

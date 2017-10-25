@@ -1,27 +1,30 @@
 package org.brewingagile.backoffice.rest.gui;
 
+import argo.jdom.JsonRootNode;
 import fj.Monoid;
 import fj.P3;
+import fj.Unit;
+import fj.data.Either;
 import fj.data.List;
 import fj.data.Option;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.AccountSignupSecretSql;
 import org.brewingagile.backoffice.db.operations.AccountsSql;
 import org.brewingagile.backoffice.db.operations.AccountsSql.AccountData;
+import org.brewingagile.backoffice.integrations.OutvoiceInvoiceClient;
 import org.brewingagile.backoffice.pure.AccountIO;
 import org.brewingagile.backoffice.pure.AccountLogic;
 import org.brewingagile.backoffice.rest.json.ToJson;
 import org.brewingagile.backoffice.types.Account;
 import org.brewingagile.backoffice.types.AccountSignupSecret;
+import org.brewingagile.backoffice.types.BillingMethod;
 import org.brewingagile.backoffice.utils.ArgoUtils;
+import org.brewingagile.backoffice.utils.Result;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -38,19 +41,22 @@ public class AccountsJaxRs {
 	private final AccountsSql accountsSql;
 	private final AccountIO accountIO;
 	private final AccountSignupSecretSql accountSignupSecretSql;
+	private final OutvoiceInvoiceClient outvoiceInvoiceClient;
 
 	public AccountsJaxRs(
 		DataSource dataSource,
 		AuthService authService,
 		AccountsSql accountsSql,
 		AccountIO accountIO,
-		AccountSignupSecretSql accountSignupSecretSql
+		AccountSignupSecretSql accountSignupSecretSql,
+		OutvoiceInvoiceClient outvoiceInvoiceClient
 	) {
 		this.dataSource = dataSource;
 		this.authService = authService;
 		this.accountsSql = accountsSql;
 		this.accountIO = accountIO;
 		this.accountSignupSecretSql = accountSignupSecretSql;
+		this.outvoiceInvoiceClient = outvoiceInvoiceClient;
 	}
 
 	//	curl -u admin:password "http://localhost:9080/gui/accounts/"
@@ -130,6 +136,33 @@ public class AccountsJaxRs {
 
 	private static BigDecimal total(AccountLogic.Line x) {
 		return x.price.multiply(new BigDecimal(x.qty));
+	}
+
+//	curl -v -u admin:password -X POST 'http://localhost:9080/gui/accounts/Uptive/invoice'
+
+	@POST
+	@Path("{account}/invoice")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response postSendInvoices(@Context HttpServletRequest request, @PathParam("account") String aAccount) throws Exception {
+		authService.guardAuthenticatedUser(request);
+
+		try {
+			Account account = Account.account(aAccount);
+			JsonRootNode jsonRequest;
+			try (Connection c = dataSource.getConnection()) {
+				c.setAutoCommit(false);
+				AccountLogic.AccountStatement accountStatement = accountIO.accountStatement(c, account);
+				AccountData ad = accountsSql.accountData(c, account);
+				jsonRequest = OutvoiceInvoiceClient.mkAccountRequest(BillingMethod.SNAILMAIL, "", ad.billingRecipient, ad.billingAddress, account, accountStatement);
+			}
+			return outvoiceInvoiceClient.postInvoice(jsonRequest).either(
+				x -> Response.serverError().entity(ArgoUtils.format(Result.warning(x))).build(),
+				x -> Response.ok(ArgoUtils.format(Result.success2("Invoice Successfully Sent"))).build()
+			);
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			return Response.serverError().entity(ArgoUtils.format(Result.warning(e.getMessage()))).build();
+		}
 	}
 
 }

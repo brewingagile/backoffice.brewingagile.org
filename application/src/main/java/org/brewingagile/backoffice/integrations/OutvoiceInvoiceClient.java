@@ -63,7 +63,7 @@ public class OutvoiceInvoiceClient {
 			field("recipientEmailAddress", string(recipientEmailAddress)),
 			field("recipient", string(recipient)),
 			field("recipientBillingAddress", string(recipientBillingAddres)),
-			field("lines", array(accountStatement.lines.map(x -> line(x.description, "", x.price, new BigDecimal(x.qty)))))
+			field("lines", array(accountStatement.lines.map(x -> line(x.description, "Avser: Brewing Agile 2017", x.price, new BigDecimal(x.qty)))))
 		);
 	}
 

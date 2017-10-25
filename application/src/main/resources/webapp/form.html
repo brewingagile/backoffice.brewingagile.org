@@ -111,12 +111,14 @@ input.textarea {
 				Invoice will be sent from Rebel Alliance AB as a PDF to Participant's Email address.
 			</em>
 		</div>
-		<div class="col-sm-8 col-sm-offset-2" ng-if="account">
-			<strong>Account: {{account.account}}</strong>
-			<p>
-				Your Account holder has arranged payment details directly with Brewing Agile and Rebel Alliance.<br>
-				You don't need to do anything but come and enjoy the event!
-			</p>
+		<div class="row" ng-if="account">
+			<div class="col-sm-8 col-sm-offset-2">
+				<strong>Account: {{account.account}}</strong>
+				<p>
+					Your Account holder has arranged payment details directly with Brewing Agile and Rebel Alliance.<br>
+					You don't need to do anything but come and enjoy the event!
+				</p>
+			</div>
 		</div>
 
 		<legend>

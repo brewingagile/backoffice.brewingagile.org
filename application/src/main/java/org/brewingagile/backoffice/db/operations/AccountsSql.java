@@ -68,4 +68,17 @@ public class AccountsSql {
 					));
 		}
 	}
+
+	public void update(Connection c, Account account, AccountData accountData) throws SQLException {
+		String sql = "UPDATE account SET " +
+			"billing_recipient = ?," +
+			"billing_address = ? " +
+			"WHERE account = ?";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			ps.setString(1, accountData.billingRecipient);
+			ps.setString(2, accountData.billingAddress);
+			PreparedStatements.set(ps, 3, account);
+			ps.executeUpdate();
+		}
+	}
 }

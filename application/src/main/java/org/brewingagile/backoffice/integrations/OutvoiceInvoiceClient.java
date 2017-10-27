@@ -4,13 +4,11 @@ import argo.jdom.JsonRootNode;
 import fj.F;
 import fj.Unit;
 import fj.data.Either;
+import fj.data.List;
+import fj.data.Option;
 import fj.data.Set;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 import org.brewingagile.backoffice.pure.AccountLogic;
-import org.brewingagile.backoffice.types.Account;
 import org.brewingagile.backoffice.types.BillingMethod;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.utils.ArgoUtils;
@@ -33,8 +31,11 @@ public class OutvoiceInvoiceClient {
 	}
 
 	public Either<String, Unit> postInvoice(JsonRootNode jsonRequest) throws IOException {
+		HttpUrl url = HttpUrl.parse(endpoint).newBuilder()
+			.addEncodedPathSegment("invoices")
+			.build();
 		Request httpRequest = new Request.Builder()
-			.url(endpoint)
+			.url(url)
 			.addHeader("Accept", "application/json")
 			.addHeader("X-API-KEY", apikey)
 			.post(RequestBody.create(okhttp3.MediaType.parse("application/json"), ArgoUtils.format(jsonRequest)))
@@ -48,23 +49,34 @@ public class OutvoiceInvoiceClient {
 		}
 	}
 
-	public static JsonRootNode mkAccountRequest(
+	public static Option<JsonRootNode> mkAccountRequest(
+		String accountKey,
 		BillingMethod deliveryMethod,
 		String recipientEmailAddress,
 		String recipient,
 		String recipientBillingAddres,
-		Account account,
-		AccountLogic.AccountStatement accountStatement
+		AccountLogic.AccountStatement accountStatement,
+		BigDecimal alreadyInvoicedAmountExVat
 	) {
-		return object(
+		BigDecimal total = AccountLogic.total(accountStatement.lines);
+		if (total.equals(alreadyInvoicedAmountExVat)) return Option.none();
+
+		List<JsonRootNode> map = accountStatement.lines.map(x -> line(x.description, "Avser: Brewing Agile 2017", x.price, new BigDecimal(x.qty)))
+			.append(
+				alreadyInvoicedAmountExVat.equals(BigDecimal.ZERO)
+				? List.list()
+				: List.list(line("Avgår, redan fakturerat", "", alreadyInvoicedAmountExVat.negate(), BigDecimal.ONE))
+			);
+
+		return Option.some(object(
 			field("apiClientReference", string(UUID.randomUUID().toString())),
-			field("accountKey", string("brewingagile-" + account.value)),
+			field("accountKey", string(accountKey)),
 			field("deliveryMethod", string(deliveryMethod.name())),
 			field("recipientEmailAddress", string(recipientEmailAddress)),
 			field("recipient", string(recipient)),
 			field("recipientBillingAddress", string(recipientBillingAddres)),
-			field("lines", array(accountStatement.lines.map(x -> line(x.description, "Avser: Brewing Agile 2017", x.price, new BigDecimal(x.qty)))))
-		);
+			field("lines", array(map))
+		));
 	}
 
 	public static JsonRootNode mkParticipantRequest(

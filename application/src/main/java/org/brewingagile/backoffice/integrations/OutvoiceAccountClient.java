@@ -1,6 +1,7 @@
 package org.brewingagile.backoffice.integrations;
 
 import argo.jdom.JsonNode;
+import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
 import fj.P;
 import fj.P2;
@@ -10,23 +11,24 @@ import okhttp3.*;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.UUID;
 
-public class OutvoicePaidClient {
+public class OutvoiceAccountClient {
 	private final OkHttpClient okHttpClient;
 	private final String endpoint;
 	private final String apikey;
 
-	public OutvoicePaidClient(OkHttpClient okHttpClient, String endpoint, String apikey) {
+	public OutvoiceAccountClient(OkHttpClient okHttpClient, String endpoint, String apikey) {
 		this.okHttpClient = okHttpClient;
 		this.endpoint = endpoint;
 		this.apikey = apikey;
 	}
 
-	public String get() throws IOException {
+	public String get(String invoiceAccountKey) throws IOException {
 		HttpUrl url = HttpUrl.parse(endpoint).newBuilder()
-			.addEncodedPathSegment("invoices")
-			.addEncodedPathSegment("paid")
+			.addEncodedPathSegment("account")
+			.addEncodedPathSegment(invoiceAccountKey)
 			.build();
 		Request request = new Request.Builder()
 			.url(url)
@@ -41,7 +43,7 @@ public class OutvoicePaidClient {
 	}
 
 	public static Array<P2<String, Option<UUID>>> parse(String json) throws InvalidSyntaxException {
-		return Array.iterableArray(ArgoUtils.parse(json).getArrayNode()).map(OutvoicePaidClient::unjson);
+		return Array.iterableArray(ArgoUtils.parse(json).getArrayNode()).map(OutvoiceAccountClient::unjson);
 	}
 
 	private static P2<String, Option<UUID>> unjson(JsonNode x) {
@@ -52,8 +54,12 @@ public class OutvoicePaidClient {
 	}
 
 	public static void main(String[] args) throws IOException, InvalidSyntaxException {
-		OutvoicePaidClient outvoicePaidClient = new OutvoicePaidClient(new OkHttpClient(), "http://localhost:9060/api/2/invoices/", "simplekey");
-		Array<P2<String, Option<UUID>>> parse = outvoicePaidClient.parse(outvoicePaidClient.get());
+		OutvoiceAccountClient c = new OutvoiceAccountClient(new OkHttpClient(), "http://localhost:9060/api/2/", "simplekey");
+		Array<P2<String, Option<UUID>>> parse = c.parse(c.get("brewingagile-Pro%20Agile"));
 		System.out.println(parse);
+	}
+
+	public static BigDecimal invoiceAmountExVat(String s) throws InvalidSyntaxException {
+		return new BigDecimal(ArgoUtils.parse(s).getNumberValue("invoicedExVat"));
 	}
 }

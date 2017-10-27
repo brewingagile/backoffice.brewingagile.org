@@ -1,12 +1,20 @@
 <div class="col-lg-5">
 	<legend>
-		<h3>Billing Address</h3>
+		<h3>
+			Billing Address <small><button class="btn btn-link" ng-click="editBillingInfo = true;" ng-hide="editBillingInfo">Edit</button></small>
+		</h3>
 	</legend>
-	<address>
+
+	<address ng-hide="editBillingInfo">
 		<strong>{{account.billingRecipient}}</strong><br>
-		<p style="white-space: pre;">{{account.billingAddress}}</p>
+		<p style="white-space: pre;">{{account.billingAddress}}</p><br>
 		<!--<abbr title="Phone">P:</abbr> (123) 456-7890-->
 	</address>
+	<form ng-submit="saveBillingInfo()" role="form" ng-show="editBillingInfo">
+		<input type="text" class="form-control" ng-model="account.billingRecipient"/><br>
+		<textarea class="form-control" ng-model="account.billingAddress"></textarea>
+		<button type="submit" class="btn btn-primary">Spara</button>
+	</form>
 </div>
 <div class="col-lg-5">
 	<legend>
@@ -41,7 +49,43 @@
 		</tr>
 		</tfoot>
 	</table>
+</div>
+<div class="col-lg-10">
+	<legend>
+		<h3>Invoices</h3>
+	</legend>
+	<table class="table">
+		<thead>
+		<tr>
+			<th class="col-lg-3">#</th>
+			<th class="col-lg-2">Issued</th>
+			<th class="col-lg-2">Due</th>
+			<th class="col-lg-2">Amount</th>
+			<th class="col-lg-1"></th>
+		</tr>
+		</thead>
+		<tr ng-repeat="i in outvoice.invoices">
+			<td>{{i.number}}</td>
+			<td>{{i.issueDate | date: 'yyyy-MM-dd'}}</td>
+			<td>{{i.dueDate | date: 'yyyy-MM-dd'}}</td>
+			<td>{{i.amountExVat | number}}</td>
+			<td>{{i.paid}}</td>
+		</tr>
+		<tr>
+			<th colspan="3">Amount Invoiced</th>
+			<th colspan="1">{{outvoice.invoicedExVat | number}}</th>
+			<th></th>
+		</tr>
+		<tr>
+			<th colspan="3">Amount due (not paid)</th>
+			<th colspan="1">{{outvoice.dueExVat  | number}}</th>
+			<th></th>
+		</tr>
+	</table>
+	<p>
 	<em>Prices exclude VAT.</em>
+	</p>
+
 </div>
 <div class="col-lg-10">
 	<legend><h3>Invoice</h3></legend>

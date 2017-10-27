@@ -1,16 +1,16 @@
 package org.brewingagile.backoffice.rest.gui;
 
 import argo.jdom.JsonRootNode;
-import fj.Monoid;
 import fj.P3;
-import fj.Unit;
 import fj.data.Either;
 import fj.data.List;
 import fj.data.Option;
+import jdk.nashorn.internal.runtime.regexp.joni.constants.Arguments;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.AccountSignupSecretSql;
 import org.brewingagile.backoffice.db.operations.AccountsSql;
 import org.brewingagile.backoffice.db.operations.AccountsSql.AccountData;
+import org.brewingagile.backoffice.integrations.OutvoiceAccountClient;
 import org.brewingagile.backoffice.integrations.OutvoiceInvoiceClient;
 import org.brewingagile.backoffice.pure.AccountIO;
 import org.brewingagile.backoffice.pure.AccountLogic;
@@ -42,6 +42,7 @@ public class AccountsJaxRs {
 	private final AccountIO accountIO;
 	private final AccountSignupSecretSql accountSignupSecretSql;
 	private final OutvoiceInvoiceClient outvoiceInvoiceClient;
+	private final OutvoiceAccountClient outvoiceAccountClient;
 
 	public AccountsJaxRs(
 		DataSource dataSource,
@@ -49,7 +50,8 @@ public class AccountsJaxRs {
 		AccountsSql accountsSql,
 		AccountIO accountIO,
 		AccountSignupSecretSql accountSignupSecretSql,
-		OutvoiceInvoiceClient outvoiceInvoiceClient
+		OutvoiceInvoiceClient outvoiceInvoiceClient,
+		OutvoiceAccountClient outvoiceAccountClient
 	) {
 		this.dataSource = dataSource;
 		this.authService = authService;
@@ -57,6 +59,7 @@ public class AccountsJaxRs {
 		this.accountIO = accountIO;
 		this.accountSignupSecretSql = accountSignupSecretSql;
 		this.outvoiceInvoiceClient = outvoiceInvoiceClient;
+		this.outvoiceAccountClient = outvoiceAccountClient;
 	}
 
 	//	curl -u admin:password "http://localhost:9080/gui/accounts/"
@@ -114,6 +117,7 @@ public class AccountsJaxRs {
 			AccountLogic.AccountStatement accountStatement = accountIO.accountStatement(c, account);
 			AccountData accountData = accountsSql.accountData(c, account);
 			Option<AccountSignupSecret> accountSignupSecrets = accountSignupSecretSql.accountSignupSecret(c, account);
+			BigDecimal value = AccountLogic.total(accountStatement.lines);
 			return Response.ok(ArgoUtils.format(
 				object(
 					field("billingRecipient", string(accountData.billingRecipient)),
@@ -123,9 +127,9 @@ public class AccountsJaxRs {
 						field("description", string(x.description)),
 						field("price", number(x.price)),
 						field("qty", number(x.qty)),
-						field("total", number(total(x)))
+						field("total", number(AccountLogic.total(x)))
 					)))),
-					field("total", number(accountStatement.lines.map(AccountsJaxRs::total).foldLeft(Monoid.bigdecimalAdditionMonoid.sum(), Monoid.bigdecimalAdditionMonoid.zero())))
+					field("total", number(value))
 				)
 			)).build();
 		} catch (Exception e) {
@@ -134,11 +138,22 @@ public class AccountsJaxRs {
 		}
 	}
 
-	private static BigDecimal total(AccountLogic.Line x) {
-		return x.price.multiply(new BigDecimal(x.qty));
+	//	curl -u admin:password "http://localhost:9080/gui/accounts/Uptive/invoices"
+	@GET
+	@Path("{account}/invoices")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response accountInvoices(@Context HttpServletRequest request, @PathParam("account") String aAccount) throws Exception {
+		authService.guardAuthenticatedUser(request);
+		try {
+			Account account = Account.account(aAccount);
+			return Response.ok(outvoiceAccountClient.get("brewingagile-" + account.value)).build();
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			return Response.serverError().entity(ArgoUtils.format(Result.warning(e.getMessage()))).build();
+		}
 	}
 
-//	curl -v -u admin:password -X POST 'http://localhost:9080/gui/accounts/Uptive/invoice'
+	//	curl -v -u admin:password -X POST 'http://localhost:9080/gui/accounts/Uptive/invoice'
 
 	@POST
 	@Path("{account}/invoice")
@@ -153,7 +168,12 @@ public class AccountsJaxRs {
 				c.setAutoCommit(false);
 				AccountLogic.AccountStatement accountStatement = accountIO.accountStatement(c, account);
 				AccountData ad = accountsSql.accountData(c, account);
-				jsonRequest = OutvoiceInvoiceClient.mkAccountRequest(BillingMethod.SNAILMAIL, "", ad.billingRecipient, ad.billingAddress, account, accountStatement);
+				String invoiceAccountKey = "brewingagile-" + account.value;
+				BigDecimal alreadyInvoicedAmountExVat = OutvoiceAccountClient.invoiceAmountExVat(outvoiceAccountClient.get(invoiceAccountKey));
+				Option<JsonRootNode> jsonRootNodes = OutvoiceInvoiceClient.mkAccountRequest(invoiceAccountKey, BillingMethod.SNAILMAIL, "", ad.billingRecipient, ad.billingAddress, accountStatement, alreadyInvoicedAmountExVat);
+				if (jsonRootNodes.isNone())
+					return Response.ok(ArgoUtils.format(Result.success2("Balance is Zero. Nothing to invoice."))).build();
+				jsonRequest = jsonRootNodes.some();
 			}
 			return outvoiceInvoiceClient.postInvoice(jsonRequest).either(
 				x -> Response.serverError().entity(ArgoUtils.format(Result.warning(x))).build(),
@@ -165,4 +185,32 @@ public class AccountsJaxRs {
 		}
 	}
 
+
+	@POST
+	@Path("{account}/billing")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response postBillingInfo(@Context HttpServletRequest request, @PathParam("account") String aAccount, String body) throws Exception {
+		authService.guardAuthenticatedUser(request);
+
+		try {
+			Account account = Account.account(aAccount);
+			JsonRootNode parse = ArgoUtils.parse(body);
+			String billingRecipient = parse.getStringValue("billingRecipient");
+			String billingAddress = parse.getStringValue("billingAddress");
+			String billingEmail = "";
+			BillingMethod billingMethod = BillingMethod.SNAILMAIL;
+			AccountData accountData = new AccountData(billingRecipient, billingAddress);
+
+			try (Connection c = dataSource.getConnection()) {
+				c.setAutoCommit(false);
+				accountsSql.update(c, account, accountData);
+				c.commit();
+			}
+			return Response.ok(ArgoUtils.format(Result.success2("Account Data Saved"))).build();
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			return Response.serverError().entity(ArgoUtils.format(Result.warning(e.getMessage()))).build();
+		}
+	}
 }

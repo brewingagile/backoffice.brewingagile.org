@@ -32,6 +32,7 @@ public class Application {
 
 		OutvoiceInvoiceClient outvoiceInvoiceClient = new OutvoiceInvoiceClient(unsafe, config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 		OutvoicePaidClient outvoicePaidClient = new OutvoicePaidClient(okHttpClient, config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
+		OutvoiceAccountClient outvoiceAccountClient = new OutvoiceAccountClient(okHttpClient, config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 
 		AccountsSql accountsSql = new AccountsSql();
 		AccountSecretSql accountSecretSql = new AccountSecretSql();
@@ -62,7 +63,7 @@ public class Application {
 		this.guiRestServices = List.list(
 			new LoggedInJaxRs(authService),
 			new VersionNumberJaxRs(versionNumberProvider),
-			new AccountsJaxRs(dataSource, authService, accountsSql, accountIO, accountSignupSecretSql, outvoiceInvoiceClient),
+			new AccountsJaxRs(dataSource, authService, accountsSql, accountIO, accountSignupSecretSql, outvoiceInvoiceClient, outvoiceAccountClient),
 			new RegistrationsJaxRs(dataSource, authService, registrationsSqlMapper, sendInvoiceService, dismissRegistrationService, markAsCompleteService, markAsPaidService, outvoicePaidClient),
 			new NameTagsJaxRs(dataSource, authService, registrationsSqlMapper),
 			new BudgetJaxRs(dataSource, authService, budgetSql, registrationsSqlMapper, accountIO, ticketsSql),

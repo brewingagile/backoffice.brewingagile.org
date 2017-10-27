@@ -13,6 +13,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public class AccountLogic {
+	public static BigDecimal total(Line x) {
+		return x.price.multiply(new BigDecimal(x.qty));
+	}
+
+	public static BigDecimal total(List<Line> lines) {
+		return lines.map(AccountLogic::total).foldLeft(Monoid.bigdecimalAdditionMonoid.sum(), Monoid.bigdecimalAdditionMonoid.zero());
+	}
+
 	@EqualsAndHashCode
 	@ToString
 	public static final class Line {
@@ -35,6 +43,7 @@ public class AccountLogic {
 		public AccountStatement(List<Line> lines) {
 			this.lines = lines;
 		}
+
 	}
 
 	public static AccountStatement accountStatement(List<AccountPackage> packages, List<P2<TicketName, BigInteger>> signupsIn, TreeMap<TicketName, BigDecimal> prices) {

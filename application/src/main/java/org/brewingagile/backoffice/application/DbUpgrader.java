@@ -36,7 +36,8 @@ public class DbUpgrader {
 			migration("account-secret").installsThrough(script("021-account-secret.sql")),
 			migration("lanyard-organisation").installsThrough(script("022-lanyard-organisation.sql")),
 			migration("account-sponsorships").installsThrough(script("023-account-sponsorships.sql")),
-			migration("account-signup-secret").installsThrough(script("024-account-signup-secret.sql"))
+			migration("account-signup-secret").installsThrough(script("024-account-signup-secret.sql")),
+			migration("account-billing-email").installsThrough(script("025-account-billing-email.sql"))
 		);
 	}
 

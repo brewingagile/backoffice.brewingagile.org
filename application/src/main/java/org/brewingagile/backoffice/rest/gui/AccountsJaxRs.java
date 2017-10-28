@@ -5,6 +5,7 @@ import fj.P3;
 import fj.data.Either;
 import fj.data.List;
 import fj.data.Option;
+import fj.function.Strings;
 import jdk.nashorn.internal.runtime.regexp.joni.constants.Arguments;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.AccountSignupSecretSql;
@@ -122,6 +123,7 @@ public class AccountsJaxRs {
 				object(
 					field("billingRecipient", string(accountData.billingRecipient)),
 					field("billingAddress", string(accountData.billingAddress)),
+					field("billingEmail", string(accountData.billingEmail)),
 					field("accountSignupSecret", ToJson.nullable(accountSignupSecrets, x -> string("/form.html?account_signup_secret=" + x.value))),
 					field("lines", array(accountStatement.lines.map(x -> object(
 						field("description", string(x.description)),
@@ -170,7 +172,7 @@ public class AccountsJaxRs {
 				AccountData ad = accountsSql.accountData(c, account);
 				String invoiceAccountKey = "brewingagile-" + account.value;
 				BigDecimal alreadyInvoicedAmountExVat = OutvoiceAccountClient.invoiceAmountExVat(outvoiceAccountClient.get(invoiceAccountKey));
-				Option<JsonRootNode> jsonRootNodes = OutvoiceInvoiceClient.mkAccountRequest(invoiceAccountKey, BillingMethod.SNAILMAIL, "", ad.billingRecipient, ad.billingAddress, accountStatement, alreadyInvoicedAmountExVat);
+				Option<JsonRootNode> jsonRootNodes = OutvoiceInvoiceClient.mkAccountRequest(invoiceAccountKey, ad.billingEmail, ad.billingRecipient, ad.billingAddress, accountStatement, alreadyInvoicedAmountExVat);
 				if (jsonRootNodes.isNone())
 					return Response.ok(ArgoUtils.format(Result.success2("Balance is Zero. Nothing to invoice."))).build();
 				jsonRequest = jsonRootNodes.some();
@@ -198,9 +200,9 @@ public class AccountsJaxRs {
 			JsonRootNode parse = ArgoUtils.parse(body);
 			String billingRecipient = parse.getStringValue("billingRecipient");
 			String billingAddress = parse.getStringValue("billingAddress");
-			String billingEmail = "";
-			BillingMethod billingMethod = BillingMethod.SNAILMAIL;
-			AccountData accountData = new AccountData(billingRecipient, billingAddress);
+			String billingEmail = parse.getStringValue("billingEmail");
+
+			AccountData accountData = new AccountData(billingRecipient, billingAddress, billingEmail);
 
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);

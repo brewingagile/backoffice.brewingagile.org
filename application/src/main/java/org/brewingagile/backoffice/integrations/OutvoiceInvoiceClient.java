@@ -7,6 +7,7 @@ import fj.data.Either;
 import fj.data.List;
 import fj.data.Option;
 import fj.data.Set;
+import fj.function.Strings;
 import okhttp3.*;
 import org.brewingagile.backoffice.pure.AccountLogic;
 import org.brewingagile.backoffice.types.BillingMethod;
@@ -51,8 +52,7 @@ public class OutvoiceInvoiceClient {
 
 	public static Option<JsonRootNode> mkAccountRequest(
 		String accountKey,
-		BillingMethod deliveryMethod,
-		String recipientEmailAddress,
+		String billingEmail,
 		String recipient,
 		String recipientBillingAddres,
 		AccountLogic.AccountStatement accountStatement,
@@ -68,11 +68,16 @@ public class OutvoiceInvoiceClient {
 				: List.list(line("Avgår, redan fakturerat", "", alreadyInvoicedAmountExVat.negate(), BigDecimal.ONE))
 			);
 
+		BillingMethod deliveryMethod =
+			Strings.isNullOrBlank.f(billingEmail)
+			? BillingMethod.SNAILMAIL
+			: BillingMethod.EMAIL;
+
 		return Option.some(object(
 			field("apiClientReference", string(UUID.randomUUID().toString())),
 			field("accountKey", string(accountKey)),
 			field("deliveryMethod", string(deliveryMethod.name())),
-			field("recipientEmailAddress", string(recipientEmailAddress)),
+			field("recipientEmailAddress", string(billingEmail)),
 			field("recipient", string(recipient)),
 			field("recipientBillingAddress", string(recipientBillingAddres)),
 			field("lines", array(map))

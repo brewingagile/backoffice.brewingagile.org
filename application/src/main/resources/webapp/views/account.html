@@ -8,11 +8,12 @@
 	<address ng-hide="editBillingInfo">
 		<strong>{{account.billingRecipient}}</strong><br>
 		<p style="white-space: pre;">{{account.billingAddress}}</p><br>
-		<!--<abbr title="Phone">P:</abbr> (123) 456-7890-->
+		<abbr title="Send Invoice to Email">Invoicing Email:</abbr> {{account.billingEmail}}
 	</address>
 	<form ng-submit="saveBillingInfo()" role="form" ng-show="editBillingInfo">
 		<input type="text" class="form-control" ng-model="account.billingRecipient"/><br>
-		<textarea class="form-control" ng-model="account.billingAddress"></textarea>
+		<textarea class="form-control" ng-model="account.billingAddress"></textarea><br>
+		<input type="email" class="form-control" ng-model="account.billingEmail" placeholder="Invoicing Email">
 		<button type="submit" class="btn btn-primary">Spara</button>
 	</form>
 </div>

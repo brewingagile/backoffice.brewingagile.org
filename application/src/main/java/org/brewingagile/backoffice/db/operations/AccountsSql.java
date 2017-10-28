@@ -20,10 +20,12 @@ public class AccountsSql {
 	public static final class AccountData {
 		public final String billingRecipient;
 		public final String billingAddress;
+		public final String billingEmail;
 
-		public AccountData(String billingRecipient, String billingAddress) {
+		public AccountData(String billingRecipient, String billingAddress, String billingEmail) {
 			this.billingRecipient = billingRecipient;
 			this.billingAddress = billingAddress;
+			this.billingEmail = billingEmail;
 		}
 	}
 
@@ -40,7 +42,8 @@ public class AccountsSql {
 			PreparedStatements.set(ps, 1, account);
 			return SqlOps.one(ps, rs -> new AccountData(
 				rs.getString("billing_recipient"),
-				rs.getString("billing_address")
+				rs.getString("billing_address"),
+				rs.getString("billing_email")
 			)).some();
 		}
 	}
@@ -72,12 +75,14 @@ public class AccountsSql {
 	public void update(Connection c, Account account, AccountData accountData) throws SQLException {
 		String sql = "UPDATE account SET " +
 			"billing_recipient = ?," +
-			"billing_address = ? " +
+			"billing_address = ?, " +
+			"billing_email = ? " +
 			"WHERE account = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setString(1, accountData.billingRecipient);
 			ps.setString(2, accountData.billingAddress);
-			PreparedStatements.set(ps, 3, account);
+			ps.setString(3, accountData.billingEmail);
+			PreparedStatements.set(ps, 4, account);
 			ps.executeUpdate();
 		}
 	}

@@ -149,6 +149,7 @@ public class BudgetJaxRs {
 				t("Speaker Reimbursements", 2, 10000),
 				t("Speaker: Workshop 1", 1, BigDecimal.valueOf(workshop1).multiply(ticketPrices.get(ticketName("workshop1")).some()).subtract(sum(costsWorkshop1))),
 				t("Speaker: Workshop 2", 1, BigDecimal.valueOf(workshop2).multiply(ticketPrices.get(ticketName("workshop2")).some()).subtract(sum(costsWorkshop2))),
+				t("Audio Technician", 1, 3600),
 				t("Supplies for Open Spaces", 1, 1000),
 				t("Lanyards", 1, 529 + 325)
 			);

@@ -59,7 +59,7 @@ public class OutvoiceInvoiceClient {
 		BigDecimal alreadyInvoicedAmountExVat
 	) {
 		BigDecimal total = AccountLogic.total(accountStatement.lines);
-		if (total.equals(alreadyInvoicedAmountExVat)) return Option.none();
+		if (total.compareTo(alreadyInvoicedAmountExVat) == 0) return Option.none();
 
 		List<JsonRootNode> map = accountStatement.lines.map(x -> line(x.description, "Avser: Brewing Agile 2017", x.price, new BigDecimal(x.qty)))
 			.append(

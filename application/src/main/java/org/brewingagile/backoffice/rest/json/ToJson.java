@@ -3,10 +3,7 @@ package org.brewingagile.backoffice.rest.json;
 import argo.jdom.JsonNode;
 import fj.F;
 import fj.data.Option;
-import org.brewingagile.backoffice.types.Account;
-import org.brewingagile.backoffice.types.AccountSecret;
-import org.brewingagile.backoffice.types.AccountSignupSecret;
-import org.brewingagile.backoffice.types.TicketName;
+import org.brewingagile.backoffice.types.*;
 
 import static argo.jdom.JsonNodeFactories.nullNode;
 import static argo.jdom.JsonNodeFactories.string;
@@ -20,4 +17,5 @@ public class ToJson {
 	public static JsonNode ticketName(TicketName x) { return string(x.ticketName); }
 	public static JsonNode accountSecret(AccountSecret x) { return string(x.value.toString()); }
 	public static JsonNode accountSignupSecret(AccountSignupSecret x) { return string(x.value.toString()); }
+	public static JsonNode json(ParticipantOrganisation x) { return string(x.value); }
 }

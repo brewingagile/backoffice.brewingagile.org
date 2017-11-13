@@ -8,6 +8,7 @@ import fj.data.Option;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
+import org.brewingagile.backoffice.rest.json.ToJson;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
@@ -86,7 +87,7 @@ public class NameTagsJaxRs {
 	private static JsonRootNode json(Registration r) {
 		return object(
 			field("name", string(r.tuple.participantName)),
-			field("company", string(r.tuple.billingCompany)),
+			field("company", ToJson.json(r.tuple.organisation)),
 			field("badge", string(r.tuple.badge.badge)),
 			field("workshop", booleanNode(false)),
 			field("conference", booleanNode(r.tickets.member(ticketName("conference")))),

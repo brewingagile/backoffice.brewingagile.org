@@ -1,4 +1,5 @@
-PDF-hur?
+I Firefox, Printa som PDF.
+Välj A5. Landscape.
 
 i HP MFP 277dw Web-GUI
 Tray 1: A5

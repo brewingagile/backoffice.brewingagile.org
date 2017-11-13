@@ -34,7 +34,7 @@
 	}
 	.label {
 		position: relative;
-		margin: 0mm 5mm 0mm 5mm;
+		margin: 0mm 0mm 0mm 0mm;
 		width: 88mm;
 		height: 138mm;
 		float: left;
@@ -92,6 +92,16 @@
 		background-color: blue;
 	}
 
+	.left {
+		margin-right: 8mm;
+		margin-left: 2mm;
+	}
+
+	.right {
+		margin-left: 8mm;
+		margin-right: 2mm;
+	}
+
 	.name {
 		margin-top: 5mm;
 		font-size: 12mm;
@@ -147,7 +157,7 @@
 </head>
 <body ng-controller="LabelsController">
 <div class="registration" ng-repeat="l in labels">
-	<div class="label" ng-repeat="d in [1,2]" ng-class="{organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER'), support: (l.badge == 'VIDEO' || l.badge == 'AUDIO' || l.badge == 'PHOTO' || l.badge == 'VOLUNTEER'), co: (l.badge == 'HOSTESS' || l.badge == 'HOST'), speaker: (l.badge == 'SPEAKER'), badge: (l.badge != '')}">
+	<div class="label" ng-repeat="d in [1,2]" ng-class="{organiser: (l.badge == 'ORGANIZER' || l.badge == 'ORGANISER'), support: (l.badge == 'VIDEO' || l.badge == 'AUDIO' || l.badge == 'PHOTO' || l.badge == 'VOLUNTEER'), co: (l.badge == 'HOSTESS' || l.badge == 'HOST'), speaker: (l.badge == 'SPEAKER'), badge: (l.badge != ''), left: d == 1, right: d == 2}">
 		<div class="badge" ng-show="l.badge != ''">{{l.badge}}</div>
 		<div class="name">{{l.name}}</div>
 		<div class="extras">{{l.twitter}}<br>{{l.company}}</div>

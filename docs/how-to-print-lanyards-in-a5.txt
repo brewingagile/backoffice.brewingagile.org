@@ -1,0 +1,12 @@
+PDF-hur?
+
+i HP MFP 277dw Web-GUI
+Tray 1: A5
+Tray 2: A5
+A5 laddad i Tray 2 i mitten (korta sidan mot skrivarens baksida, som ett litet A4)
+
+Skriv ut som "raw":
+lpr -l nametags.pdf
+eller: lpr -o raw nametags.pdf
+
+insert into printed_nametags SELECT registration_id from registration;

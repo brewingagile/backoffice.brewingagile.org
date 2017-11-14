@@ -10,4 +10,4 @@ Skriv ut som "raw":
 lpr -l nametags.pdf
 eller: lpr -o raw nametags.pdf
 
-insert into printed_nametags SELECT registration_id from registration;
+INSERT INTO printed_nametags SELECT registration_id FROM registration NATURAL LEFT JOIN printed_nametags WHERE printed_nametags IS NULL;

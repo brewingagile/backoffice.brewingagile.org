@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html ng-app="coupons">
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" href="reset.css" type="text/css">
+
+	<title>Drink Tickets</title>
+	<link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+	<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-resource.min.js"></script>
+	<script>
+var app = angular.module('coupons', ['ngResource'], function($locationProvider) {
+	$locationProvider.html5Mode(true);
+});
+
+function CouponController($scope, $resource, $location, $routeParams) {
+	var NameTagsResource = $resource('../gui/nametags/');
+
+	var chunk = function(list, chunksize) {
+		var chunked = [];
+		var rest = list;
+		while (rest.length > 0) {
+			chunked.push(_.first(rest, chunksize));
+			rest = _.rest(rest, chunksize);
+		}
+		return chunked;
+	};
+
+	NameTagsResource.query(function(ls) {
+		$scope.labels = ls; //chunk(ls, 10);
+	});
+
+	$scope.seq = function(max) {
+		var numberArray = [];
+        for(var i = 0; i < max; i++){
+            numberArray.push(i);
+        }
+        return numberArray;
+	};
+}
+</script>
+
+<style>
+@media print {
+	@page {
+		size: a4 portrait;
+		margin: 1cm 0 0 0;
+	}
+}
+
+@media all {
+    html,body,div,span,body.ng-scope {
+		padding: 0;
+		font-family: Arial, Helvetica, sans-serif;
+		margin: none; 
+	}
+
+
+	.coupon {
+		width: 60mm;
+		margin-left: 4mm;
+		margin-right: 4mm;
+		float: left;
+	}
+
+	.logo {
+		float: left;
+	}
+	.logo img {
+		height: 17mm;
+		position: relative;
+		z-index: -1;
+	}
+
+	.year {
+		font-size: 17mm;
+		font-weight: bold;
+		float: left;
+	}
+
+	.ticket {
+		font-size: 8mm;
+		text-align: center;
+		font-weight: bold;
+		text-transform: uppercase;
+		position: relative;
+		top: -4mm;
+	}
+}
+</style>
+</head>
+<body ng-controller="CouponController">
+<div class="coupon" ng-repeat="i in seq(30)">
+	<div class="logo"><img src="logo.png"></div>
+	<div class="year">2017</div>
+	<div class="ticket">Drink Ticket</div>
+</div>
+</body>
+</html>

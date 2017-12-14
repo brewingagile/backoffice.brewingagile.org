@@ -2,6 +2,7 @@ package org.brewingagile.backoffice.integrations;
 
 import argo.jdom.JsonRootNode;
 import fj.F;
+import fj.P2;
 import fj.Unit;
 import fj.data.Either;
 import fj.data.List;
@@ -12,6 +13,8 @@ import okhttp3.*;
 import org.brewingagile.backoffice.pure.AccountLogic;
 import org.brewingagile.backoffice.types.BillingMethod;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
+import org.brewingagile.backoffice.types.ParticipantName;
+import org.brewingagile.backoffice.types.TicketName;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
 import java.io.IOException;
@@ -55,7 +58,7 @@ public class OutvoiceInvoiceClient {
 		String billingEmail,
 		String recipient,
 		String recipientBillingAddres,
-		AccountLogic.AccountStatement accountStatement,
+		AccountLogic.AccountStatement2 accountStatement,
 		BigDecimal alreadyInvoicedAmountExVat
 	) {
 		BigDecimal total = AccountLogic.total(accountStatement.lines);

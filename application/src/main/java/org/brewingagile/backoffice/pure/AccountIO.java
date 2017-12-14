@@ -12,6 +12,7 @@ import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.types.Account;
 import org.brewingagile.backoffice.types.AccountPackage;
+import org.brewingagile.backoffice.types.ParticipantName;
 import org.brewingagile.backoffice.types.TicketName;
 
 import java.math.BigDecimal;
@@ -41,6 +42,17 @@ public class AccountIO {
 			.toList();
 		TreeMap<TicketName, BigDecimal> tickets = ticketsSql.all(c).groupBy(x -> x.ticket, x -> x.price).map(x -> x.head());
 		return AccountLogic.accountStatement(
+			packages,
+			signups,
+			tickets
+		);
+	}
+
+	public AccountLogic.AccountStatement2 accountStatement2(Connection c, Account account) throws SQLException {
+		List<AccountPackage> packages = accountsSql.accountPackages(c, account);
+		List<P2<ParticipantName, Set<TicketName>>> signups = registrationsSqlMapper.inAccount2(c, account);
+		TreeMap<TicketName, BigDecimal> tickets = ticketsSql.all(c).groupBy(x -> x.ticket, x -> x.price).map(x -> x.head());
+		return AccountLogic.accountStatement2(
 			packages,
 			signups,
 			tickets

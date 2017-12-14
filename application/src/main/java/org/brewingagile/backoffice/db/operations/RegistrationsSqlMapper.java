@@ -4,8 +4,10 @@ import fj.*;
 import fj.data.List;
 import fj.data.Option;
 import fj.data.Set;
+import fj.data.TreeMap;
 import fj.function.Try1;
 import functional.Tuple2;
+import jersey.repackaged.com.google.common.collect.Maps;
 import org.brewingagile.backoffice.instances.PreparedStatements;
 import org.brewingagile.backoffice.instances.ResultSets;
 import org.brewingagile.backoffice.types.*;
@@ -350,6 +352,24 @@ public class RegistrationsSqlMapper {
 	}
 
 	public static final class PrintedNametag {}
+
+	public List<P2<ParticipantName, Set<TicketName>>> inAccount2(Connection c, Account account) throws SQLException {
+		String sql = "SELECT participant_name, ticket FROM registration " +
+			"JOIN registration_account USING (registration_id) " +
+			"JOIN registration_ticket USING (registration_id) " +
+			"WHERE account = ? " +
+			"ORDER BY participant_name, ticket";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			PreparedStatements.set(ps, 1, account);
+			List<P2<ParticipantName, TicketName>> list = SqlOps.list(ps,
+				rs -> P.p(
+					ResultSets.participantName(rs, "participant_name"),
+					ResultSets.ticketName(rs, "ticket")
+				)
+			);
+			return list.groupBy(x -> x._1(), x -> x._2(), ParticipantName.Ord).map(x -> Set.iterableSet(TicketName.Ord, x)).toList();
+		}
+	}
 
 	public List<P4<String, TicketName, BigDecimal, String>> inAccount(Connection c, Account account) throws SQLException {
 		String sql = "SELECT " +

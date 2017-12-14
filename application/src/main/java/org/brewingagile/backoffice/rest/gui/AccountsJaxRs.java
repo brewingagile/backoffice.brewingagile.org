@@ -168,7 +168,7 @@ public class AccountsJaxRs {
 			JsonRootNode jsonRequest;
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);
-				AccountLogic.AccountStatement accountStatement = accountIO.accountStatement(c, account);
+				AccountLogic.AccountStatement2 accountStatement = accountIO.accountStatement2(c, account);
 				AccountData ad = accountsSql.accountData(c, account);
 				String invoiceAccountKey = "brewingagile-" + account.value;
 				BigDecimal alreadyInvoicedAmountExVat = OutvoiceAccountClient.invoiceAmountExVat(outvoiceAccountClient.get(invoiceAccountKey));

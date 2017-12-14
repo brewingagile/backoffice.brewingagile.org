@@ -7,6 +7,7 @@ import fj.data.TreeMap;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.brewingagile.backoffice.types.AccountPackage;
+import org.brewingagile.backoffice.types.ParticipantName;
 import org.brewingagile.backoffice.types.TicketName;
 
 import java.math.BigDecimal;
@@ -33,6 +34,42 @@ public class AccountLogic {
 			this.qty = qty;
 			this.price = price;
 		}
+	}
+
+
+	@EqualsAndHashCode
+	@ToString
+	public static final class AccountStatement2 {
+		public final List<Line> lines;
+
+		public AccountStatement2(List<Line> lines) {
+			this.lines = lines;
+		}
+
+	}
+
+	public static AccountStatement2 accountStatement2(List<AccountPackage> packages, List<P2<ParticipantName, Set<TicketName>>> signups, TreeMap<TicketName, BigDecimal> prices) {
+		List<Line> signupLines = List.join(signups.sort(Ord.p2Ord1(ParticipantName.Ord)).map(x -> x._2().toList().sort(TicketName.Ord).map(y ->
+			new Line(x._1().value + ": " + y.ticketName, BigInteger.ONE, unvat(prices.get(y).some()))
+		)));
+
+
+		List<Line> packageLines = List.join(packages.map(x ->
+			x.tickets.map(
+				y -> new Line(x.description + ": " + y._1().ticketName, y._2(), unvat(prices.get(y._1()).some()).negate())
+			).cons(
+				new Line(x.description, BigInteger.ONE, x.price)
+			)
+		));
+
+		List<Line> lines = List.join(
+			List.list(
+				signupLines,
+				packageLines
+			)
+		).filter(x -> !x.qty.equals(BigInteger.ZERO));
+
+		return new AccountStatement2( lines );
 	}
 
 	@EqualsAndHashCode

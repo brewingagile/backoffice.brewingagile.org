@@ -26,4 +26,8 @@ public class ResultSets {
 	public static AccountSignupSecret accountSignupSecret(ResultSet rs, String f) throws SQLException {
 		return AccountSignupSecret.accountSignupSecret((UUID) rs.getObject(f));
 	}
+
+	public static ParticipantName participantName(ResultSet rs, String f) throws SQLException {
+		return ParticipantName.participantName(rs.getString(f));
+	}
 }

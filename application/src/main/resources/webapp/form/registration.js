@@ -55,10 +55,17 @@ function RegistrationController($scope, $http, $resource, $window, $timeout, $wi
         return _.filter($scope.r.tickets, function(x) { return x != "" && x != null });
     };
 
+    function amount() {
+        var tickets = _.filter($scope.r.tickets, function(x) { return x != "" && x != null });
+        var amountInOre = _.reduce(tickets, function(memo, x) {
+            var t = _.find($scope.tickets, function(y) { return y.ticket === x; });
+            return memo + t.price;
+        }, 0);
+        return amountInOre;
+    }
+
     $scope.stripeCheckout = function() {
-       console.log("stripeCheckout")
-       var amountInOre = 2000;
-       
+       var amountInOre = amount();
        var registration = mkRegistration($scope);
        var handler = StripeCheckout.configure({
           key: $scope.config.stripePublicKey,
@@ -118,7 +125,6 @@ function RegistrationController($scope, $http, $resource, $window, $timeout, $wi
 	}
 
 	$scope.register = function() {
-	    console.log($scope.paymentMethod);
 	    if ($scope.paymentMethod === 'CREDIT_CARD') {
 	        $scope.stripeCheckout();
 	        return;

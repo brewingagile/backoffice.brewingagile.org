@@ -319,7 +319,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 							BigInteger allTickets = BigInteger.valueOf(x.seats);
 							BigInteger usedTickets = sold.get(x.ticket).orSome(BigInteger.ZERO);
 							BigInteger availableTickets = allTickets.subtract(usedTickets);
-							return ticketJson(x.ticket, x.productText, availableTickets.longValue() > 0, x.price);
+							return ticketJson(x.ticket, x.productText, availableTickets.longValue() > 0, BigDecimals.inOre(x.price));
 						})
 					)
 				)
@@ -366,12 +366,12 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 		}
 	}
 
-	private static JsonRootNode ticketJson(TicketName ticketName, String description, boolean value, BigDecimal price) {
+	private static JsonRootNode ticketJson(TicketName ticketName, String description, boolean value, BigInteger priceInOre) {
 		return object(
 			field("ticket", ToJson.json(ticketName)),
 			field("description", string(description)),
 			field("available", booleanNode(value)),
-			field("price", number(price))
+			field("price", number(priceInOre))
 		);
 	}
 

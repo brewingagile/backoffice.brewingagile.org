@@ -11,7 +11,9 @@
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-resource.min.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
+	<script src="https://code.angularjs.org/1.2.6/i18n/angular-locale_sv.js"></script>
+	<script src="https://code.angularjs.org/1.2.6/i18n/angular-locale_sv-se.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
     <script src="https://checkout.stripe.com/checkout.js"></script>
     <script src="form/app.js?version=4"></script>
     <script src="form/registration.js?version=8"></script>
@@ -83,7 +85,7 @@ input.textarea {
 			<div class="col-sm-offset-2">
 				<div class="checkbox" ng-repeat="t in tickets">
 					<label>
-						<input type="checkbox" ng-model="r.tickets[$index]" ng-true-value="{{t.ticket}}" ng-false-value="" ng-disabled="!t.available"> <span ng-class="{soldout: !t.available}"> {{t.description}} <em>{{t.price}} SEK</em>. <span style="font-weight: bold;" ng-show="!t.available">SOLD OUT!</span></span>
+						<input type="checkbox" ng-model="r.tickets[$index]" ng-true-value="{{t.ticket}}" ng-false-value="" ng-disabled="!t.available"> <span ng-class="{soldout: !t.available}"> {{t.description}} <em>{{t.price / 100}} SEK</em>. <span style="font-weight: bold;" ng-show="!t.available">SOLD OUT!</span></span>
 					</label>
 				</div>
 			</div>

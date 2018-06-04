@@ -64,7 +64,7 @@ public class OutvoiceInvoiceClient {
 		BigDecimal total = AccountLogic.total(accountStatement.lines);
 		if (total.compareTo(alreadyInvoicedAmountExVat) == 0) return Option.none();
 
-		List<JsonRootNode> map = accountStatement.lines.map(x -> line(x.description, "Avser: Brewing Agile 2017", x.price, new BigDecimal(x.qty)))
+		List<JsonRootNode> map = accountStatement.lines.map(x -> line(x.description, "Avser: Brewing Agile 2018", x.price, new BigDecimal(x.qty)))
 			.append(
 				alreadyInvoicedAmountExVat.equals(BigDecimal.ZERO)
 				? List.list()
@@ -103,7 +103,7 @@ public class OutvoiceInvoiceClient {
 			field("recipientEmailAddress", string(recipientEmailAddress)),
 			field("recipient", string(recipient)),
 			field("recipientBillingAddress", string(recipientBillingAddres)),
-			field("lines", tickets.toList().map(OutvoiceInvoiceClient.line("Brewing Agile 2017: ", participantName)).toJavaList().stream().collect(ArgoUtils.toArray()))
+			field("lines", tickets.toList().map(OutvoiceInvoiceClient.line("Brewing Agile 2018: ", participantName)).toJavaList().stream().collect(ArgoUtils.toArray()))
 		);
 	}
 

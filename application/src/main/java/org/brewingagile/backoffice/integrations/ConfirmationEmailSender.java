@@ -29,7 +29,7 @@ public class ConfirmationEmailSender {
 	}
 
 	private void catchAll(String toEmail) throws EmailException, IOException {
-		String subject = "BrewingAgile 2017: Registration Received";
+		String subject = "BrewingAgile 2018: Registration Received";
 
 		HtmlEmail email = new HtmlEmail();
 		email.setCharset("UTF-8");

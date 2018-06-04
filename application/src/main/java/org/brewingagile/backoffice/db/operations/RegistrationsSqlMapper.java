@@ -4,10 +4,7 @@ import fj.*;
 import fj.data.List;
 import fj.data.Option;
 import fj.data.Set;
-import fj.data.TreeMap;
 import fj.function.Try1;
-import functional.Tuple2;
-import jersey.repackaged.com.google.common.collect.Maps;
 import org.brewingagile.backoffice.instances.PreparedStatements;
 import org.brewingagile.backoffice.instances.ResultSets;
 import org.brewingagile.backoffice.types.*;
@@ -177,13 +174,13 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	public List<Tuple2<UUID, RegistrationTuple>> all(Connection c) throws SQLException {
+	public List<P2<UUID, RegistrationTuple>> all(Connection c) throws SQLException {
 		String sql = "SELECT *, account FROM registration " +
 			"LEFT JOIN registration_account USING (registration_id) " +
 			"ORDER BY participant_name";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			return SqlOps.list(ps,
-				rs -> Tuple2.of(
+				rs -> P.p(
 					(UUID) rs.getObject("registration_id"),
 					toRegistrationTuple(rs)
 				)

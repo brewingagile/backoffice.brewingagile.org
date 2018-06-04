@@ -63,7 +63,7 @@ public class ExportsJaxRs {
 		authService.guardAuthenticatedUser(request);
 		Option<TicketName> ticket1 = Option.fromNull(ticket0).map(TicketName::ticketName);
 		try (Connection c = dataSource.getConnection()) {
-			List<UUID> all = registrationsSqlMapper.all(c).map(x -> x._1);
+			List<UUID> all = registrationsSqlMapper.all(c).map(x -> x._1());
 			List<RegistrationsSqlMapper.Registration> somes = Option.somes(all.traverseIO(ioify(c)).run());
 			List<RegistrationsSqlMapper.Registration> filtered = somes.filter(x -> ticket1.map(t -> x.tickets.member(t)).orSome(true));
 			return Response.ok(Strings.unlines(
@@ -77,7 +77,7 @@ public class ExportsJaxRs {
 		}
 	}
 
-	private F<UUID,IO<Option<RegistrationsSqlMapper.Registration>>> ioify(Connection c) throws IOException {
+	private F<UUID,IO<Option<RegistrationsSqlMapper.Registration>>> ioify(Connection c) {
 		return registrationId -> () -> {
 			try {
 				return registrationsSqlMapper.one(c, registrationId);

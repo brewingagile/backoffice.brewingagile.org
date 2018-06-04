@@ -8,7 +8,6 @@ import fj.Function;
 import fj.P2;
 import fj.data.*;
 import fj.function.Strings;
-import functional.Tuple2;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
@@ -78,7 +77,7 @@ public class RegistrationsJaxRs {
 		authService.guardAuthenticatedUser(request);
 		
 		try (Connection c = dataSource.getConnection()) {
-			List<UUID> ids = registrationsSqlMapper.all(c).map(x -> x.fst());
+			List<UUID> ids = registrationsSqlMapper.all(c).map(x -> x._1());
 			List<RegistrationsSqlMapper.Registration> all = Option.somes(ids.traverseIO(ioify(c)).run());
 			JsonRootNode overview = object(
 				field("received", array(all.filter(x -> x.tuple.state == RegistrationState.RECEIVED).map(RegistrationsJaxRs::json))),
@@ -117,14 +116,6 @@ public class RegistrationsJaxRs {
 			e.printStackTrace();
 			return Response.serverError().build();
 		}
-	}
-
-	public static argo.jdom.JsonRootNode json(Tuple2<UUID, RegistrationsSqlMapper.RegistrationTuple> t) {
-		RegistrationsSqlMapper.RegistrationTuple r = t._2;
-		return object(
-			field("id", string(t._1.toString())),
-			field("tuple", json(r))
-		);
 	}
 
 	private static JsonRootNode json(RegistrationsSqlMapper.Registration r) {
@@ -217,7 +208,7 @@ public class RegistrationsJaxRs {
 	@Path("/send-invoices")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response postSendInvoices(@Context HttpServletRequest request, String body) throws Exception {
+	public Response postSendInvoices(@Context HttpServletRequest request, String body) {
 		authService.guardAuthenticatedUser(request);
 
 		try {

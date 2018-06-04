@@ -29,4 +29,9 @@ public class PreparedStatements {
 	public static void set(PreparedStatement ps, int i, Badge x) throws SQLException {
 		ps.setString(i, x.badge);
 	}
+
+	public static void set(PreparedStatement ps, int i, RegistrationId x) throws SQLException {
+		ps.setObject(i, x.value);
+	}
+
 }

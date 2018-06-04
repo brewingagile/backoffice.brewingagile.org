@@ -33,6 +33,15 @@ public class SqlOps {
 		return Set.iterableSet(ord, list(ps, f));
 	}
 
+	public static <T> T queryExactlyOne(PreparedStatement ps, Try1<ResultSet, T, SQLException> f) throws SQLException {
+		try (ResultSet rs = ps.executeQuery()) {
+			if (!rs.next()) throw new SQLException("Expected exacty one row in ResultSet. Was 0.");
+			T applied = f.f(rs);
+			if (rs.next()) throw new SQLException("Expected exacty one row in ResultSet. Was > 1.");
+			return applied;
+		}
+	}
+
 	static void deferAll(Connection c) throws SQLException {
 		c.createStatement().execute("SET CONSTRAINTS ALL DEFERRED;");
 	}

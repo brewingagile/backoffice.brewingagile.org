@@ -12,7 +12,12 @@ function RegistrationController($scope, $http, $resource, $window, $timeout, $wi
 
 	var RegistrationResource = $resource("api/registration/1/", {});
 	var Tickets = $resource("api/registration/1/tickets");
-	$scope.lastRegisteredName = "";
+    $http.get('api/registration/1/config')
+        .success(function(d) {
+            $scope.config = d;
+        });
+
+    $scope.lastRegisteredName = "";
 
 	$scope.loading = false;
 	Tickets.get(function(d) {
@@ -30,9 +35,13 @@ function RegistrationController($scope, $http, $resource, $window, $timeout, $wi
 		invoiceAddress: ""
 	};
 
+    $scope.stripeData = null;
+	$scope.paymentMethod = 'CREDIT_CARD'; // valid: 'CREDIT_CARD', 'ACCOUNT'
+
     $http.get('api/registration/1/account/' + $scope.accountSignupSecret)
         .success(function(d) {
             $scope.account = d;
+            $scope.paymentMethod = 'ACCOUNT';
         });
 
 	$scope.reset = function() {	
@@ -46,40 +55,98 @@ function RegistrationController($scope, $http, $resource, $window, $timeout, $wi
         return _.filter($scope.r.tickets, function(x) { return x != "" && x != null });
     };
 
-	$scope.submit = function() {
-		$scope.success = null;
+    $scope.stripeCheckout = function() {
+       console.log("stripeCheckout")
+       var amountInOre = 2000;
+       
+       var registration = mkRegistration($scope);
+       var handler = StripeCheckout.configure({
+          key: $scope.config.stripePublicKey,
+          name: 'Brewing Agile',
+          image: 'img/logo.png',
+          locale: 'auto',
+          zipCode: true,
+          currency: 'sek',
+          email: registration.email,
+          token: function(token) {
+            $http.post('api/registration/1/',
+                {
+                    stripe: token,
+                    registration: registration
+                }
+            ).success(function(p) {
+                if (p.success) $scope.lastRegisteredName = $scope.r.participantName;
+                $scope.success = p.success;
+                $scope.loading = false;
+                Tickets.get(function(d) { $scope.tickets = d.tickets; });
+            }).error(function(data, status, headers, config) {
+                //TODO - syns inte!
+                $scope.alert = {
+                    style: "danger",
+                    message: data.message
+                };
+            });
+          }
+        });
+
+        handler.open({ amount: amountInOre });
+
+        $window.addEventListener('popstate', function() {
+          handler.close();
+        });
+    };
+
+	$scope.register2 = function() {
+        $scope.success = null;
 		$scope.error = null;
 		$scope.loading = true;
-		var r = $scope.r;
-		RegistrationResource.save(
-		    {
-        		participantName: r.participantName,
-        		participantEmail: r.participantEmail,
-        		dietaryRequirements: r.dietaryRequirements,
-        		lanyardCompany: r.lanyardCompany,
-        		twitter: r.twitter,
-        		tickets: $scope.selectedTickets(),
-        		invoiceRecipient: r.invoiceRecipient,
-        		invoiceAddress: r.invoiceAddress,
-        		billingMethod: "EMAIL",
-        		accountSignupSecret: ($scope.account) ? $scope.account.accountSignupSecret : null
-        	}
-		, function(p) {
-			if (p.success) $scope.lastRegisteredName = $scope.r.participantName;
-			$scope.success = p.success;
-			$scope.loading = false;
+	    $http.post('api/registration/1/',
+            {
+                registration: mkRegistration($scope),
+                invoice: mkInvoice($scope),
+                accountSignupSecret: ($scope.account) ? $scope.account.accountSignupSecret : null
+            }
+         ).success(function(p) {
+            if (p.success) $scope.lastRegisteredName = $scope.r.participantName;
+            $scope.success = p.success;
+            $scope.loading = false;
+            Tickets.get(function(d) { $scope.tickets = d.tickets; });
+        }).error(function(data, status, headers, config) {
+            $scope.error = true;
+            $scope.loading = false;
+        });
+	}
 
-			Tickets.get(function(d) { $scope.tickets = d.tickets; });
-		}, function(response) { 
-			$scope.error = true;
-			$scope.loading = false;
-		});
-	};
+	$scope.register = function() {
+	    console.log($scope.paymentMethod);
+	    if ($scope.paymentMethod === 'CREDIT_CARD') {
+	        $scope.stripeCheckout();
+	        return;
+	    }
 
-  $scope.showForm = function() {
-    if ($scope.success) return false;
-    return true;
-  }
+	    $scope.register2();
+	}
+
+    function mkRegistration(scope) {
+        return {
+            name: scope.r.participantName,
+            email: scope.r.participantEmail,
+            dietaryRequirements: scope.r.dietaryRequirements,
+            lanyardCompany: scope.r.lanyardCompany,
+            twitter: scope.r.twitter,
+            tickets: scope.selectedTickets()
+        };
+    }
+
+    function mkInvoice(scope) {
+        if ($scope.paymentMethod != 'INVOICE')
+            return null;
+
+        return {
+            recipient: r.invoiceRecipient,
+            address: r.invoiceAddress
+        };
+    }
 
   $scope.anyTicket = function(t) {
     return ($scope.selectedTickets().length > 0);

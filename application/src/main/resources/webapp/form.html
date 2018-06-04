@@ -12,6 +12,7 @@
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-resource.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
+    <script src="https://checkout.stripe.com/checkout.js"></script>
     <script src="form/app.js?version=4"></script>
     <script src="form/registration.js?version=8"></script>
 <style>
@@ -91,35 +92,6 @@ input.textarea {
 			Prices are in Swedish SEK and includes Swedish VAT ("MOMS").
 		</em>
 
-		<legend>
-			<h2>Payment</h2>
-		</legend>
-		<div ng-if="!account">
-			<div class="form-group">
-				<label for="inputInvoiceRecipient" class="col-sm-3 control-label">Invoice Recipient</label>
-				<div class="col-sm-8">
-					<input type="text" class="form-control" id="inputInvoiceRecipient" ng-model="r.invoiceRecipient" placeholder="Person or Company Name" required>
-				</div>
-			</div>
-			<div class="form-group">
-				<label for="inputInvoiceAddress" class="col-sm-3 control-label">Invoice Address</label>
-				<div class="col-sm-8">
-					<textarea class="form-control" id="inputInvoiceAddress" ng-model="r.invoiceAddress" placeholder="Street Address, City and Reference/PO number"></textarea>
-				</div>
-			</div>
-			<em class="col-sm-offset-3">
-				Invoice will be sent from Rebel Alliance AB as a PDF to Participant's Email address.
-			</em>
-		</div>
-		<div class="row" ng-if="account">
-			<div class="col-sm-8 col-sm-offset-2">
-				<strong>Account: {{account.account}}</strong>
-				<p>
-					Your Account holder has arranged payment details directly with Brewing Agile and Rebel Alliance.<br>
-					You don't need to do anything but come and enjoy the event!
-				</p>
-			</div>
-		</div>
 
 		<legend>
 			<h2>Terms</h2>
@@ -140,6 +112,46 @@ input.textarea {
 				</li>
 			</ul>
 		</div>
+
+        <legend>
+			<h2>Payment</h2>
+		</legend>
+        <div ng-if="paymentMethod == 'CREDIT_CARD'">
+            <div class="col-sm-8 col-sm-offset-2">
+                <strong>Credit Card</strong>
+                <p>
+                    When you press "Register!" you will be presented with a dialogue from Stripe to complete payment.<br>
+                    All major credit cards are accepted.
+                </p>
+            </div>
+        </div>
+		<div ng-if="paymentMethod == 'INVOICE'">
+			<div class="form-group">
+				<label for="inputInvoiceRecipient" class="col-sm-3 control-label">Invoice Recipient</label>
+				<div class="col-sm-8">
+					<input type="text" class="form-control" id="inputInvoiceRecipient" ng-model="r.invoiceRecipient" placeholder="Person or Company Name" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="inputInvoiceAddress" class="col-sm-3 control-label">Invoice Address</label>
+				<div class="col-sm-8">
+					<textarea class="form-control" id="inputInvoiceAddress" ng-model="r.invoiceAddress" placeholder="Street Address, City and Reference/PO number"></textarea>
+				</div>
+			</div>
+			<em class="col-sm-offset-3">
+				Invoice will be sent from Rebel Alliance AB as a PDF to Participant's Email address.
+			</em>
+		</div>
+		<div class="row" ng-if="paymentMethod == 'ACCOUNT'">
+			<div class="col-sm-8 col-sm-offset-2">
+				<strong>Account: {{account.account}}</strong>
+				<p>
+					Your Account holder has arranged payment details directly with Brewing Agile and Rebel Alliance AB.<br>
+					You don't need to do anything but come and enjoy the event!
+				</p>
+			</div>
+		</div>
+
 
 		<div class="row" style="padding-top: 2em;">
 			<div class="col-sm-offset-1 col-sm-10">
@@ -163,8 +175,8 @@ input.textarea {
 
 		<div class="form-group">
 			<div class="col-sm-offset-2 col-sm-10">
-				<button type="submit" class="btn btn-lg btn-default" ng-hide="loading" ng-disabled="!myForm.$valid || lastRegisteredName == r.participantName || !anyTicket(r.tickets)">Register!</button>
-				<button type="submit" class="btn btn-lg btn-default" ng-show="loading" ng-disabled="true"><span class="glyphicon glyphicon-refresh spinning"></span> Registering... </button>
+				<button type="button" ng-click="register()" class="btn btn-lg btn-default" ng-show="!loading" ng-disabled="!myForm.$valid || lastRegisteredName == r.participantName || !anyTicket(r.tickets)">Register!</button>
+				<button type="button" class="btn btn-lg btn-default" ng-show="loading" ng-disabled="true"><span class="glyphicon glyphicon-refresh spinning"></span> Registering... </button>
 			</div>
 		</div>
 	</form>

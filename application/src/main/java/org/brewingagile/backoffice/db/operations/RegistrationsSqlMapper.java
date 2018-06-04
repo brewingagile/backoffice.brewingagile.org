@@ -67,6 +67,14 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
+	public BigDecimal totalTicketsIncVat(Connection c, UUID registrationId) throws SQLException {
+		String sql = "SELECT sum(price) AS total FROM registration JOIN registration_ticket USING (registration_id) JOIN ticket USING (ticket) WHERE registration_id = ?;";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			ps.setObject(1, registrationId);
+			return SqlOps.queryExactlyOne(ps, rs -> rs.getBigDecimal("total"));
+		}
+	}
+
 	public final static class Registration {
 		public final UUID id;
 		public final RegistrationTuple tuple;

@@ -9,3 +9,4 @@ dependency-reduced-pom.xml
 *.iml 
 
 default.nix
+application/src/main/resources/webapp/nametags/Thumbs.db

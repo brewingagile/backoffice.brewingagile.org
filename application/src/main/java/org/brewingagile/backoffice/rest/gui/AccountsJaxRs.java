@@ -21,6 +21,7 @@ import org.brewingagile.backoffice.types.AccountSignupSecret;
 import org.brewingagile.backoffice.types.BillingMethod;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
+import org.brewingagile.backoffice.utils.URLEncoder;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
 import javax.servlet.http.HttpServletRequest;
@@ -124,7 +125,7 @@ public class AccountsJaxRs {
 					field("billingRecipient", string(accountData.billingRecipient)),
 					field("billingAddress", string(accountData.billingAddress)),
 					field("billingEmail", string(accountData.billingEmail)),
-					field("accountSignupSecret", ToJson.nullable(accountSignupSecrets, x -> string("/form.html?account_signup_secret=" + x.value))),
+					field("accountSignupSecret", ToJson.nullable(accountSignupSecrets, x -> string("/form.html?account_signup_secret=" + x.value + "&account=" + URLEncoder.encode(account.value)))),
 					field("lines", array(accountStatement.lines.map(x -> object(
 						field("description", string(x.description)),
 						field("price", number(x.price)),

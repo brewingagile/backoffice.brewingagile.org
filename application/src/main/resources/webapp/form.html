@@ -31,157 +31,183 @@ input.textarea {
 </head>
 
 <body ng-controller="RegistrationController">
-<div class="container-fluid">
-	<div class="page-header">
-		<h1>Registration Form <small>Brewing Agile 2018</small></h1>
-	</div>
-	<form class="form-horizontal" role="form" name="myForm" ng-submit="submit()">
-		<legend>
-			<h2>Participant</h2>
-		</legend>
-		<div class="form-group">
-			<label for="inputParticipantName" class="col-sm-3 control-label">Full Name</label>
-			<div class="col-sm-8">
-				<input type="text" class="form-control" id="inputParticipantName" ng-model="r.participantName" placeholder="Participant's Firstname Surname" required>
-			</div>
-		</div>
-		<div class="form-group">
-			<label for="inputEmail" class="col-sm-3 control-label">Participant Email</label>
-			<div class="col-sm-8">
-				<input type="email" class="form-control" id="inputEmail" ng-model="r.participantEmail" placeholder="Participant's Email Address" required>
-			</div>
-		</div>
-		<div class="form-group">
-			<label class="col-sm-3 control-label">Diet or allergies?</label>
-			<div class="col-sm-1">
-				<div class="checkbox">
-					<label>
-						<input type="checkbox" ng-model="diet"> Yes
-					</label>
-				</div>
-			</div>
-			<div class="col-sm-7" ng-show="diet">
-				<input type="text" class="form-control" id="inputDiet" ng-model="r.dietaryRequirements" placeholder="Please be as specific as possible about what you can and can't eat. Thank you!">
-			</div>
-		</div>
-		<div class="form-group">
-			<label for="inputTwitter" class="col-sm-3 control-label">Twitter Handle</label>
-			<div class="col-sm-8">
-				<input type="text" class="form-control" id="inputTwitter" ng-model="r.twitter" ng-pattern="/^@[a-zA-Z0-9_]{1,15}$/" placeholder="@twitter">
-			</div>
-		</div>
-		<div class="form-group">
-			<label for="inputLanyardCompany" class="col-sm-3 control-label">Organisation</label>
-			<div class="col-sm-8">
-				<input type="text" class="form-control" id="inputLanyardCompany" ng-model="r.lanyardCompany" placeholder="Shown on your Lanyard">
-			</div>
-		</div>
+<div class="container">
+    <div class="page-header">
+        <h1>Registration Form <small>Brewing Agile 2018</small></h1>
+    </div>
+    <form class="form-horizontal" role="form" name="myForm" ng-submit="submit()">
+        <div class="row">
+            <legend>
+                <h2>Participant</h2>
+            </legend>
+            <div class="form-group">
+                <label for="inputParticipantName" class="col-sm-2 control-label">Full Name</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputParticipantName" ng-model="r.participantName" placeholder="Participant's Firstname Surname" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="inputEmail" class="col-sm-2 control-label">Participant Email</label>
+                <div class="col-sm-10">
+                    <input type="email" class="form-control" id="inputEmail" ng-model="r.participantEmail" placeholder="Participant's Email Address" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Diet or allergies?</label>
+                <div class="col-sm-1">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" ng-model="diet"> Yes
+                        </label>
+                    </div>
+                </div>
+                <div class="col-sm-9" ng-show="diet">
+                    <input type="text" class="form-control" id="inputDiet" ng-model="r.dietaryRequirements" placeholder="Please be as specific as possible about what you can and can't eat. Thank you!">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="inputTwitter" class="col-sm-2 control-label">Twitter Handle</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputTwitter" ng-model="r.twitter" ng-pattern="/^@[a-zA-Z0-9_]{1,15}$/" placeholder="@twitter">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="inputLanyardCompany" class="col-sm-2 control-label">Organisation</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputLanyardCompany" ng-model="r.lanyardCompany" placeholder="Shown on your Lanyard">
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <legend>
+                <h2>Tickets</h2>
+            </legend>
+            <div class="col-sm-12 form-group">
+                <div class="checkbox" ng-repeat="t in tickets">
+                    <label>
+                        <input type="checkbox" ng-model="r.tickets[$index]" ng-true-value="{{t.ticket}}" ng-false-value="" ng-disabled="!t.available"> <span ng-class="{soldout: !t.available}"> {{t.description}} <em>{{t.price / 100}} SEK</em>. <span style="font-weight: bold;" ng-show="!t.available">SOLD OUT!</span></span>
+                    </label>
+                </div>
+            </div>
+            <em class="col-sm-12">
+                Prices are in Swedish SEK and includes Swedish VAT ("MOMS").
+            </em>
+        </div>
 
 
-		<legend>
-			<h2>Tickets</h2>
-		</legend>
-		<div class="form-group">
-			<div class="col-sm-offset-2">
-				<div class="checkbox" ng-repeat="t in tickets">
-					<label>
-						<input type="checkbox" ng-model="r.tickets[$index]" ng-true-value="{{t.ticket}}" ng-false-value="" ng-disabled="!t.available"> <span ng-class="{soldout: !t.available}"> {{t.description}} <em>{{t.price / 100}} SEK</em>. <span style="font-weight: bold;" ng-show="!t.available">SOLD OUT!</span></span>
-					</label>
-				</div>
-			</div>
-		</div>
-		<em class="col-sm-offset-2">
-			Prices are in Swedish SEK and includes Swedish VAT ("MOMS").
-		</em>
 
-
-		<legend>
-			<h2>Terms</h2>
-		</legend>
-		<div class="col-sm-offset-2 col-sm-9">
-			<ul>
-				<li>
-					Because we are a small, non-profit, organization we must enforce a strict no-cancellation policy.
-				</li>
-				<li>
-					Program subject to change at any time.
-				</li>
-				<li>
-					Payments Terms: Due 14 days after Invoice but no later than the start of the event.
-				</li>
-				<li>
-					If you require custom payment terms or handling, it may incur additional costs.
-				</li>
-			</ul>
-		</div>
-
-        <legend>
-			<h2>Payment</h2>
-		</legend>
-        <div ng-if="paymentMethod == 'CREDIT_CARD'">
-            <div class="col-sm-8 col-sm-offset-2">
+        <div class="row" ng-show="paymentMethod == 'CREDIT_CARD'">
+            <legend>
+                <h2>Payment</h2>
+            </legend>
+            <div class="col-sm-12">
                 <strong>Credit Card</strong>
                 <p>
                     When you press "Register!" you will be presented with a dialogue from Stripe to complete payment.<br>
                     All major credit cards are accepted.
                 </p>
+                <p>
+                    If you want to buy many tickets but only receive one invoice, let us know and we will set that up!
+                </p>
             </div>
         </div>
-		<div ng-if="paymentMethod == 'INVOICE'">
-			<div class="form-group">
-				<label for="inputInvoiceRecipient" class="col-sm-3 control-label">Invoice Recipient</label>
-				<div class="col-sm-8">
-					<input type="text" class="form-control" id="inputInvoiceRecipient" ng-model="r.invoiceRecipient" placeholder="Person or Company Name" required>
-				</div>
+		<div class="row" ng-show="paymentMethod == 'INVOICE'">
+            <legend>
+                <h2>Invoicing</h2>
+            </legend>
+			<div class="col-sm-12">
+				<p>
+                    Invoice will be sent from Rebel Alliance AB as a PDF to Participant's Email address.<br>
+                </p>
+                <p>
+                    <strong>Invoice Payment Terms:</strong><br>
+                    Due 14 days after issue but no later than the start of the event.<br>
+                    If you require custom payment terms or handling, it may incur additional costs.
+                </p>
+                <p style="padding-bottom: 2em;">
+                    If you want to buy multiple tickets but only receive one invoice, let us know and we will set that up!
+                </p>
+
+
+                <div class="form-group">
+                    <label for="inputInvoiceRecipient" class="col-sm-2 control-label">Invoice Recipient</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="inputInvoiceRecipient" ng-model="r.invoiceRecipient" placeholder="Person or Company Name" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="inputInvoiceAddress" class="col-sm-2 control-label">Invoice Address</label>
+                    <div class="col-sm-10">
+                        <textarea class="form-control" id="inputInvoiceAddress" ng-model="r.invoiceAddress" placeholder="Street Address, City and Reference/PO number"></textarea>
+                    </div>
+                </div>
 			</div>
-			<div class="form-group">
-				<label for="inputInvoiceAddress" class="col-sm-3 control-label">Invoice Address</label>
-				<div class="col-sm-8">
-					<textarea class="form-control" id="inputInvoiceAddress" ng-model="r.invoiceAddress" placeholder="Street Address, City and Reference/PO number"></textarea>
-				</div>
-			</div>
-			<em class="col-sm-offset-3">
-				Invoice will be sent from Rebel Alliance AB as a PDF to Participant's Email address.
-			</em>
+
 		</div>
-		<div class="row" ng-if="paymentMethod == 'ACCOUNT'">
-			<div class="col-sm-8 col-sm-offset-2">
+		<div class="row" ng-show="paymentMethod == 'ACCOUNT'">
+            <legend>
+                <h2>Pre-arranged Payment</h2>
+            </legend>
+            <div class="col-sm-12">
 				<strong>Account: {{account.account}}</strong>
 				<p>
 					Your Account holder has arranged payment details directly with Brewing Agile and Rebel Alliance AB.<br>
 					You don't need to do anything but come and enjoy the event!
 				</p>
-			</div>
-		</div>
+            </div>
+        </div>
 
+        <div class="row">
+            <legend>
+                <h2>Terms</h2>
+            </legend>
+            <div class="col-sm-12">
+                <ul>
+                    <li>
+                        Because we are a small, non-profit, organization we must enforce a strict no-cancellation policy.
+                    </li>
+                    <li>
+                        Program subject to change at any time.
+                    </li>
+                    <li>
+                        GPDR-stuff will go here.
+                    </li>
+                </ul>
+            </div>
+        </div>
 
-		<div class="row" style="padding-top: 2em;">
-			<div class="col-sm-offset-1 col-sm-10">
-				<div class="well">
-					After submitting the registration, you should receive a confirmation email within 24 hours.<br> If you do not receive it, please contact brewingagile@scrumbeers.com.
-				</div>
-			</div>
-		</div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="well">
+                    After submitting the registration, you should receive a confirmation email within 24 hours.<br> If you do not receive it, please contact brewingagile@scrumbeers.com.
+                </div>
+            </div>
+        </div>
 
-		<div class="col-sm-offset-2 col-sm-9 alert alert-success" role="alert" ng-show="success">
-			<strong>Thank you!</strong>
-			<p>We will send an invoice to you ASAP. If you do not receive it, please contact <a class="alert-link" href="mailto:brewingagile@scrumbeers.com">brewingagile@scrumbeers.com</a></p>
-			<p><a class="alert-link" href="" ng-click="reset()">Make another reservation?</a></p>
-		</div>
+        <div class="row">
+            <div class="col-sm-offset-2 col-sm-8 alert alert-success" role="alert" ng-show="success">
+                <strong>Thank you!</strong>
+                <p>We will send an invoice to you ASAP. If you do not receive it, please contact <a class="alert-link" href="mailto:brewingagile@scrumbeers.com">brewingagile@scrumbeers.com</a></p>
+                <p><a class="alert-link" href="" ng-click="reset()">Make another reservation?</a></p>
+            </div>
+        </div>
 
-		<div class="col-sm-offset-2 col-sm-9 alert alert-danger" role="alert" ng-show="error">
-			<Strong>Sorry!</Strong>
-			<p>Something went wrong, can you please try again?</p> 
-			<p>If it still does not work, write in caps to <a class="alert-link" href="mailto:brewingagile@scrumbeers.com">brewingagile@scrumbeers.com</a> </p>
-		</div> 
+        <div class="row">
+            <div class="col-sm-offset-2 col-sm-8 alert alert-danger" role="alert" ng-show="error">
+                <Strong>Sorry!</Strong>
+                <p>Something went wrong, can you please try again?</p>
+                <p>If it still does not work, write in caps to <a class="alert-link" href="mailto:brewingagile@scrumbeers.com">brewingagile@scrumbeers.com</a> </p>
+            </div>
+        </div>
 
-		<div class="form-group">
-			<div class="col-sm-offset-2 col-sm-10">
-				<button type="button" ng-click="register()" class="btn btn-lg btn-default" ng-show="!loading" ng-disabled="!myForm.$valid || lastRegisteredName == r.participantName || !anyTicket(r.tickets)">Register!</button>
-				<button type="button" class="btn btn-lg btn-default" ng-show="loading" ng-disabled="true"><span class="glyphicon glyphicon-refresh spinning"></span> Registering... </button>
-			</div>
-		</div>
-	</form>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <button type="button" ng-click="register()" class="btn btn-lg btn-default" ng-show="!loading" ng-disabled="!myForm.$valid || lastRegisteredName == r.participantName || !anyTicket(r.tickets)">Register!</button>
+                <button type="button" class="btn btn-lg btn-default" ng-show="loading" ng-disabled="true"><span class="glyphicon glyphicon-refresh spinning"></span> Registering... </button>
+            </div>
+        </div>
+    </form>
 </div>
 
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>

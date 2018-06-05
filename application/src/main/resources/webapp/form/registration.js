@@ -36,7 +36,7 @@ function RegistrationController($scope, $http, $resource, $window, $timeout, $wi
 	};
 
     $scope.stripeData = null;
-	$scope.paymentMethod = 'CREDIT_CARD'; // valid: 'CREDIT_CARD', 'ACCOUNT'
+	$scope.paymentMethod = 'INVOICE'; // valid: 'CREDIT_CARD', 'ACCOUNT', 'INVOICE'
 
     $http.get('api/registration/1/account/' + $scope.accountSignupSecret)
         .success(function(d) {
@@ -145,12 +145,12 @@ function RegistrationController($scope, $http, $resource, $window, $timeout, $wi
     }
 
     function mkInvoice(scope) {
-        if ($scope.paymentMethod != 'INVOICE')
+        if (scope.paymentMethod != 'INVOICE')
             return null;
 
         return {
-            recipient: r.invoiceRecipient,
-            address: r.invoiceAddress
+            recipient: scope.r.invoiceRecipient,
+            address: scope.r.invoiceAddress
         };
     }
 

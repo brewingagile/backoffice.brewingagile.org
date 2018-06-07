@@ -12,7 +12,7 @@ function OverviewController($scope, $http, $location) {
     $scope.create = function(account) {
         $http.put('gui/accounts/' + encodeURIComponent(account), {})
             .success(function() {
-                $location.path('/account/' + account);
+                $location.path('/account/' + encodeURIComponent(account));
             });
     }
 }

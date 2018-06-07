@@ -20,4 +20,5 @@ public final class Account {
 	}
 
 	public static fj.Ord<Account> Ord = fj.Ord.ord(l -> r -> fj.Ord.stringOrd.compare(l.value, r.value));
+	public static fj.Ord<Account> CaseInsensitive = fj.Ord.ord(l -> r -> fj.Ord.stringOrd.compare(l.value.toLowerCase(), r.value.toLowerCase()));
 }

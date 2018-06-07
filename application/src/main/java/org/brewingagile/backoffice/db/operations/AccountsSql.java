@@ -17,6 +17,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class AccountsSql {
+	public void insert(Connection c, Account account) throws SQLException {
+		String sql = "INSERT INTO account (account, billing_recipient, billing_address, billing_email) VALUES (?, '', '', '');";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			PreparedStatements.set(ps, 1, account);
+			ps.executeUpdate();
+		}
+	}
+
 	public static final class AccountData {
 		public final String billingRecipient;
 		public final String billingAddress;
@@ -32,7 +40,7 @@ public class AccountsSql {
 	public Set<Account> all(Connection c) throws SQLException {
 		String sql = "SELECT account FROM account;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			return SqlOps.set(ps, Account.Ord, rs -> ResultSets.account(rs, "account"));
+			return SqlOps.set(ps, Account.CaseInsensitive, rs -> ResultSets.account(rs, "account"));
 		}
 	}
 

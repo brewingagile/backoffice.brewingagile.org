@@ -2,11 +2,8 @@ package org.brewingagile.backoffice.rest.gui;
 
 import argo.jdom.JsonRootNode;
 import fj.P3;
-import fj.data.Either;
 import fj.data.List;
 import fj.data.Option;
-import fj.function.Strings;
-import jdk.nashorn.internal.runtime.regexp.joni.constants.Arguments;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.AccountSignupSecretSql;
 import org.brewingagile.backoffice.db.operations.AccountsSql;
@@ -18,7 +15,6 @@ import org.brewingagile.backoffice.pure.AccountLogic;
 import org.brewingagile.backoffice.rest.json.ToJson;
 import org.brewingagile.backoffice.types.Account;
 import org.brewingagile.backoffice.types.AccountSignupSecret;
-import org.brewingagile.backoffice.types.BillingMethod;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
 import org.brewingagile.backoffice.utils.URLEncoder;
@@ -32,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.util.UUID;
 
 import static argo.jdom.JsonNodeFactories.*;
 
@@ -188,6 +185,26 @@ public class AccountsJaxRs {
 		}
 	}
 
+	@PUT
+	@Path("{account}")
+	public Response postBillingInfo(@Context HttpServletRequest request, @PathParam("account") String aAccount) {
+		authService.guardAuthenticatedUser(request);
+
+		try {
+			Account account = Account.account(aAccount);
+			AccountSignupSecret secret = AccountSignupSecret.accountSignupSecret(UUID.randomUUID());
+			try (Connection c = dataSource.getConnection()) {
+				c.setAutoCommit(false);
+				accountsSql.insert(c, account);
+				accountSignupSecretSql.insert(c, account, secret);
+				c.commit();
+			}
+			return Response.ok(ArgoUtils.format(Result.success2("Account Data Saved"))).build();
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			return Response.serverError().entity(ArgoUtils.format(Result.warning(e.getMessage()))).build();
+		}
+	}
 
 	@POST
 	@Path("{account}/billing")

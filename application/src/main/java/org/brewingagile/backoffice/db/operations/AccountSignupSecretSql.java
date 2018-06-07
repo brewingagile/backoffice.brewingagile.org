@@ -28,4 +28,13 @@ public class AccountSignupSecretSql {
 			return SqlOps.one(ps, rs -> ResultSets.accountSignupSecret(rs, "account_signup_secret"));
 		}
 	}
+
+	public void insert(Connection c, Account account, AccountSignupSecret x) throws SQLException {
+		String sql = "INSERT INTO account_signup_secret (account, account_signup_secret) VALUES (?, ?);";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			PreparedStatements.set(ps, 1, account);
+			PreparedStatements.set(ps, 2, x);
+			ps.executeUpdate();
+		}
+	}
 }

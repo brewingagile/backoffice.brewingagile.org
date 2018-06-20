@@ -51,6 +51,7 @@ public class RegistrationApiJaxRs {
 	private final StripePublishableKey stripePublishableKey;
 	private final StripeChargeClient stripeChargeClient;
 	private final RegistrationStripeChargeSql registrationStripeChargeSql;
+	private final MailchimpSubscribeClient.ListUniqueId newsletterList;
 
 	public RegistrationApiJaxRs(
 		DataSource dataSource,
@@ -63,7 +64,8 @@ public class RegistrationApiJaxRs {
 		AccountSignupSecretSql accountSignupSecretSql,
 		StripePublishableKey stripePublishableKey,
 		StripeChargeClient stripeChargeClient,
-		RegistrationStripeChargeSql registrationStripeChargeSql
+		RegistrationStripeChargeSql registrationStripeChargeSql,
+		MailchimpSubscribeClient.ListUniqueId newsletterList
 	) {
 		this.dataSource = dataSource;
 		this.registrationsSqlMapper = registrationsSqlMapper;
@@ -76,6 +78,7 @@ public class RegistrationApiJaxRs {
 		this.stripePublishableKey = stripePublishableKey;
 		this.stripeChargeClient = stripeChargeClient;
 		this.registrationStripeChargeSql = registrationStripeChargeSql;
+		this.newsletterList = newsletterList;
 	}
 
 	@EqualsAndHashCode
@@ -266,7 +269,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 				e.printStackTrace();
 			}
 
-			Either<String, Effect> subscribeResult = mailchimpSubscribeClient.subscribe(rr.participantR.email, "da90a13118");
+			Either<String, Effect> subscribeResult = mailchimpSubscribeClient.subscribe(rr.participantR.email, newsletterList);
 			if (subscribeResult.isLeft()) {
 				System.err.println("We couldn't subscribe " + rr.participantR.email + " to email-list. Cause: " + subscribeResult.left().value());
 			}

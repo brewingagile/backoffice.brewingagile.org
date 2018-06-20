@@ -57,7 +57,7 @@ public class Application {
 		AccountIO accountIO = new AccountIO(accountsSql, registrationsSqlMapper, ticketsSql);
 
 		this.apiRestServices = List.list(
-			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, slackBotHook, ticketsSql, accountIO, accountSignupSecretSql, config.stripePublishableKey, stripeChargeClient, registrationStripeChargeSql),
+			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, slackBotHook, ticketsSql, accountIO, accountSignupSecretSql, config.stripePublishableKey, stripeChargeClient, registrationStripeChargeSql, config.mailchimpList),
 			new StripeJaxRs(dataSource, registrationsSqlMapper, accountSecretSql, stripeChargeClient, config.stripePublishableKey, stripeChargeSql)
 		);
 

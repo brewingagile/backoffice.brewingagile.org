@@ -3,9 +3,12 @@ package org.brewingagile.backoffice.integrations;
 import argo.jdom.JsonRootNode;
 import fj.data.Either;
 import functional.Effect;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Hex;
 import org.brewingagile.backoffice.utils.Http;
+import org.brewingagile.backoffice.utils.Strings;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
@@ -15,6 +18,7 @@ import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 import static argo.jdom.JsonNodeFactories.*;
 
@@ -29,9 +33,23 @@ public class MailchimpSubscribeClient {
 		this.apikey = apikey;
 	}
 
-	public Either<String, Effect> subscribe(String emailAddress, String listUniqueId) {
+	@EqualsAndHashCode
+	@ToString
+	public static final class ListUniqueId {
+		public final String value;
+
+		private ListUniqueId(String value) {
+			this.value = Objects.requireNonNull(Strings.emptyToNull(value));
+		}
+
+		public static ListUniqueId listUniqueId(String x) {
+			return new ListUniqueId(x);
+		}
+	}
+
+	public Either<String, Effect> subscribe(String emailAddress, ListUniqueId listUniqueId) {
 		try {
-			Response post = client.target(endpoint).path("3.0/lists/" + listUniqueId + "/members/" + md5Crap(emailAddress.toLowerCase())).request()
+			Response post = client.target(endpoint).path("3.0/lists/" + listUniqueId.value + "/members/" + md5Crap(emailAddress.toLowerCase())).request()
 				.header("Authorization", Http.basic("anystring", apikey))
 				.accept(MediaType.APPLICATION_JSON)
 				.put(Entity.entity(ArgoUtils.format(request(emailAddress)), MediaType.APPLICATION_JSON));

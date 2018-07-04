@@ -8,7 +8,6 @@ import org.brewingagile.backoffice.db.operations.*;
 import org.brewingagile.backoffice.integrations.*;
 import org.brewingagile.backoffice.pure.AccountIO;
 import org.brewingagile.backoffice.rest.api.RegistrationApiJaxRs;
-import org.brewingagile.backoffice.rest.api.StripeJaxRs;
 import org.brewingagile.backoffice.rest.gui.*;
 import org.brewingagile.backoffice.io.DismissRegistrationService;
 import org.brewingagile.backoffice.io.MarkAsCompleteService;
@@ -57,8 +56,7 @@ public class Application {
 		AccountIO accountIO = new AccountIO(accountsSql, registrationsSqlMapper, ticketsSql);
 
 		this.apiRestServices = List.list(
-			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, slackBotHook, ticketsSql, accountIO, accountSignupSecretSql, config.stripePublishableKey, stripeChargeClient, registrationStripeChargeSql, config.mailchimpList),
-			new StripeJaxRs(dataSource, registrationsSqlMapper, accountSecretSql, stripeChargeClient, config.stripePublishableKey, stripeChargeSql)
+			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, slackBotHook, ticketsSql, accountIO, accountSignupSecretSql, config.stripePublishableKey, stripeChargeClient, registrationStripeChargeSql, config.mailchimpList)
 		);
 
 		this.guiRestServices = List.list(

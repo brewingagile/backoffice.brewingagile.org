@@ -59,7 +59,7 @@ public class NameTagsJaxRs {
 		}
 	}
 
-	private F<UUID,IO<Option<Registration>>> ioify(Connection c) throws IOException {
+	private F<UUID,IO<Option<Registration>>> ioify(Connection c) {
 		return registrationId -> () -> {
 			try {
 				return registrationsSqlMapper.one(c, registrationId);
@@ -86,7 +86,7 @@ public class NameTagsJaxRs {
 
 	private static JsonRootNode json(Registration r) {
 		return object(
-			field("name", string(r.tuple.participantName)),
+			field("name", ToJson.participantName(r.tuple.participantName)),
 			field("company", ToJson.json(r.tuple.organisation)),
 			field("badge", string(r.tuple.badge.badge)),
 			field("workshop", booleanNode(false)),

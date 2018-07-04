@@ -1,6 +1,7 @@
 package org.brewingagile.backoffice.rest.json;
 
 import argo.jdom.JsonNode;
+import argo.jdom.JsonStringNode;
 import fj.F;
 import fj.data.Option;
 import org.brewingagile.backoffice.types.*;
@@ -18,4 +19,7 @@ public class ToJson {
 	public static JsonNode accountSecret(AccountSecret x) { return string(x.value.toString()); }
 	public static JsonNode accountSignupSecret(AccountSignupSecret x) { return string(x.value.toString()); }
 	public static JsonNode json(ParticipantOrganisation x) { return string(x.value); }
+
+	public static JsonStringNode participantEmail(ParticipantEmail participantEmail) { return string(participantEmail.value); }
+	public static JsonStringNode participantName(ParticipantName participantName) { return string(participantName.value); }
 }

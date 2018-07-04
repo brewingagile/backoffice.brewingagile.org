@@ -2,7 +2,6 @@ package org.brewingagile.backoffice.integrations;
 
 import argo.jdom.JsonRootNode;
 import fj.F;
-import fj.P2;
 import fj.Unit;
 import fj.data.Either;
 import fj.data.List;
@@ -10,11 +9,12 @@ import fj.data.Option;
 import fj.data.Set;
 import fj.function.Strings;
 import okhttp3.*;
-import org.brewingagile.backoffice.pure.AccountLogic;
-import org.brewingagile.backoffice.types.BillingMethod;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
+import org.brewingagile.backoffice.pure.AccountLogic;
+import org.brewingagile.backoffice.rest.json.ToJson;
+import org.brewingagile.backoffice.types.BillingMethod;
+import org.brewingagile.backoffice.types.ParticipantEmail;
 import org.brewingagile.backoffice.types.ParticipantName;
-import org.brewingagile.backoffice.types.TicketName;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
 import java.io.IOException;
@@ -90,24 +90,24 @@ public class OutvoiceInvoiceClient {
 	public static JsonRootNode mkParticipantRequest(
 		UUID registrationId,
 		BillingMethod deliveryMethod,
-		String recipientEmailAddress,
+		ParticipantEmail recipientEmailAddress,
 		String recipient,
 		String recipientBillingAddres,
 		Set<TicketsSql.Ticket> tickets,
-		String participantName
+		ParticipantName participantName
 	) {
 		return object(
 			field("apiClientReference", string(registrationId.toString())),
 			field("accountKey", string("brewingagile-" + registrationId.toString())),
 			field("deliveryMethod", string(deliveryMethod.name())),
-			field("recipientEmailAddress", string(recipientEmailAddress)),
+			field("recipientEmailAddress", ToJson.participantEmail(recipientEmailAddress)),
 			field("recipient", string(recipient)),
 			field("recipientBillingAddress", string(recipientBillingAddres)),
 			field("lines", tickets.toList().map(OutvoiceInvoiceClient.line("Brewing Agile 2018: ", participantName)).toJavaList().stream().collect(ArgoUtils.toArray()))
 		);
 	}
 
-	private static F<TicketsSql.Ticket, JsonRootNode> line(String eventPrefix, String participantName) {
+	private static F<TicketsSql.Ticket, JsonRootNode> line(String eventPrefix, ParticipantName participantName) {
 		return ticket -> line(eventPrefix + ticket.ticket.ticketName, ticket.productText + "\nAvser deltagare: " + participantName, ticket.price.multiply(BigDecimal.valueOf(0.8)), BigDecimal.ONE);
 	}
 

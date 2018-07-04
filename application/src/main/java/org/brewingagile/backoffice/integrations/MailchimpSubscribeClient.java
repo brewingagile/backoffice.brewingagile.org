@@ -5,6 +5,7 @@ import fj.data.Either;
 import functional.Effect;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.brewingagile.backoffice.types.ParticipantEmail;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Hex;
 import org.brewingagile.backoffice.utils.Http;
@@ -47,12 +48,13 @@ public class MailchimpSubscribeClient {
 		}
 	}
 
-	public Either<String, Effect> subscribe(String emailAddress, ListUniqueId listUniqueId) {
+	public Either<String, Effect> subscribe(ParticipantEmail participantEmail, ListUniqueId listUniqueId) {
 		try {
-			Response post = client.target(endpoint).path("3.0/lists/" + listUniqueId.value + "/members/" + md5Crap(emailAddress.toLowerCase())).request()
+			String email = participantEmail.value;
+			Response post = client.target(endpoint).path("3.0/lists/" + listUniqueId.value + "/members/" + md5Crap(email.toLowerCase())).request()
 				.header("Authorization", Http.basic("anystring", apikey))
 				.accept(MediaType.APPLICATION_JSON)
-				.put(Entity.entity(ArgoUtils.format(request(emailAddress)), MediaType.APPLICATION_JSON));
+				.put(Entity.entity(ArgoUtils.format(request(email)), MediaType.APPLICATION_JSON));
 			return response(post.readEntity(String.class));
 		} catch (WebApplicationException e) {
 			return Either.left(e.getMessage());

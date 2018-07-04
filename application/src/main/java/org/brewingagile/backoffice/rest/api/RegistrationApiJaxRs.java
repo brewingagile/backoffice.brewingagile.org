@@ -2,7 +2,6 @@ package org.brewingagile.backoffice.rest.api;
 
 import argo.jdom.JsonNode;
 import argo.jdom.JsonRootNode;
-import fj.F;
 import fj.Monoid;
 import fj.Ord;
 import fj.data.*;
@@ -36,6 +35,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static argo.jdom.JsonNodeFactories.*;
+import static java.util.Objects.requireNonNull;
 
 @NeverCache
 @Path("/registration/1/")
@@ -132,23 +132,23 @@ public class RegistrationApiJaxRs {
 	@EqualsAndHashCode
 	@ToString
 	public static final class ParticipantR {
-		public final String name;
-		public final String email;
+		public final ParticipantName name;
+		public final ParticipantEmail email;
 		public final String dietaryRequirements;
 		public final String twitter;
 		public final ParticipantOrganisation organisation;
 		public final Set<TicketName> tickets;
 
 		public ParticipantR(
-			String name,
-			String participantEmail,
+			ParticipantName name,
+			ParticipantEmail participantEmail,
 			String dietaryRequirements,
 			String twitter,
 			ParticipantOrganisation organisation,
 			Set<TicketName> tickets
 		) {
-			this.name = name;
-			this.email = participantEmail;
+			this.name = requireNonNull(name);
+			this.email = requireNonNull(participantEmail);
 			this.dietaryRequirements = dietaryRequirements;
 			this.twitter = twitter;
 			this.organisation = organisation;
@@ -241,7 +241,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 			if (rr.stripeTokenR.isSome()) {
 				StripeTokenR some = rr.stripeTokenR.some();
 				BigInteger amountInOre = BigDecimals.inOre(totalTicketIncsVat);
-				Either<String, StripeChargeClient.ChargeResponse> stringChargeEither = stripeChargeClient.postCharge(some.id, amountInOre);
+				Either<String, StripeChargeClient.ChargeResponse> stringChargeEither = stripeChargeClient.postCharge(some.id, amountInOre, rr.participantR.name, rr.participantR.email);
 				if (stringChargeEither.isLeft())
 					return Response.status(402).entity(errorJson(stringChargeEither.left().value())).build();
 
@@ -407,20 +407,12 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 		Array<String> a = Array.iterableArray(body.getArrayNode("tickets")).map(x -> x.getStringValue());
 		Set<TicketName> tickets = Set.iterableSet(Ord.stringOrd, a).map(Ord.hashEqualsOrd(), TicketName::ticketName);
 		return new ParticipantR(
-			ArgoUtils.stringOrEmpty(body, "name").trim(),
-			ArgoUtils.stringOrEmpty(body, "email").trim().toLowerCase(),
+			ParticipantName.participantName(ArgoUtils.stringOrEmpty(body, "name").trim()),
+			ParticipantEmail.participantEmail(ArgoUtils.stringOrEmpty(body, "email").trim()),
 			ArgoUtils.stringOrEmpty(body, "dietaryRequirements".trim()),
 			ArgoUtils.stringOrEmpty(body, "twitter".trim()),
 			ParticipantOrganisation.participantOrganisation(ArgoUtils.stringOrEmpty(body, "lanyardCompany").trim()),
 			tickets
 		);
-	}
-
-	private static BillingMethod billingMethod(String billingMethod) {
-		switch (billingMethod) {
-			case "EMAIL": return BillingMethod.EMAIL;
-			case "SNAILMAIL": return BillingMethod.SNAILMAIL;
-			default: throw new IllegalArgumentException("billingMethod " + billingMethod + " not mapped.");
-		}
 	}
 }

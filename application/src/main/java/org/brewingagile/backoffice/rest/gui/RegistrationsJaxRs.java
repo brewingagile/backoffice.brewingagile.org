@@ -11,9 +11,7 @@ import fj.function.Strings;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
-import org.brewingagile.backoffice.types.Account;
-import org.brewingagile.backoffice.types.Badge;
-import org.brewingagile.backoffice.types.BillingCompany;
+import org.brewingagile.backoffice.types.*;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.PrintedNametag;
 import org.brewingagile.backoffice.integrations.OutvoicePaidClient;
 import org.brewingagile.backoffice.rest.json.ToJson;
@@ -129,8 +127,8 @@ public class RegistrationsJaxRs {
 
 	private static JsonRootNode json(RegistrationsSqlMapper.RegistrationTuple r) {
 		return object(
-			field("participantName", string(r.participantName)),
-			field("participantEmail", string(r.participantEmail)),
+			field("participantName", ToJson.participantName(r.participantName)),
+			field("participantEmail", ToJson.participantEmail(r.participantEmail)),
 			field("billingCompany", string(r.billingCompany)),
 			field("billingAddress", string(r.billingAddress)),
 			field("billingMethod", string(r.billingMethod.name())),

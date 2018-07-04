@@ -93,8 +93,8 @@ public class RegistrationsSqlMapper {
 
 	public final static class RegistrationTuple {
 		public final RegistrationState state;
-		public final String participantName;
-		public final String participantEmail;
+		public final ParticipantName participantName;
+		public final ParticipantEmail participantEmail;
 		public final String billingCompany;
 		public final String billingAddress;
 		public final BillingMethod billingMethod;
@@ -106,8 +106,8 @@ public class RegistrationsSqlMapper {
 
 		public RegistrationTuple(
 			RegistrationState state,
-			String participantName,
-			String participantEmail, String billingCompany,
+			ParticipantName participantName,
+			ParticipantEmail participantEmail, String billingCompany,
 			String billingAddress,
 			BillingMethod billingMethod,
 			String dietaryRequirements,
@@ -249,8 +249,8 @@ public class RegistrationsSqlMapper {
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
 			ps.setString(2, rt.state.name());
-			ps.setString(3, rt.participantName);
-			ps.setString(4, rt.participantEmail);
+			ps.setString(3, rt.participantName.value);
+			ps.setString(4, rt.participantEmail.value);
 			ps.setString(5, rt.billingCompany);
 			ps.setString(6, rt.billingAddress);
 			ps.setString(7, rt.billingMethod.name());
@@ -264,8 +264,8 @@ public class RegistrationsSqlMapper {
 	public static RegistrationTuple toRegistrationTuple(ResultSet rs) throws SQLException {
 		return new RegistrationTuple(
 			RegistrationState.valueOf(rs.getString("state")),
-			rs.getString("participant_name"),
-			rs.getString("participant_email"),
+			ParticipantName.participantName(rs.getString("participant_name")),
+			ParticipantEmail.participantEmail(rs.getString("participant_email")),
 			rs.getString("billing_company"),
 			rs.getString("billing_address"),
 			BillingMethod.valueOf(rs.getString("billing_method")),

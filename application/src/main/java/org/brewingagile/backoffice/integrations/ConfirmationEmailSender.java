@@ -5,6 +5,7 @@ import fj.data.Either;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.brewingagile.backoffice.application.Configuration;
+import org.brewingagile.backoffice.types.ParticipantEmail;
 import org.brewingagile.backoffice.utils.Resources2;
 import org.eclipse.jetty.util.IO;
 
@@ -18,9 +19,9 @@ public class ConfirmationEmailSender {
 		this.configuration = configuration;
 	}
 
-	public Either<String, String> email(String toEmail) {
+	public Either<String, String> email(ParticipantEmail toEmail) {
 		try {
-			catchAll(toEmail);
+			catchAll(toEmail.value);
 			return Either.right("OK");
 		} catch (Exception e) {
 			e.printStackTrace();

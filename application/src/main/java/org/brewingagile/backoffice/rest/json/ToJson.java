@@ -6,6 +6,8 @@ import fj.F;
 import fj.data.Option;
 import org.brewingagile.backoffice.types.*;
 
+import java.time.Instant;
+
 import static argo.jdom.JsonNodeFactories.nullNode;
 import static argo.jdom.JsonNodeFactories.string;
 
@@ -22,4 +24,8 @@ public class ToJson {
 
 	public static JsonStringNode participantEmail(ParticipantEmail participantEmail) { return string(participantEmail.value); }
 	public static JsonStringNode participantName(ParticipantName participantName) { return string(participantName.value); }
+	public static JsonStringNode registrationId(RegistrationId registrationId) { return string(registrationId.value.toString()); }
+
+	public static JsonNode chargeId(ChargeId chargeId) { return string(chargeId.value); }
+	public static JsonNode instant(Instant stripeChargeTimestamp) { return string(stripeChargeTimestamp.toString()); }
 }

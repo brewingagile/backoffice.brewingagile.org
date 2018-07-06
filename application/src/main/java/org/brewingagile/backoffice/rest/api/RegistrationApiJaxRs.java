@@ -9,10 +9,7 @@ import functional.Effect;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.brewingagile.backoffice.db.operations.*;
-import org.brewingagile.backoffice.integrations.ConfirmationEmailSender;
-import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
-import org.brewingagile.backoffice.integrations.SlackBotHook;
-import org.brewingagile.backoffice.integrations.StripeChargeClient;
+import org.brewingagile.backoffice.integrations.*;
 import org.brewingagile.backoffice.pure.AccountIO;
 import org.brewingagile.backoffice.rest.json.ToJson;
 import org.brewingagile.backoffice.types.*;
@@ -52,6 +49,7 @@ public class RegistrationApiJaxRs {
 	private final StripeChargeClient stripeChargeClient;
 	private final RegistrationStripeChargeSql registrationStripeChargeSql;
 	private final MailchimpSubscribeClient.ListUniqueId newsletterList;
+	private final OutvoiceReceiptClient outvoiceReceiptClient;
 
 	public RegistrationApiJaxRs(
 		DataSource dataSource,
@@ -65,7 +63,8 @@ public class RegistrationApiJaxRs {
 		StripePublishableKey stripePublishableKey,
 		StripeChargeClient stripeChargeClient,
 		RegistrationStripeChargeSql registrationStripeChargeSql,
-		MailchimpSubscribeClient.ListUniqueId newsletterList
+		MailchimpSubscribeClient.ListUniqueId newsletterList,
+		OutvoiceReceiptClient outvoiceReceiptClient
 	) {
 		this.dataSource = dataSource;
 		this.registrationsSqlMapper = registrationsSqlMapper;
@@ -79,6 +78,7 @@ public class RegistrationApiJaxRs {
 		this.stripeChargeClient = stripeChargeClient;
 		this.registrationStripeChargeSql = registrationStripeChargeSql;
 		this.newsletterList = newsletterList;
+		this.outvoiceReceiptClient = outvoiceReceiptClient;
 	}
 
 	@EqualsAndHashCode
@@ -238,6 +238,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 				c.commit();
 			}
 
+			Option<byte[]> receiptPdf = Option.none();
 			if (rr.stripeTokenR.isSome()) {
 				StripeTokenR some = rr.stripeTokenR.some();
 				BigInteger amountInOre = BigDecimals.inOre(totalTicketIncsVat);
@@ -245,18 +246,40 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 				if (stringChargeEither.isLeft())
 					return Response.status(402).entity(errorJson(stringChargeEither.left().value())).build();
 
+				Instant stripeTxTimestamp = Instant.now();
+				ChargeId chargeId = stringChargeEither.right().value().id;
 				try (Connection c = dataSource.getConnection()) {
 					c.setAutoCommit(false);
 					registrationStripeChargeSql.insertCharge(c, registrationId, new RegistrationStripeChargeSql.Charge(
-						stringChargeEither.right().value().id,
+						chargeId,
 						new BigDecimal(amountInOre).divide(BigDecimal.valueOf(100)),
-						Instant.now()
+						stripeTxTimestamp
 					));
+					c.commit();
+				}
+
+				try (Connection c = dataSource.getConnection()) {
+					c.setAutoCommit(false);
+					TreeMap<TicketName, TicketsSql.Ticket> p2s = ticketsSql.all(c).groupBy(x -> x.ticket).map(x -> x.head());
+					List<TicketsSql.Ticket> map = rr.participantR.tickets.toList().map(x -> p2s.get(x).some());
+					JsonRootNode jsonRootNode = OutvoiceReceiptClient.mkParticipantRequest(stringChargeEither.right().value().id, stripeTxTimestamp, rr.participantR.name, rr.participantR.email, map);
+					Either<String, OutvoiceReceiptClient.ReceiptResponse> post = outvoiceReceiptClient.post(jsonRootNode);
+					receiptPdf = post.right().toOption().map(x -> x.pdfSource);
+
+					if (post.isLeft()) {
+						System.err.println("We could not create a receipt for ChargeId " + chargeId + ". This is really bad.");
+					} else {
+						registrationStripeChargeSql.insertChargeReceipt(c, chargeId, post.right().value().pdfSource);
+					}
+
 					c.commit();
 				}
 			}
 
-			Either<String, String> emailResult = confirmationEmailSender.email(rr.participantR.email);
+			Array<ConfirmationEmailSender.Attachment> map = receiptPdf.toArray()
+				.map(x -> new ConfirmationEmailSender.Attachment("Brewing Agile 2018 kvitto (" + rr.participantR.name.value + ").pdf", "application/pdf", x));
+
+			Either<String, String> emailResult = confirmationEmailSender.email(rr.participantR.email, map);
 			if (emailResult.isLeft()) {
 				System.err.println("We couldn't send an email to " + rr.participantR.name + "(" + rr.participantR.email + "). Cause: " + emailResult.left().value());
 			}

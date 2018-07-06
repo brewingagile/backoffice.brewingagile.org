@@ -36,7 +36,7 @@ public class OutvoiceInvoiceClient {
 
 	public Either<String, Unit> postInvoice(JsonRootNode jsonRequest) throws IOException {
 		HttpUrl url = HttpUrl.parse(endpoint).newBuilder()
-			.addEncodedPathSegment("invoices")
+			.addPathSegment("invoices")
 			.build();
 		Request httpRequest = new Request.Builder()
 			.url(url)
@@ -46,7 +46,7 @@ public class OutvoiceInvoiceClient {
 			.build();
 
 		try (Response r = okHttpClient.newCall(httpRequest).execute()) {
-			if (!(200 <= r.code() && r.code() < 300))
+			if (!r.isSuccessful())
 				return Either.left("While sending invoice: Received HTTP Status " + r.code());
 
 			return Either.right(Unit.unit());

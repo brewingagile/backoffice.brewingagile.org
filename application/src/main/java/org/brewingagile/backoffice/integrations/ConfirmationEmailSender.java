@@ -1,7 +1,10 @@
 package org.brewingagile.backoffice.integrations;
 
 import com.hencjo.summer.security.utils.Charsets;
+import fj.data.Array;
 import fj.data.Either;
+import org.apache.commons.mail.ByteArrayDataSource;
+import org.apache.commons.mail.EmailAttachment;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.brewingagile.backoffice.application.Configuration;
@@ -19,9 +22,9 @@ public class ConfirmationEmailSender {
 		this.configuration = configuration;
 	}
 
-	public Either<String, String> email(ParticipantEmail toEmail) {
+	public Either<String, String> email( ParticipantEmail toEmail, Array<Attachment> attachments ) {
 		try {
-			catchAll(toEmail.value);
+			catchAll(toEmail.value, attachments);
 			return Either.right("OK");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -29,7 +32,19 @@ public class ConfirmationEmailSender {
 		}
 	}
 
-	private void catchAll(String toEmail) throws EmailException, IOException {
+	public static final class Attachment {
+		public final String name;
+		public final String contentType;
+		public final byte[] contents;
+
+		public Attachment(String name, String contentType, byte[] contents) {
+			this.name = name;
+			this.contentType = contentType;
+			this.contents = contents;
+		}
+	}
+
+	private void catchAll(String toEmail, Array<Attachment> attachments) throws EmailException, IOException {
 		String subject = "Brewing Agile 2018: Registration Received";
 
 		HtmlEmail email = new HtmlEmail();
@@ -44,6 +59,7 @@ public class ConfirmationEmailSender {
 
 		email.setHtmlMsg(template("/email-templates/registration-confirmation/email-processed.html"));
 		email.setTextMsg(template("/email-templates/registration-confirmation/email-processed.txt"));
+		for (Attachment a : attachments) email.attach(new ByteArrayDataSource(a.contents, a.contentType), a.name, "", EmailAttachment.ATTACHMENT);
 		email.send();
 	}
 

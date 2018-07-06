@@ -39,6 +39,7 @@ public class DbUpgrader {
 			migration("account-signup-secret").installsThrough(script("024-account-signup-secret.sql")),
 			migration("account-billing-email").installsThrough(script("025-account-billing-email.sql")),
 			migration("registration-stripe-charge").installsThrough(script("026-registration-stripe-charge.sql"))
+			,migration("registration-stripe-charge-receipt").installsThrough(script("027-registration-stripe-charge-receipt.sql"))
 		);
 	}
 

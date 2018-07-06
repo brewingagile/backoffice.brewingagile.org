@@ -5,7 +5,6 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.brewingagile.backoffice.instances.PreparedStatements;
 import org.brewingagile.backoffice.instances.ResultSets;
-import org.brewingagile.backoffice.types.Account;
 import org.brewingagile.backoffice.types.ChargeId;
 import org.brewingagile.backoffice.types.RegistrationId;
 
@@ -25,6 +24,15 @@ public class RegistrationStripeChargeSql {
 			ps.setString(2, charge.chargeId.value);
 			ps.setBigDecimal(3, charge.amount);
 			ps.setTimestamp(4, Timestamp.from(charge.when));
+			ps.execute();
+		}
+	}
+
+	public void insertChargeReceipt(Connection c, ChargeId chargeId, byte[] receiptPdfSource) throws SQLException {
+		String sql = "INSERT INTO registration_stripe_charge_receipt (charge_id, receipt_pdf_source) VALUES (?, ?);";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			ps.setString(1, chargeId.value);
+			ps.setBytes(2, receiptPdfSource);
 			ps.execute();
 		}
 	}

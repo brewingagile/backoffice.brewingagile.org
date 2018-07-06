@@ -242,7 +242,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 			if (rr.stripeTokenR.isSome()) {
 				StripeTokenR some = rr.stripeTokenR.some();
 				BigInteger amountInOre = BigDecimals.inOre(totalTicketIncsVat);
-				Either<String, StripeChargeClient.ChargeResponse> stringChargeEither = stripeChargeClient.postCharge(some.id, amountInOre, rr.participantR.name, rr.participantR.email);
+				Either<String, StripeChargeClient.ChargeResponse> stringChargeEither = stripeChargeClient.postCharge(some.id, amountInOre, rr.participantR.name, rr.participantR.email, registrationId);
 				if (stringChargeEither.isLeft())
 					return Response.status(402).entity(errorJson(stringChargeEither.left().value())).build();
 

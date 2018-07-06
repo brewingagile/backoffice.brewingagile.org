@@ -4,10 +4,7 @@ import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
 import fj.data.Either;
 import okhttp3.*;
-import org.brewingagile.backoffice.types.ChargeId;
-import org.brewingagile.backoffice.types.ParticipantEmail;
-import org.brewingagile.backoffice.types.ParticipantName;
-import org.brewingagile.backoffice.types.StripePrivateKey;
+import org.brewingagile.backoffice.types.*;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Http;
 
@@ -28,7 +25,8 @@ public class StripeChargeClient {
 		String token,
 		BigInteger amountInOre,
 		ParticipantName participantName,
-		ParticipantEmail participantEmail
+		ParticipantEmail participantEmail,
+		RegistrationId registrationId
 	) throws IOException, InvalidSyntaxException {
 		RequestBody requestBody = new FormBody.Builder()
 			.add("amount", amountInOre.toString())
@@ -37,6 +35,7 @@ public class StripeChargeClient {
 			.add("source", token)
 			.add("metadata[name]", participantName.value)
 			.add("metadata[email]", participantEmail.value)
+			.add("metadata[registration_id]", registrationId.value.toString())
 			.build();
 
 		Request httpRequest = new Request.Builder()

@@ -63,7 +63,7 @@ public class OutvoiceReceiptClient {
 			field("buyerEmail", ToJson.participantEmail(buyerEmail)),
 			field("lines", tickets.map(x -> object(
 				field("text", string("Brewing Agile 2018: " + x.ticket.ticketName)),
-				field("description", string(x.productText + "\nAvser deltagare: " + buyerName)),
+				field("description", string(x.productText + "\nAvser deltagare: " + buyerName.value)),
 				field("price", number(x.price.multiply(BigDecimal.valueOf(0.8)))),
 				field("quantity", number(BigDecimal.ONE)),
 				field("vatRate", string("VAT_25"))

@@ -286,7 +286,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 
 			try {
 				String s = rr.participantR.tickets.toList().map(x -> x.ticketName).foldLeft1((l, r) -> l + ", " + r);
-				slackBotHook.post("*" + rr.participantR.name + "* just signed up for *" + s +"*");
+				slackBotHook.post("*" + rr.participantR.name.value + "* just signed up for *" + s +"*");
 			} catch (IOException e) {
 				System.err.println("Couldn't post signup to Slack: " + e.getMessage());
 				e.printStackTrace();

@@ -30,7 +30,7 @@ function RegistrationController($scope, $http, $resource, $window, $timeout, $wi
 		dietaryRequirements: "",
 		lanyardCompany: "",
 		twitter: "",
-		tickets: [],
+		tickets: ["conference"],
 		invoiceRecipient: "",
 		invoiceAddress: ""
 	};

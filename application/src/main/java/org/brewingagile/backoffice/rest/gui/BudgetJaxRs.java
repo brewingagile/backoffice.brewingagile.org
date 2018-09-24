@@ -141,25 +141,25 @@ public class BudgetJaxRs {
 				t("Venue: Workshop1", Math.max(workshop1 + 1, 27), 595) // + speaker
 			);
 			List<BudgetItem> costsWorkshop2 = List.list(
-				t("Venue: Workshop2", workshop2 + 1, 495) // + speaker
+				t("Venue: Workshop2", Math.max(workshop2 + 1, 20), 495) // + speaker
 			);
 			List<BudgetItem> costsWorkshop3 = List.list(
-				t("Venue: Workshop3", workshop3 + 1, 495) // + speaker
+				t("Venue: Workshop3", Math.max(workshop3 + 1, 25), 495) // + speaker
 			);
 			List<BudgetItem> costsOrganisers = List.list(
 				t("Organiser Food: Thursday, all day", 1, 595),
 				t("Organiser Food: Friday morning", 5, 495)
 			);
 			List<BudgetItem> costsConference = List.list(
-				t("Venue: Friday Conference", Math.max(conference, 135), 250),
-				t("Venue: Friday Fika", Math.max(conference, 135), 25),
+				t("Venue: Friday Conference", Math.max(conference, 150), 250),
+				t("Venue: Friday Fika", Math.max(conference, 150), 25),
 				t("Beer", conference, 68),
-				t("Venue: Saturday", Math.max(conference / 2, 63), 395),
+				t("Venue: Saturday", Math.max(conference / 2, 70), 395),
 				t("Speaker Reimbursements", 1, 10000),
 				t("Speaker: Workshop 1", 1, BigDecimal.valueOf(workshop1).multiply(ticketPrices.get(ticketName("workshop1")).some()).subtract(sum(costsWorkshop1))),
 				t("Speaker: Workshop 2", 1, BigDecimal.valueOf(workshop2).multiply(ticketPrices.get(ticketName("workshop2")).some()).subtract(sum(costsWorkshop2))),
 				t("Speaker: Workshop 3", 1, BigDecimal.valueOf(workshop3).multiply(ticketPrices.get(ticketName("workshop3")).some()).subtract(sum(costsWorkshop3))),
-				t("Video Production", 1, 20000),
+				t("Video Production", 1, 24000),
 				t("Audio Technician", 1, 4500),
 				t("Supplies for Open Spaces", 1, 1000),
 				t("Lanyards", 1, 1500)

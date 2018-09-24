@@ -302,10 +302,14 @@ public class RegistrationsSqlMapper {
 	}
 
 	public void deleteRegistrationTuple(Connection c, UUID id) throws SQLException {
-		String sql = "DELETE FROM registration_ticket WHERE registration_id = ?; DELETE FROM registration WHERE registration_id = ?";
+		String sql =
+			"DELETE FROM registration_ticket WHERE registration_id = ?;" +
+			"DELETE FROM registration_account WHERE registration_id = ?;" +
+			"DELETE FROM registration WHERE registration_id = ?;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
 			ps.setObject(2, id);
+			ps.setObject(3, id);
 			ps.execute();
 		}
 	}

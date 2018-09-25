@@ -327,7 +327,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 	@GET
 	@Path("tickets")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response get(@Context HttpServletRequest request) throws Exception {
+	public Response tickets(@Context HttpServletRequest request) throws Exception {
 		Array<TicketsSql.Ticket> tickets;
 		TreeMap<TicketName, BigInteger> sold;
 		try (Connection c = dataSource.getConnection()) {

@@ -40,6 +40,7 @@ public class DbUpgrader {
 			migration("account-billing-email").installsThrough(script("025-account-billing-email.sql")),
 			migration("registration-stripe-charge").installsThrough(script("026-registration-stripe-charge.sql"))
 			,migration("registration-stripe-charge-receipt").installsThrough(script("027-registration-stripe-charge-receipt.sql"))
+			,migration("deferrable-tickets").installsThrough(script("028-deferrable-tickets.sql"))
 		);
 	}
 

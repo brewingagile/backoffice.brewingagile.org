@@ -14,7 +14,7 @@ function TicketsController($scope, $window, $resource) {
         $scope.success = null;
 		$scope.error = null;
         Resource.save({}, tickets, function() {
-            $scope.success = tickets.length + ' hinkar har sparats.';
+            $scope.success = tickets.length + ' biljetter har sparats.';
         }, function() {
             $scope.error = "Misslyckades med att spara.";
         });

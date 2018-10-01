@@ -162,7 +162,7 @@ public class BudgetJaxRs {
 				t("Video Production", 1, 24000),
 				t("Audio Technician", 1, 4500),
 				t("Supplies for Open Spaces", 1, 1000),
-				t("Lanyards", 1, 1500)
+				t("Lanyards", 1, 1450)
 			);
 
 			List<BudgetItem> individualRevenues = individualSales.map(x -> t(x._1().ticketName + ": Separata biljetter", x._2().intValue(), ticketPrices.get(x._1()).some().intValue()));

@@ -108,7 +108,7 @@ public class OutvoiceInvoiceClient {
 	}
 
 	private static F<TicketsSql.Ticket, JsonRootNode> line(String eventPrefix, ParticipantName participantName) {
-		return ticket -> line(eventPrefix + ticket.ticket.ticketName, ticket.productText + "\nAvser deltagare: " + participantName, ticket.price.multiply(BigDecimal.valueOf(0.8)), BigDecimal.ONE);
+		return ticket -> line(eventPrefix + ticket.ticket.ticketName, ticket.productText + "\nAvser deltagare: " + participantName.value, ticket.price.multiply(BigDecimal.valueOf(0.8)), BigDecimal.ONE);
 	}
 
 	private static JsonRootNode line(String text, String description, BigDecimal price, BigDecimal qty) {

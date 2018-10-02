@@ -11,4 +11,5 @@ WHERE registered < '2018-08-07' AND registration_account IS NULL;
 
 ALTER TABLE registration
 	DROP COLUMN billing_company,
-	DROP COLUMN billing_address;
+	DROP COLUMN billing_address,
+	DROP COLUMN billing_method;

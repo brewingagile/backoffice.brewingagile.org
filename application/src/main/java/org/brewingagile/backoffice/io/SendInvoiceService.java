@@ -1,7 +1,6 @@
 package org.brewingagile.backoffice.io;
 
 import argo.jdom.JsonRootNode;
-import fj.Effect;
 import fj.Unit;
 import fj.data.Either;
 import fj.data.Set;
@@ -10,6 +9,8 @@ import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.integrations.OutvoiceInvoiceClient;
+import org.brewingagile.backoffice.types.BillingMethod;
+import org.brewingagile.backoffice.types.RegistrationId;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -34,11 +35,15 @@ public class SendInvoiceService {
 	}
 
 	public void sendInvoice(UUID id) throws Exception {
+		RegistrationId registrationId = RegistrationId.registrationId(id);
+
 		System.out.println("1");
 		Registration registration;
+		RegistrationsSqlMapper.RegistrationInvoiceMethod registrationInvoiceMethod;
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			registration = registrationsSqlMapper.one(c, id).some();
+			registrationInvoiceMethod = registrationsSqlMapper.registrationInvoiceMethod(c, registrationId).some();
 			if (registration.tuple.state != RegistrationState.RECEIVED) throw new IllegalArgumentException("Registration is not in expected state.");
 		}
 
@@ -48,7 +53,7 @@ public class SendInvoiceService {
 			if (!registrationsSqlMapper.invoiceReference(c, id).isSome()) {
 				Set<TicketsSql.Ticket> tickets = ticketsSql.by(c, id);
 				RegistrationsSqlMapper.RegistrationTuple rt = registration.tuple;
-				JsonRootNode jsonRequest = OutvoiceInvoiceClient.mkParticipantRequest(registration.id, rt.billingMethod, rt.participantEmail, rt.billingCompany, rt.billingAddress, tickets, rt.participantName);
+				JsonRootNode jsonRequest = OutvoiceInvoiceClient.mkParticipantRequest(registration.id, BillingMethod.EMAIL, rt.participantEmail, registrationInvoiceMethod.billingCompany, registrationInvoiceMethod.billingAddress, tickets, rt.participantName);
 				Either<String, Unit> invoiceReferenceId = outvoiceInvoiceClient.postInvoice(jsonRequest);
 				if (invoiceReferenceId.isLeft()) {
 					System.err.println(invoiceReferenceId.left().value());

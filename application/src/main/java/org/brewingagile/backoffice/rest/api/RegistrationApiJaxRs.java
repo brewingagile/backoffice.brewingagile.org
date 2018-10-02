@@ -205,32 +205,23 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);
 
-				registrationsSqlMapper.replace(
-					c,
-					registrationId.value,
-					new RegistrationsSqlMapper.Registration(
-						registrationId.value,
-						new RegistrationsSqlMapper.RegistrationTuple(
-							RegistrationState.RECEIVED,
-							rr.participantR.name,
-							rr.participantR.email,
-							rr.invoicingR.map(x -> x.recipient).orSome(""),
-							rr.invoicingR.map(x -> x.address).orSome(""),
-							BillingMethod.EMAIL,
-							rr.participantR.dietaryRequirements,
-							new Badge(""),
-							rr.participantR.twitter,
-							Option.none(),
-							rr.participantR.organisation
-						),
-						rr.participantR.tickets,
-						Option.none()
-					)
-				);
+				registrationsSqlMapper.insertRegistrationTuple(c, registrationId.value, new RegistrationsSqlMapper.RegistrationTuple(
+					RegistrationState.RECEIVED,
+					rr.participantR.name,
+					rr.participantR.email,
+					rr.participantR.dietaryRequirements,
+					new Badge(""),
+					rr.participantR.twitter,
+					rr.participantR.organisation
+				));
+				registrationsSqlMapper.insertTickets(c, registrationId.value, rr.participantR.tickets);
 
 				if (rr.accountSignupSecret.isSome()) {
 					Option<Account> account = accountSignupSecretSql.account(c, rr.accountSignupSecret.some());
 					registrationsSqlMapper.replaceAccount(c, registrationId.value, account);
+				} else if (rr.invoicingR.isSome()) {
+					InvoicingR invoicingR = rr.invoicingR.some();
+					registrationsSqlMapper.insertRegistrationInvoiceMethod(c, registrationId, invoicingR.recipient, invoicingR.address);
 				}
 
 				totalTicketIncsVat = registrationsSqlMapper.totalTicketsIncVat(c, registrationId.value);

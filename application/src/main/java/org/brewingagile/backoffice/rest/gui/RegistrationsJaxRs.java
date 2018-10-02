@@ -3,22 +3,23 @@ package org.brewingagile.backoffice.rest.gui;
 import argo.jdom.JsonNode;
 import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
-import fj.F;
-import fj.Function;
-import fj.P2;
+import fj.*;
 import fj.data.*;
 import fj.function.Strings;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
-import org.brewingagile.backoffice.types.*;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.PrintedNametag;
+import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.RegistrationInvoiceMethod;
 import org.brewingagile.backoffice.integrations.OutvoicePaidClient;
-import org.brewingagile.backoffice.rest.json.ToJson;
 import org.brewingagile.backoffice.io.DismissRegistrationService;
 import org.brewingagile.backoffice.io.MarkAsCompleteService;
 import org.brewingagile.backoffice.io.MarkAsPaidService;
 import org.brewingagile.backoffice.io.SendInvoiceService;
+import org.brewingagile.backoffice.rest.json.ToJson;
+import org.brewingagile.backoffice.types.Account;
+import org.brewingagile.backoffice.types.Badge;
+import org.brewingagile.backoffice.types.RegistrationId;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.Result;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
@@ -76,20 +77,25 @@ public class RegistrationsJaxRs {
 		
 		try (Connection c = dataSource.getConnection()) {
 			List<UUID> ids = registrationsSqlMapper.all(c).map(x -> x._1());
-			List<RegistrationsSqlMapper.Registration> all = Option.somes(ids.traverseIO(ioify(c)).run());
+			List<P3<RegistrationsSqlMapper.Registration, Option<Account>, Option<RegistrationInvoiceMethod>>> all = Option.somes(ids.traverseIO(ioify(c)).run());
 			JsonRootNode overview = object(
-				field("received", array(all.filter(x -> x.tuple.state == RegistrationState.RECEIVED).map(RegistrationsJaxRs::json))),
-				field("invoicing", array(all.filter(x -> x.tuple.state == RegistrationState.INVOICING).map(RegistrationsJaxRs::json))),
-				field("paid", array(all.filter(x -> x.tuple.state == RegistrationState.PAID).map(RegistrationsJaxRs::json)))
+				field("received", array(all.filter(x -> x._1().tuple.state == RegistrationState.RECEIVED).map(r -> json(r._1(), r._2(), r._3())))),
+				field("invoicing", array(all.filter(x -> x._1().tuple.state == RegistrationState.INVOICING).map(r -> json(r._1(), r._2(), r._3())))),
+				field("paid", array(all.filter(x -> x._1().tuple.state == RegistrationState.PAID).map(r -> json(r._1(), r._2(), r._3()))))
 			);
 			return Response.ok(ArgoUtils.format(overview)).build();
 		}
 	}
 
-	private F<UUID,IO<Option<RegistrationsSqlMapper.Registration>>> ioify(Connection c) {
+	private F<UUID,IO<Option<P3<RegistrationsSqlMapper.Registration, Option<Account>, Option<RegistrationInvoiceMethod>>>>> ioify(Connection c) {
 		return registrationId -> () -> {
 			try {
-				return registrationsSqlMapper.one(c, registrationId);
+				Option<RegistrationsSqlMapper.Registration> one = registrationsSqlMapper.one(c, registrationId);
+				if (one.isNone()) return Option.none();
+
+				Option<Account> account = registrationsSqlMapper.account(c, registrationId);
+				Option<RegistrationInvoiceMethod> registrationInvoiceMethod = registrationsSqlMapper.registrationInvoiceMethod(c, RegistrationId.registrationId(registrationId));
+				return Option.some(P.p(one.some(), account, registrationInvoiceMethod));
 			} catch (SQLException e) {
 				throw new IOException(e);
 			}
@@ -100,11 +106,18 @@ public class RegistrationsJaxRs {
 	@Path("/{registrationId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getRegistration(@Context HttpServletRequest request, @PathParam("registrationId") UUID id) {
+		RegistrationId registrationId = RegistrationId.registrationId(id);
 		authService.guardAuthenticatedUser(request);
 		try {
 			try (Connection c = dataSource.getConnection()) {
-				return registrationsSqlMapper.one(c, id)
-					.map(RegistrationsJaxRs::json)
+				Option<RegistrationsSqlMapper.Registration> one = registrationsSqlMapper.one(c, id);
+				if (one.isNone())
+					return Response.status(Status.NOT_FOUND).build();
+
+				Option<Account> account = registrationsSqlMapper.account(c, id);
+				Option<RegistrationInvoiceMethod> registrationInvoiceMethod = registrationsSqlMapper.registrationInvoiceMethod(c, registrationId);
+				return one
+					.map(r -> json(r, account, registrationInvoiceMethod))
 					.map(ArgoUtils::format)
 					.map(Response::ok)
 					.orSome(Response.status(Status.NOT_FOUND))
@@ -116,45 +129,39 @@ public class RegistrationsJaxRs {
 		}
 	}
 
-	private static JsonRootNode json(RegistrationsSqlMapper.Registration r) {
+	private static JsonRootNode json(
+		RegistrationsSqlMapper.Registration r,
+		Option<Account> registrationAccount,
+		Option<RegistrationInvoiceMethod> registrationInvoiceMethod
+	) {
 		return object(
 			field("id", string(r.id.toString())),
-			field("tuple", json(r.tuple)),
+			field("tuple", object(
+				field("participantName", ToJson.participantName(r.tuple.participantName)),
+				field("participantEmail", ToJson.participantEmail(r.tuple.participantEmail)),
+				field("billingCompany", ToJson.nullable(registrationInvoiceMethod, x -> string(x.billingCompany))),
+				field("billingAddress", ToJson.nullable(registrationInvoiceMethod, x -> string(x.billingAddress))),
+				field("billingMethod", string("EMAIL")),
+				field("twitter", string(r.tuple.twitter)),
+				field("dietaryRequirements", string(r.tuple.dietaryRequirements)),
+				field("badge", string(r.tuple.badge.badge)),
+				field("bundle", registrationAccount.map(ToJson::account).orSome(string("")))
+			)),
 			field("printedNametag", booleanNode(r.printedNametag.isSome())),
 			field("tickets", r.tickets.toList().map(ToJson::json).toJavaList().stream().collect(ArgoUtils.toArray()))
 		);
 	}
 
-	private static JsonRootNode json(RegistrationsSqlMapper.RegistrationTuple r) {
-		return object(
-			field("participantName", ToJson.participantName(r.participantName)),
-			field("participantEmail", ToJson.participantEmail(r.participantEmail)),
-			field("billingCompany", string(r.billingCompany)),
-			field("billingAddress", string(r.billingAddress)),
-			field("billingMethod", string(r.billingMethod.name())),
-			field("twitter", string(r.twitter)),
-			field("dietaryRequirements", string(r.dietaryRequirements)),
-			field("badge", string(r.badge.badge)),
-			field("bundle", r.account.map(ToJson::account).orSome(string("")))
-		);
-	}
-
 	public static final class RegistrationsUpdate {
-		public final BillingCompany billingCompany;
-		public final String billingAddress;
 		public final Badge badge;
 		public final String dietaryRequirements;
 		public final Option<Account> account;
 
 		public RegistrationsUpdate(
-			BillingCompany billingCompany,
-			String billingAddress,
 			Badge badge,
 			String dietaryRequirements,
 			Option<Account> account
 		) {
-			this.billingCompany = billingCompany;
-			this.billingAddress = billingAddress;
 			this.badge = badge;
 			this.dietaryRequirements = dietaryRequirements;
 			this.account = account;
@@ -162,8 +169,6 @@ public class RegistrationsJaxRs {
 	}
 
 	private static Either<String, RegistrationsUpdate> registrationsUpdate(JsonNode jsonNode) {
-		Either<String, BillingCompany> billingCompany = ArgoUtils.stringValue(jsonNode, "billingCompany").right().map(BillingCompany::new);
-		Either<String, String> billingAddress = ArgoUtils.stringValue(jsonNode, "billingAddress");
 		Either<String, Badge> badge = ArgoUtils.stringValue(jsonNode, "badge").right().map(Badge::new);
 		Either<String, String> dietaryRequirements = ArgoUtils.stringValue(jsonNode, "dietaryRequirements");
 		Either<String, Option<Account>> account = ArgoUtils.stringValue(jsonNode, "bundle")
@@ -174,9 +179,7 @@ public class RegistrationsJaxRs {
 		return account.right()
 			.apply(dietaryRequirements.right()
 				.apply(badge.right()
-					.apply(billingAddress.right()
-						.apply(billingCompany.right()
-							.apply(Either.right(Function.curry(RegistrationsUpdate::new)))))));
+					.apply(Either.right(Function.curry(RegistrationsUpdate::new)))));
 	}
 
 	@POST
@@ -184,6 +187,7 @@ public class RegistrationsJaxRs {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response postUpdate(@Context HttpServletRequest request, @PathParam("registrationId") UUID id, String body) throws Exception {
+		RegistrationId registrationId = RegistrationId.registrationId(id);
 		authService.guardAuthenticatedUser(request);
 		Either<String, RegistrationsUpdate> map =
 			ArgoUtils.parseEither(body)
@@ -196,7 +200,7 @@ public class RegistrationsJaxRs {
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			if (!registrationsSqlMapper.one(c, id).isSome()) return Response.status(Status.NOT_FOUND).build();
-			registrationsSqlMapper.update(c, id, ru.billingCompany, ru.billingAddress, ru.badge, ru.dietaryRequirements, ru.account);
+			registrationsSqlMapper.update(c, registrationId, ru.badge, ru.dietaryRequirements, ru.account);
 			c.commit();
 		}
 		return Response.ok().build();

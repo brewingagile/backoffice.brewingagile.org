@@ -5,6 +5,8 @@ import fj.data.List;
 import fj.data.Option;
 import fj.data.Set;
 import fj.function.Try1;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.brewingagile.backoffice.instances.PreparedStatements;
 import org.brewingagile.backoffice.instances.ResultSets;
 import org.brewingagile.backoffice.types.*;
@@ -75,19 +77,39 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
+	public void insertRegistrationInvoiceMethod(Connection c, RegistrationId registrationId, String recipient, String address) throws SQLException {
+		String sql = "INSERT INTO registration_invoice_method " +
+			"(registration_id, billing_company, billing_address) " +
+			"VALUES (?, ?, ?)";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			PreparedStatements.set(ps, 1, registrationId);
+			ps.setString(2, recipient);
+			ps.setString(3, address);
+			ps.execute();
+		}
+	}
+
 	public final static class Registration {
 		public final UUID id;
 		public final RegistrationTuple tuple;
 		public final Set<TicketName> tickets;
 		public final Option<PrintedNametag> printedNametag;
+		public final Option<Account> account;
 
 		public static Ord<RegistrationsSqlMapper.Registration> byBadge = Ord.ord(l -> r -> Ord.stringOrd.compare(l.tuple.badge.badge, r.tuple.badge.badge));
 
-		public Registration(UUID id, RegistrationTuple tuple, Set<TicketName> tickets, Option<PrintedNametag> printedNametag) {
+		public Registration(
+			UUID id,
+			RegistrationTuple tuple,
+			Set<TicketName> tickets,
+			Option<PrintedNametag> printedNametag,
+			Option<Account> account
+		) {
 			this.id = id;
 			this.tuple = tuple;
 			this.tickets = tickets;
 			this.printedNametag = printedNametag;
+			this.account = account;
 		}
 	}
 
@@ -95,38 +117,39 @@ public class RegistrationsSqlMapper {
 		public final RegistrationState state;
 		public final ParticipantName participantName;
 		public final ParticipantEmail participantEmail;
-		public final String billingCompany;
-		public final String billingAddress;
-		public final BillingMethod billingMethod;
 		public final String dietaryRequirements;
 		public final Badge badge;
 		public final String twitter;
-		public final Option<Account> account;
 		public final ParticipantOrganisation organisation;
 
 		public RegistrationTuple(
 			RegistrationState state,
 			ParticipantName participantName,
-			ParticipantEmail participantEmail, String billingCompany,
-			String billingAddress,
-			BillingMethod billingMethod,
+			ParticipantEmail participantEmail,
 			String dietaryRequirements,
 			Badge badge,
 			String twitter,
-			Option<Account> account,
 			ParticipantOrganisation organisation
 		) {
 			this.state = state;
 			this.participantName = participantName;
 			this.participantEmail = participantEmail;
-			this.billingCompany = billingCompany;
-			this.billingAddress = billingAddress;
-			this.billingMethod = billingMethod;
 			this.dietaryRequirements = dietaryRequirements;
 			this.badge = badge;
 			this.twitter = twitter;
-			this.account = account;
 			this.organisation = organisation;
+		}
+	}
+
+	@EqualsAndHashCode
+	@ToString
+	public final static class RegistrationInvoiceMethod {
+		public final String billingCompany;
+		public final String billingAddress;
+
+		public RegistrationInvoiceMethod(String billingCompany, String billingAddress) {
+			this.billingCompany = billingCompany;
+			this.billingAddress = billingAddress;
 		}
 	}
 
@@ -134,19 +157,43 @@ public class RegistrationsSqlMapper {
 		Option<RegistrationTuple> registration = registration(c, id);
 		if (registration.isNone()) return Option.none();
 
+		Option<Account> account = account(c, id);
 		Set<TicketName> tickets = tickets(c, id);
 		return Option.some(
 			new Registration(
-				id, registration.some(), tickets, printedNametag(c, id)
+				id, registration.some(), tickets, printedNametag(c, id), account
 			)
 		);
+	}
+
+	public Option<RegistrationInvoiceMethod> registrationInvoiceMethod(Connection c, RegistrationId registrationId) throws SQLException {
+		String sql = "SELECT * FROM registration_invoice_method WHERE registration_id = ?";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			PreparedStatements.set(ps, 1, registrationId);
+			return SqlOps.one(ps, rs -> new RegistrationInvoiceMethod(
+				rs.getString("billing_company"),
+				rs.getString("billing_address")
+			));
+		}
+	}
+
+	public Option<Account> account(Connection c, UUID id) throws SQLException {
+		String sql = "SELECT account FROM registration_account WHERE registration_id = ?";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			ps.setObject(1, id);
+			return SqlOps.one(ps, rs -> Account.account(rs.getString("account")));
+		}
 	}
 
 	public void replace(Connection c, UUID id, Registration r) throws SQLException {
 		deleteRegistrationTuple(c, id);
 		deleteRegistrationTicket(c, id);
 		insertRegistrationTuple(c, id, r.tuple);
-		for (TicketName ticket : r.tickets) insertRegistrationTicket(c, id, ticket);
+		insertTickets(c, id, r.tickets);
+	}
+
+	public void insertTickets(Connection c, UUID id, Set<TicketName> tickets) throws SQLException {
+		for (TicketName ticket : tickets) insertRegistrationTicket(c, id, ticket);
 	}
 
 	private void insertRegistrationTicket(Connection c, UUID id, TicketName ticket) throws SQLException {
@@ -166,9 +213,7 @@ public class RegistrationsSqlMapper {
 	}
 
 	private Option<RegistrationTuple> registration(Connection c, UUID id) throws SQLException {
-		String sql = "SELECT *, account FROM registration " +
-			"LEFT JOIN registration_account USING (registration_id) " +
-			"WHERE registration_id = ?";
+		String sql = "SELECT * FROM registration WHERE registration_id = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
 			return SqlOps.one(ps, RegistrationsSqlMapper::toRegistrationTuple);
@@ -183,9 +228,7 @@ public class RegistrationsSqlMapper {
 	}
 
 	public List<P2<UUID, RegistrationTuple>> all(Connection c) throws SQLException {
-		String sql = "SELECT *, account FROM registration " +
-			"LEFT JOIN registration_account USING (registration_id) " +
-			"ORDER BY participant_name";
+		String sql = "SELECT * FROM registration ORDER BY participant_name";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			return SqlOps.list(ps,
 				rs -> P.p(
@@ -242,21 +285,18 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
-	private void insertRegistrationTuple(Connection c, UUID id, RegistrationTuple rt) throws SQLException {
+	public void insertRegistrationTuple(Connection c, UUID id, RegistrationTuple rt) throws SQLException {
 		String sql = "INSERT INTO registration " +
-			"(registration_id, state, participant_name, participant_email, billing_company, billing_address, billing_method, dietary_requirements, twitter, organisation) " +
-				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			"(registration_id, state, participant_name, participant_email, dietary_requirements, twitter, organisation) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?)";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
 			ps.setString(2, rt.state.name());
 			ps.setString(3, rt.participantName.value);
 			ps.setString(4, rt.participantEmail.value);
-			ps.setString(5, rt.billingCompany);
-			ps.setString(6, rt.billingAddress);
-			ps.setString(7, rt.billingMethod.name());
-			ps.setString(8, rt.dietaryRequirements);
-			ps.setString(9, rt.twitter);
-			PreparedStatements.set(ps, 10, rt.organisation);
+			ps.setString(5, rt.dietaryRequirements);
+			ps.setString(6, rt.twitter);
+			PreparedStatements.set(ps, 7, rt.organisation);
 			ps.execute();
 		}
 	}
@@ -266,13 +306,9 @@ public class RegistrationsSqlMapper {
 			RegistrationState.valueOf(rs.getString("state")),
 			ParticipantName.participantName(rs.getString("participant_name")),
 			ParticipantEmail.participantEmail(rs.getString("participant_email")),
-			rs.getString("billing_company"),
-			rs.getString("billing_address"),
-			BillingMethod.valueOf(rs.getString("billing_method")),
 			rs.getString("dietary_requirements"),
 			new Badge(rs.getString("badge")),
 			rs.getString("twitter"),
-			Option.fromNull(rs.getString("account")).map(Account::account),
 			ResultSets.participantOrganisation(rs, "organisation")
 		);
 	}
@@ -305,35 +341,33 @@ public class RegistrationsSqlMapper {
 		String sql =
 			"DELETE FROM registration_ticket WHERE registration_id = ?;" +
 			"DELETE FROM registration_account WHERE registration_id = ?;" +
+			"DELETE FROM registration_invoice_method WHERE registration_id = ?;" +
 			"DELETE FROM registration WHERE registration_id = ?;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setObject(1, id);
 			ps.setObject(2, id);
 			ps.setObject(3, id);
+			ps.setObject(4, id);
 			ps.execute();
 		}
 	}
 
-	public void update(Connection c, UUID id, BillingCompany billingCompany, String billingAddress, Badge badge, String diet, Option<Account> account) throws SQLException {
-		replaceRegistrationAccount(c, id, account);
-		updateRegistration(c, id, billingCompany, billingAddress, badge, diet);
+	public void update(Connection c, RegistrationId registrationId, Badge badge, String diet, Option<Account> account) throws SQLException {
+		replaceRegistrationAccount(c, registrationId.value, account);
+		updateRegistration(c, registrationId, badge, diet);
 	}
 
 	private void updateRegistration(
 		Connection c,
-		UUID id,
-		BillingCompany billingCompany,
-		String billingAddress,
+		RegistrationId registrationId,
 		Badge badge,
 		String diet
 	) throws SQLException {
-		String sql = "UPDATE registration SET billing_company = ?, billing_address = ?, badge = ?, dietary_requirements = ? WHERE registration_id = ?;";
+		String sql = "UPDATE registration SET badge = ?, dietary_requirements = ? WHERE registration_id = ?;";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			PreparedStatements.set(ps, 1, billingCompany);
-			ps.setString(2, billingAddress);
-			PreparedStatements.set(ps, 3, badge);
-			ps.setString(4, diet);
-			ps.setObject(5, id);
+			PreparedStatements.set(ps, 1, badge);
+			ps.setString(2, diet);
+			PreparedStatements.set(ps, 3, registrationId);
 			ps.execute();
 		}
 	}

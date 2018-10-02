@@ -202,6 +202,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 
 			BigDecimal totalTicketIncsVat;
 			RegistrationId registrationId = RegistrationId.registrationId(UUID.randomUUID());
+			Option<Account> account = Option.none();
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);
 
@@ -217,7 +218,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 				registrationsSqlMapper.insertTickets(c, registrationId.value, rr.participantR.tickets);
 
 				if (rr.accountSignupSecret.isSome()) {
-					Option<Account> account = accountSignupSecretSql.account(c, rr.accountSignupSecret.some());
+					account = accountSignupSecretSql.account(c, rr.accountSignupSecret.some());
 					registrationsSqlMapper.replaceAccount(c, registrationId.value, account);
 				} else if (rr.invoicingR.isSome()) {
 					InvoicingR invoicingR = rr.invoicingR.some();
@@ -277,7 +278,8 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 
 			try {
 				String s = rr.participantR.tickets.toList().map(x -> x.ticketName).foldLeft1((l, r) -> l + ", " + r);
-				slackBotHook.post("*" + rr.participantR.name.value + "* just signed up for *" + s +"*");
+				String slackPaymentText = slackPaymentText(rr.invoicingR, account, rr.stripeTokenR);
+				slackBotHook.post("*" + rr.participantR.name.value + "* just signed up for *" + s +"* (" + slackPaymentText + ")");
 			} catch (IOException e) {
 				System.err.println("Couldn't post signup to Slack: " + e.getMessage());
 				e.printStackTrace();
@@ -296,6 +298,17 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 			e.printStackTrace(System.out);
 			return Response.serverError().build();
 		}
+	}
+
+	private static String slackPaymentText(
+		Option<InvoicingR> invoicingR,
+		Option<Account> account,
+		Option<StripeTokenR> stripeTokenR
+	) {
+		if (invoicingR.isSome()) return "INVOICE";
+		if (account.isSome()) return "Account: " + account.some().value;
+		if (stripeTokenR.isSome()) return "CREDIT CARD";
+		return "UNKNOWN";
 	}
 
 	private static String errorJson(String message) {

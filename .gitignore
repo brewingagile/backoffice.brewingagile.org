@@ -7,3 +7,6 @@
 
 default.nix
 application/src/main/resources/webapp/nametags/Thumbs.db
+
+local-config/
+

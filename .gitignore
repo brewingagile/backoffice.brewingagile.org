@@ -8,5 +8,7 @@ dependency-reduced-pom.xml
 .idea/
 *.iml 
 
+.gradle/
+
 default.nix
 application/src/main/resources/webapp/nametags/Thumbs.db

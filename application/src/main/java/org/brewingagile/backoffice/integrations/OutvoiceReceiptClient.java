@@ -1,15 +1,15 @@
 package org.brewingagile.backoffice.integrations;
 
-import argo.jdom.JsonRootNode;
+import argo.jdom.JsonNode;
 import argo.saj.InvalidSyntaxException;
-import fj.Unit;
 import fj.data.Either;
 import fj.data.List;
-import fj.data.Set;
 import okhttp3.*;
 import org.brewingagile.backoffice.db.operations.TicketsSql;
 import org.brewingagile.backoffice.rest.json.ToJson;
-import org.brewingagile.backoffice.types.*;
+import org.brewingagile.backoffice.types.ChargeId;
+import org.brewingagile.backoffice.types.ParticipantEmail;
+import org.brewingagile.backoffice.types.ParticipantName;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.postgresql.util.Base64;
 
@@ -30,7 +30,7 @@ public class OutvoiceReceiptClient {
 		this.apikey = apikey;
 	}
 
-	public Either<String, ReceiptResponse> post(JsonRootNode jsonRequest) throws IOException, InvalidSyntaxException {
+	public Either<String, ReceiptResponse> post(JsonNode jsonRequest) throws IOException, InvalidSyntaxException {
 		HttpUrl url = HttpUrl.parse(endpoint).newBuilder()
 			.addPathSegment("receipts")
 			.build();
@@ -49,7 +49,7 @@ public class OutvoiceReceiptClient {
 		}
 	}
 
-	public static JsonRootNode mkParticipantRequest(
+	public static JsonNode mkParticipantRequest(
 		ChargeId chargeId,
 		Instant stripeTxTimestamp,
 		ParticipantName buyerName,
@@ -81,7 +81,7 @@ public class OutvoiceReceiptClient {
 		}
 
 		public static ReceiptResponse unjson(String json) throws InvalidSyntaxException {
-			JsonRootNode parse = ArgoUtils.parse(json);
+			JsonNode parse = ArgoUtils.parse(json);
 			return new ReceiptResponse(
 				HttpUrl.parse(parse.getStringValue("pdfUrl")),
 				Base64.decode(parse.getStringValue("pdfSource"))

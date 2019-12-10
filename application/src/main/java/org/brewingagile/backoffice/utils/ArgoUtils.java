@@ -4,7 +4,6 @@ import argo.format.CompactJsonFormatter;
 import argo.format.JsonFormatter;
 import argo.jdom.JdomParser;
 import argo.jdom.JsonNode;
-import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
 import fj.data.Either;
 
@@ -18,30 +17,30 @@ public final class ArgoUtils {
 	private static final JsonFormatter COMPACT_FORMATTER = new CompactJsonFormatter();
 	private static final JdomParser JDOM_PARSER = new JdomParser();
 
-	public static String format(JsonRootNode json) {
+	public static String format(JsonNode json) {
 		return COMPACT_FORMATTER.format(json);
 	}
 
-	public static Collector<JsonNode, ?, JsonRootNode> toArray() {
+	public static Collector<JsonNode, ?, JsonNode> toArray() {
 		return Collectors.collectingAndThen(Collectors.toList(), list -> array(list));
 	}
 
-	public static Collector<String, ?, JsonRootNode> toStringArray() {
+	public static Collector<String, ?, JsonNode> toStringArray() {
 		return Collectors.mapping(s -> string(s), toArray());
 	}
 
-	public static <V> Collector<V, ?, JsonRootNode> toObject(Function<V, String> keyFn, Function<V, JsonNode> nodeFn) {
+	public static <V> Collector<V, ?, JsonNode> toObject(Function<V, String> keyFn, Function<V, JsonNode> nodeFn) {
 		return Collectors.mapping(
 			v -> field(keyFn.apply(v), nodeFn.apply(v)),
 			Collectors.collectingAndThen(Collectors.toList(), fields -> object(fields))
 		);
 	}
 
-	public static JsonRootNode parse(String s) throws InvalidSyntaxException {
+	public static JsonNode parse(String s) throws InvalidSyntaxException {
 		return JDOM_PARSER.parse(s);
 	}
 
-	public static Either<String, JsonRootNode> parseEither(String s) {
+	public static Either<String, JsonNode> parseEither(String s) {
 		try {
 			return Either.right(JDOM_PARSER.parse(s));
 		} catch (InvalidSyntaxException ex) {

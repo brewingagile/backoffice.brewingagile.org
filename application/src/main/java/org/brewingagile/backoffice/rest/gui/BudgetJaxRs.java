@@ -1,7 +1,6 @@
 package org.brewingagile.backoffice.rest.gui;
 
 import argo.jdom.JsonNode;
-import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
 import fj.Monoid;
 import fj.P2;
@@ -74,7 +73,7 @@ public class BudgetJaxRs {
 		}
 	}
 
-	private static JsonRootNode json(BudgetSql.FixedCost x) {
+	private static JsonNode json(BudgetSql.FixedCost x) {
 		return object(
 			field("cost" ,string(x.cost)),
 			field("amount", number(x.amount))
@@ -194,7 +193,7 @@ public class BudgetJaxRs {
 		return revenue.foldLeft((BigDecimal l, BudgetItem r) -> l.add(r.total), BigDecimal.ZERO);
 	}
 
-	private static JsonRootNode json(
+	private static JsonNode json(
 		List<BudgetItem> revenue,
 		List<BudgetItem> cost,
 		BigDecimal allRevenue,
@@ -212,7 +211,7 @@ public class BudgetJaxRs {
 		);
 	}
 
-	private static JsonRootNode json(BudgetItem bi) {
+	private static JsonNode json(BudgetItem bi) {
 		return object(
 			field("description", string(bi.description)),
 			field("qty", number(bi.qty)),

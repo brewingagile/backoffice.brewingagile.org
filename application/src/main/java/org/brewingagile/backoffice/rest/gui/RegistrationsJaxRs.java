@@ -1,7 +1,6 @@
 package org.brewingagile.backoffice.rest.gui;
 
 import argo.jdom.JsonNode;
-import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
 import fj.*;
 import fj.data.*;
@@ -78,7 +77,7 @@ public class RegistrationsJaxRs {
 		try (Connection c = dataSource.getConnection()) {
 			List<UUID> ids = registrationsSqlMapper.all(c).map(x -> x._1());
 			List<P3<RegistrationsSqlMapper.Registration, Option<Account>, Option<RegistrationInvoiceMethod>>> all = Option.somes(ids.traverseIO(ioify(c)).run());
-			JsonRootNode overview = object(
+			JsonNode overview = object(
 				field("received", array(all.filter(x -> x._1().tuple.state == RegistrationState.RECEIVED).map(r -> json(r._1(), r._2(), r._3())))),
 				field("invoicing", array(all.filter(x -> x._1().tuple.state == RegistrationState.INVOICING).map(r -> json(r._1(), r._2(), r._3())))),
 				field("paid", array(all.filter(x -> x._1().tuple.state == RegistrationState.PAID).map(r -> json(r._1(), r._2(), r._3()))))
@@ -129,7 +128,7 @@ public class RegistrationsJaxRs {
 		}
 	}
 
-	private static JsonRootNode json(
+	private static JsonNode json(
 		RegistrationsSqlMapper.Registration r,
 		Option<Account> registrationAccount,
 		Option<RegistrationInvoiceMethod> registrationInvoiceMethod

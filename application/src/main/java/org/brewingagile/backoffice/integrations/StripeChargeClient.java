@@ -1,6 +1,6 @@
 package org.brewingagile.backoffice.integrations;
 
-import argo.jdom.JsonRootNode;
+import argo.jdom.JsonNode;
 import argo.saj.InvalidSyntaxException;
 import fj.data.Either;
 import okhttp3.*;
@@ -64,14 +64,14 @@ public class StripeChargeClient {
 			this.id = id;
 		}
 
-		public static ChargeResponse unjson(JsonRootNode x) {
+		public static ChargeResponse unjson(JsonNode x) {
 			return new ChargeResponse(
 				ChargeId.chargeId(x.getStringValue("id"))
 			);
 		}
 	}
 
-	public static String unjsonErrorMessage(JsonRootNode x) {
+	public static String unjsonErrorMessage(JsonNode x) {
 		return x.getStringValue("error", "message");
 	}
 

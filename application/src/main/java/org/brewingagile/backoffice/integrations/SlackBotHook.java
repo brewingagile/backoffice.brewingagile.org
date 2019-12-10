@@ -1,6 +1,6 @@
 package org.brewingagile.backoffice.integrations;
 
-import argo.jdom.JsonRootNode;
+import argo.jdom.JsonNode;
 import okhttp3.*;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
@@ -22,7 +22,7 @@ public class SlackBotHook {
 	}
 
 	public void post(String text) throws IOException {
-		JsonRootNode request9 = object(
+		JsonNode request9 = object(
 			field("text", string(text)),
 			field("channel", string(channel)), //@username, #channel
 			field("username", string(botUsername)),

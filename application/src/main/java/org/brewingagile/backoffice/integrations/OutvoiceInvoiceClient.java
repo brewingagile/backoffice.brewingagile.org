@@ -1,6 +1,6 @@
 package org.brewingagile.backoffice.integrations;
 
-import argo.jdom.JsonRootNode;
+import argo.jdom.JsonNode;
 import fj.F;
 import fj.Unit;
 import fj.data.Either;
@@ -34,7 +34,7 @@ public class OutvoiceInvoiceClient {
 		this.apikey = apikey;
 	}
 
-	public Either<String, Unit> postInvoice(JsonRootNode jsonRequest) throws IOException {
+	public Either<String, Unit> postInvoice(JsonNode jsonRequest) throws IOException {
 		HttpUrl url = HttpUrl.parse(endpoint).newBuilder()
 			.addPathSegment("invoices")
 			.build();
@@ -53,7 +53,7 @@ public class OutvoiceInvoiceClient {
 		}
 	}
 
-	public static Option<JsonRootNode> mkAccountRequest(
+	public static Option<JsonNode> mkAccountRequest(
 		String accountKey,
 		String billingEmail,
 		String recipient,
@@ -64,7 +64,7 @@ public class OutvoiceInvoiceClient {
 		BigDecimal total = AccountLogic.total(accountStatement.lines);
 		if (total.compareTo(alreadyInvoicedAmountExVat) == 0) return Option.none();
 
-		List<JsonRootNode> map = accountStatement.lines.map(x -> line(x.description, "Avser: Brewing Agile 2018", x.price, new BigDecimal(x.qty)))
+		List<JsonNode> map = accountStatement.lines.map(x -> line(x.description, "Avser: Brewing Agile 2018", x.price, new BigDecimal(x.qty)))
 			.append(
 				alreadyInvoicedAmountExVat.equals(BigDecimal.ZERO)
 				? List.list()
@@ -87,7 +87,7 @@ public class OutvoiceInvoiceClient {
 		));
 	}
 
-	public static JsonRootNode mkParticipantRequest(
+	public static JsonNode mkParticipantRequest(
 		UUID registrationId,
 		BillingMethod deliveryMethod,
 		ParticipantEmail recipientEmailAddress,
@@ -107,11 +107,11 @@ public class OutvoiceInvoiceClient {
 		);
 	}
 
-	private static F<TicketsSql.Ticket, JsonRootNode> line(String eventPrefix, ParticipantName participantName) {
+	private static F<TicketsSql.Ticket, JsonNode> line(String eventPrefix, ParticipantName participantName) {
 		return ticket -> line(eventPrefix + ticket.ticket.ticketName, ticket.productText + "\nAvser deltagare: " + participantName.value, ticket.price.multiply(BigDecimal.valueOf(0.8)), BigDecimal.ONE);
 	}
 
-	private static JsonRootNode line(String text, String description, BigDecimal price, BigDecimal qty) {
+	private static JsonNode line(String text, String description, BigDecimal price, BigDecimal qty) {
 		return object(
 			field("text", string(text)),
 			field("description", string(description)),

@@ -6,9 +6,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import argo.jdom.JsonRootNode;
 import static argo.jdom.JsonNodeFactories.*;
 
+import argo.jdom.JsonNode;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.GitPropertiesDescribeVersionNumberProvider;
 
@@ -29,7 +29,7 @@ public class VersionNumberJaxRs {
 		return Response.ok(ArgoUtils.format(json(versionNumberProvider.softwareVersion()))).build();
 	}
 
-	private static JsonRootNode json(String version) {
+	private static JsonNode json(String version) {
 		return object(field("version", string(version)));
 	}
 }

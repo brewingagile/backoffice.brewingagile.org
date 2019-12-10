@@ -1,7 +1,6 @@
 package org.brewingagile.backoffice.rest.gui;
 
 import argo.jdom.JsonNode;
-import argo.jdom.JsonRootNode;
 import argo.saj.InvalidSyntaxException;
 import fj.data.Collectors;
 import fj.data.List;
@@ -56,7 +55,7 @@ public class TicketsJaxRs {
 		}
 	}
 
-	private static JsonRootNode json(Ticket t) {
+	private static JsonNode json(Ticket t) {
 		return object(
 			field("ticket", ToJson.json(t.ticket)),
 			field("productText", string(t.productText)),

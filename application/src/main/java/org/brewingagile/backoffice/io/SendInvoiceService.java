@@ -1,6 +1,6 @@
 package org.brewingagile.backoffice.io;
 
-import argo.jdom.JsonRootNode;
+import argo.jdom.JsonNode;
 import fj.Unit;
 import fj.data.Either;
 import fj.data.Set;
@@ -53,7 +53,7 @@ public class SendInvoiceService {
 			if (!registrationsSqlMapper.invoiceReference(c, id).isSome()) {
 				Set<TicketsSql.Ticket> tickets = ticketsSql.by(c, id);
 				RegistrationsSqlMapper.RegistrationTuple rt = registration.tuple;
-				JsonRootNode jsonRequest = OutvoiceInvoiceClient.mkParticipantRequest(registration.id, BillingMethod.EMAIL, rt.participantEmail, registrationInvoiceMethod.billingCompany, registrationInvoiceMethod.billingAddress, tickets, rt.participantName);
+				JsonNode jsonRequest = OutvoiceInvoiceClient.mkParticipantRequest(registration.id, BillingMethod.EMAIL, rt.participantEmail, registrationInvoiceMethod.billingCompany, registrationInvoiceMethod.billingAddress, tickets, rt.participantName);
 				Either<String, Unit> invoiceReferenceId = outvoiceInvoiceClient.postInvoice(jsonRequest);
 				if (invoiceReferenceId.isLeft()) {
 					System.err.println(invoiceReferenceId.left().value());

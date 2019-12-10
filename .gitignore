@@ -1,14 +1,9 @@
-.settings
-.classpath
-.project
-target
-dependency-reduced-pom.xml
-
 # IntelliJ
 .idea/
 *.iml 
 
 .gradle/
+*/build
 
 default.nix
 application/src/main/resources/webapp/nametags/Thumbs.db

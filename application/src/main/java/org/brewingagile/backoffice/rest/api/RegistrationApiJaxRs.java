@@ -1,7 +1,6 @@
 package org.brewingagile.backoffice.rest.api;
 
 import argo.jdom.JsonNode;
-import argo.jdom.JsonRootNode;
 import fj.Monoid;
 import fj.Ord;
 import fj.data.*;
@@ -188,7 +187,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 		try {
 			System.out.println(body);
 
-			JsonRootNode jrn = ArgoUtils.parse(body);
+			JsonNode jrn = ArgoUtils.parse(body);
 			RegistrationR rr = unjson(jrn);
 			System.out.println("============================");
 			System.out.println(rr);
@@ -254,7 +253,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 					c.setAutoCommit(false);
 					TreeMap<TicketName, TicketsSql.Ticket> p2s = ticketsSql.all(c).groupBy(x -> x.ticket).map(x -> x.head());
 					List<TicketsSql.Ticket> map = rr.participantR.tickets.toList().map(x -> p2s.get(x).some());
-					JsonRootNode jsonRootNode = OutvoiceReceiptClient.mkParticipantRequest(stringChargeEither.right().value().id, stripeTxTimestamp, rr.participantR.name, rr.participantR.email, map);
+					JsonNode jsonRootNode = OutvoiceReceiptClient.mkParticipantRequest(stringChargeEither.right().value().id, stripeTxTimestamp, rr.participantR.name, rr.participantR.email, map);
 					Either<String, OutvoiceReceiptClient.ReceiptResponse> post = outvoiceReceiptClient.post(jsonRootNode);
 					receiptPdf = post.right().toOption().map(x -> x.pdfSource);
 
@@ -396,7 +395,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 		}
 	}
 
-	private static JsonRootNode ticketJson(TicketName ticketName, String description, boolean value, BigInteger priceInOre) {
+	private static JsonNode ticketJson(TicketName ticketName, String description, boolean value, BigInteger priceInOre) {
 		return object(
 			field("ticket", ToJson.json(ticketName)),
 			field("description", string(description)),
@@ -405,7 +404,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 		);
 	}
 
-	private static RegistrationR unjson(JsonRootNode body) {
+	private static RegistrationR unjson(JsonNode body) {
 		return new RegistrationR(
 			participant(body.getNode("registration")),
 			optional(body, "accountSignupSecret").bind(j -> AccountSignupSecret.parse(j.getStringValue())),
@@ -424,7 +423,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 		);
 	}
 
-	private static Option<JsonNode> optional(JsonRootNode body, String f) {
+	private static Option<JsonNode> optional(JsonNode body, String f) {
 		if (!body.isNode(f)) return Option.none();
 		if (body.isNullNode(f)) return Option.none();
 		return Option.some(body.getNode(f));

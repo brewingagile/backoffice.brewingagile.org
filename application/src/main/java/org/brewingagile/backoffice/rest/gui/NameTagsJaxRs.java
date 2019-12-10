@@ -1,6 +1,6 @@
 package org.brewingagile.backoffice.rest.gui;
 
-import argo.jdom.JsonRootNode;
+import argo.jdom.JsonNode;
 import fj.F;
 import fj.data.IO;
 import fj.data.List;
@@ -84,7 +84,7 @@ public class NameTagsJaxRs {
 		}
 	}
 
-	private static JsonRootNode json(Registration r) {
+	private static JsonNode json(Registration r) {
 		return object(
 			field("name", ToJson.participantName(r.tuple.participantName)),
 			field("company", ToJson.json(r.tuple.organisation)),

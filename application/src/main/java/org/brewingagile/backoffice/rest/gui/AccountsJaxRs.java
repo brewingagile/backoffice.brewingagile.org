@@ -1,6 +1,6 @@
 package org.brewingagile.backoffice.rest.gui;
 
-import argo.jdom.JsonRootNode;
+import argo.jdom.JsonNode;
 import fj.P3;
 import fj.data.List;
 import fj.data.Option;
@@ -163,14 +163,14 @@ public class AccountsJaxRs {
 
 		try {
 			Account account = Account.account(aAccount);
-			JsonRootNode jsonRequest;
+			JsonNode jsonRequest;
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);
 				AccountLogic.AccountStatement2 accountStatement = accountIO.accountStatement2(c, account);
 				AccountData ad = accountsSql.accountData(c, account);
 				String invoiceAccountKey = "brewingagile-" + account.value;
 				BigDecimal alreadyInvoicedAmountExVat = OutvoiceAccountClient.invoiceAmountExVat(outvoiceAccountClient.get(invoiceAccountKey));
-				Option<JsonRootNode> jsonRootNodes = OutvoiceInvoiceClient.mkAccountRequest(invoiceAccountKey, ad.billingEmail, ad.billingRecipient, ad.billingAddress, accountStatement, alreadyInvoicedAmountExVat);
+				Option<JsonNode> jsonRootNodes = OutvoiceInvoiceClient.mkAccountRequest(invoiceAccountKey, ad.billingEmail, ad.billingRecipient, ad.billingAddress, accountStatement, alreadyInvoicedAmountExVat);
 				if (jsonRootNodes.isNone())
 					return Response.ok(ArgoUtils.format(Result.success2("Balance is Zero. Nothing to invoice."))).build();
 				jsonRequest = jsonRootNodes.some();
@@ -215,7 +215,7 @@ public class AccountsJaxRs {
 
 		try {
 			Account account = Account.account(aAccount);
-			JsonRootNode parse = ArgoUtils.parse(body);
+			JsonNode parse = ArgoUtils.parse(body);
 			String billingRecipient = parse.getStringValue("billingRecipient");
 			String billingAddress = parse.getStringValue("billingAddress");
 			String billingEmail = parse.getStringValue("billingEmail");

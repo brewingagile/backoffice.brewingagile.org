@@ -13,5 +13,6 @@ CMD [ \
   "-XX:InitialRAMPercentage=50", \
   "-XX:MaxRAMPercentage=85", \
   "-jar", "/application-all.jar", \
-  "/config/backend.conf" \
+  "/config/config.properties", \
+  "/secret/secret.properties" \
 ]

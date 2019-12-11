@@ -48,9 +48,9 @@ project(':application') {
         implementation 'com.hencjo.summer:summer-security:1.1.1'
         implementation 'com.hencjo.summer:summer-migration:1.0'
 
-        implementation 'org.eclipse.jetty:jetty-server:9.0.0.M3'
-        implementation 'org.eclipse.jetty:jetty-servlet:9.0.0.M3'
-        implementation 'org.eclipse.jetty:jetty-webapp:9.0.0.M3'
+        implementation 'org.eclipse.jetty:jetty-server:9.4.17.v20190418'
+        implementation 'org.eclipse.jetty:jetty-servlet:9.4.17.v20190418'
+        implementation 'org.eclipse.jetty:jetty-webapp:9.4.17.v20190418'
 
         implementation 'org.functionaljava:functionaljava:4.5'
         implementation 'org.functionaljava:functionaljava-java8:4.5'

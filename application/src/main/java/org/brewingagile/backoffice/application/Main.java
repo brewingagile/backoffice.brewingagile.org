@@ -87,7 +87,7 @@ public class Main {
 	private static ServletContextHandler context(Configuration configuration, Application application, String contextPath, CmdArguments args) throws IOException {
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.setContextPath(contextPath);
-		context.getSessionHandler().getSessionManager().setMaxInactiveInterval(3600);
+		context.getSessionHandler().setMaxInactiveInterval(3600);
 		context.setBaseResource(resourceCollection(args));
 		context.addFilter(new FilterHolder(new AuthenticationFilter(configuration)), "/*", EnumSet.allOf(DispatcherType.class));
 		context.addFilter(new FilterHolder(new IndexHtmlVersionRewriteFilter(application.versionNumberProvider)), "/", EnumSet.allOf(DispatcherType.class));

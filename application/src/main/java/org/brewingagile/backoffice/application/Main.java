@@ -40,23 +40,19 @@ public class Main {
 	}
 
 	public static Either<ExitCodeAndMessage, Server> subMain(String[] rawArgs) throws Exception {
-		Either<String, CmdArguments> eitherArgs = CmdArgumentParser.parse(rawArgs);
-		if (eitherArgs.isLeft())
-			return eitherArgs.bimap(l -> new ExitCodeAndMessage(1, "Illegal arguments: " + l), r -> null);
-
-		CmdArguments args = eitherArgs.right().value();
+		CmdArguments args = CmdArgumentParser.parse(rawArgs);
+//		if (eitherArgs.isLeft())
+//			return eitherArgs.bimap(l -> new ExitCodeAndMessage(1, "Illegal arguments: " + l), r -> null);
+//
+//		CmdArguments args = eitherArgs.right().value();
 
 		String contextPath = "/";
 
-		Either<ExitCodeAndMessage, Configuration> bimap = EtcPropertyFile.from(new InputStreamReader(new FileInputStream(args.propertiesFile), Charsets.UTF8))
-			.bimap(
-				l -> new ExitCodeAndMessage(1, "Could not read/find application property file '" + args.propertiesFile + "': " + l.getMessage()),
-				Configuration::from
-			);
+		EtcPropertyFile configProperties = EtcPropertyFile.from(new InputStreamReader(new FileInputStream(args.configPropertiesFile), Charsets.UTF8));
+		EtcPropertyFile secretProperties = EtcPropertyFile.from(new InputStreamReader(new FileInputStream(args.secretPropertiesFile), Charsets.UTF8));
 
-		if (bimap.isLeft()) return Either.left(bimap.left().value());
-
-		Configuration config = bimap.right().value();
+		Configuration config = Configuration.from(configProperties, secretProperties);
+//				l -> new ExitCodeAndMessage(1, "Could not read/find application property file '" + args.propertiesFile + "': " + l.getMessage()),
 
 		PostgresConnector postgresConnector = new PostgresConnector(config.dbHost, config.dbPort, config.dbName, config.dbUsername, config.dbPassword);
 		PGPoolingDataSource ds = postgresConnector.poolingDatasource();

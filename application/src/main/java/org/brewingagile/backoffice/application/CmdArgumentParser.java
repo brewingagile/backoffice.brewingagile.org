@@ -1,37 +1,42 @@
 package org.brewingagile.backoffice.application;
 
-import fj.P2;
-import fj.data.Either;
-import fj.data.List;
 import fj.data.Option;
+
+import java.io.IOException;
 
 public class CmdArgumentParser {
 	public static final class CmdArguments {
-		public final String propertiesFile;
+		public final String configPropertiesFile;
+		public final String secretPropertiesFile;
 		public final Option<String> devOverlayDirectory;
 
-		public CmdArguments(String propertiesFile, Option<String> devOverlayDirectory) {
-			this.propertiesFile = propertiesFile;
+		public CmdArguments(
+			String configPropertiesFile,
+			String secretPropertiesFile,
+			Option<String> devOverlayDirectory
+		) {
+			this.configPropertiesFile = configPropertiesFile;
+			this.secretPropertiesFile = secretPropertiesFile;
 			this.devOverlayDirectory = devOverlayDirectory;
 		}
 	}
 
-	public static Either<String, CmdArguments> parse(String[] args) {
-		return positionArgument("properties-file", args, 1)
-			.right().map(r -> new CmdArguments(r, getSwitchArgument("dev", args)));
+	public static CmdArguments parse(String[] args) throws IOException {
+		Option<String> stringStringEither = getSwitchArgument("config-file", args);
+		Option<String> s2 = getSwitchArgument("secret-file", args);
+		Option<String> dev = getSwitchArgument("dev", args);
+		if (stringStringEither.isNone()) throw new IOException("Missing mandatory argument --config-file=");
+		if (stringStringEither.isNone()) throw new IOException("Missing mandatory argument --secret-file=");
+		return new CmdArguments(stringStringEither.some(), s2.some(), dev);
 	}
 
-	private static Either<String, String> positionArgument(String name, String[] args, int position) {
-		if (args.length == 0) return Either.left(name);
-		return Either.right(args[0]);
-	}
-
-	private static Option<String> getSwitchArgument(String key, String[] args) {
-		String argKey = "--" + key;
-		List<String> list = List.list(args);
-		return list.zip(list.tail())
-			.filter(k -> argKey.equals(k._1()))
-			.map(P2.__2())
-			.headOption();
+	private static Option<String> getSwitchArgument(String c, String[] args) {
+		for (String arg : args) {
+			String prefix = "--" + c + "=";
+			if (arg.startsWith(prefix)) {
+				return Option.some(arg.substring(prefix.length()));
+			}
+		}
+		return Option.none();
 	}
 }

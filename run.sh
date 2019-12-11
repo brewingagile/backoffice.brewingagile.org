@@ -8,4 +8,4 @@ else
 fi 
 echo "Using $CONFIG"
 echo "Using $SECRET"
-java -jar application/build/libs/application-all.jar "$CONFIG" "$SECRET" --dev application/src/main/resources/webapp/
+java -jar application/build/libs/application-all.jar --config-file=$CONFIG --secret-file=$SECRET --dev application/src/main/resources/webapp/

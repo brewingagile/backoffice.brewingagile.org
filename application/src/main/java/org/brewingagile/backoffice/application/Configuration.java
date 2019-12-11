@@ -71,30 +71,30 @@ public class Configuration {
 		this.mailchimpList = mailchimpList;
 	}
 	
-	public static Configuration from(EtcPropertyFile etc) {
+	public static Configuration from(EtcPropertyFile config, EtcPropertyFile secret) {
 		return new Configuration(
-			etc.string("db.name"),
-			etc.string("db.host"),
-			etc.integer("db.port"),
-			etc.string("db.username"),
-			etc.string("db.password"),
-			etc.string("gui.admin.username"),
-			etc.string("gui.admin.password"),
-			etc.string("outvoice.invoices.endpoint"),
-			etc.string("outvoice.invoices.apikey"),
-			etc.string("email.from.email"),
-			etc.string("email.from.name"),
-			etc.string("emails.confirmation.subject"),
-			etc.string("gmail.user"),
-			etc.string("gmail.password"),
-			etc.string("mailchimp.endpoint"),
-			etc.string("mailchimp.apikey"),
-			HttpUrl.parse(etc.string("slackbot.hookurl")),
-			etc.string("slackbot.name"),
-			etc.string("slackbot.channel"),
-			StripePublishableKey.stripePublishableKey(etc.string("stripe.key.publishable")),
-			StripePrivateKey.stripePrivateKey(etc.string("stripe.key.secret")),
-			MailchimpSubscribeClient.ListUniqueId.listUniqueId(etc.string("mailchimp.list"))
+			config.string("db.name"),
+			config.string("db.host"),
+			config.integer("db.port"),
+			config.string("db.username"),
+			secret.string("db.password"),
+			config.string("gui.admin.username"),
+			secret.string("gui.admin.password"),
+			config.string("outvoice.invoices.endpoint"),
+			secret.string("outvoice.invoices.apikey"),
+			config.string("email.from.email"),
+			config.string("email.from.name"),
+			config.string("emails.confirmation.subject"),
+			config.string("gmail.user"),
+			secret.string("gmail.password"),
+			config.string("mailchimp.endpoint"),
+			secret.string("mailchimp.apikey"),
+			HttpUrl.parse(secret.string("slackbot.hookurl")),
+			config.string("slackbot.name"),
+			config.string("slackbot.channel"),
+			StripePublishableKey.stripePublishableKey(config.string("stripe.key.publishable")),
+			StripePrivateKey.stripePrivateKey(secret.string("stripe.key.secret")),
+			MailchimpSubscribeClient.ListUniqueId.listUniqueId(config.string("mailchimp.list"))
 		);
 	}
 }

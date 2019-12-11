@@ -1,12 +1,8 @@
 package org.brewingagile.backoffice.utils;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Properties;
-
-import com.hencjo.summer.migration.util.Resources;
-import fj.data.Either;
 
 public class EtcPropertyFile {
 	private final Properties properties;
@@ -15,14 +11,10 @@ public class EtcPropertyFile {
 		this.properties = properties;
 	}
 
-	public static Either<IOException, EtcPropertyFile> from(Reader reader) {
+	public static EtcPropertyFile from(Reader reader) throws IOException {
 		Properties properties = new Properties();
-		try {
-			properties.load(reader);
-			return Either.right(new EtcPropertyFile(properties));
-		} catch (IOException e) {
-			return Either.left(e);
-		}
+		properties.load(reader);
+		return new EtcPropertyFile(properties);
 	}
 
 	public int integer(String key) {

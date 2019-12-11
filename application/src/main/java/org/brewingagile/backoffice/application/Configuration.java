@@ -7,6 +7,7 @@ import org.brewingagile.backoffice.types.StripePublishableKey;
 import org.brewingagile.backoffice.utils.EtcPropertyFile;
 
 public class Configuration {
+	public final int jettyHttpListenPort;
 	public final String dbName;
 	public final String dbHost;
 	public final int dbPort;
@@ -31,10 +32,18 @@ public class Configuration {
 	public final MailchimpSubscribeClient.ListUniqueId mailchimpList;
 
 	public Configuration(
-		String dbName, String dbHost, int dbPort, String dbUsername, String dbPassword,
-		String guiAdminUsername, String guiAdminPassword,
-		String outvoiceInvoicesEndpoint, String outvoiceInvoicesApikey,
-		String emailFromEmail, String emailFromName,
+		int jettyHttpListenPort,
+		String dbName,
+		String dbHost,
+		int dbPort,
+		String dbUsername,
+		String dbPassword,
+		String guiAdminUsername,
+		String guiAdminPassword,
+		String outvoiceInvoicesEndpoint,
+		String outvoiceInvoicesApikey,
+		String emailFromEmail,
+		String emailFromName,
 		String emailsConfirmationSubject,
 		String gmailUser,
 		String gmailPassword,
@@ -47,6 +56,7 @@ public class Configuration {
 		StripePrivateKey stripePrivateKey,
 		MailchimpSubscribeClient.ListUniqueId mailchimpList
 	) {
+		this.jettyHttpListenPort = jettyHttpListenPort;
 		this.dbName = dbName;
 		this.dbHost = dbHost;
 		this.dbPort = dbPort;
@@ -70,9 +80,10 @@ public class Configuration {
 		this.stripePrivateKey = stripePrivateKey;
 		this.mailchimpList = mailchimpList;
 	}
-	
+
 	public static Configuration from(EtcPropertyFile config, EtcPropertyFile secret) {
 		return new Configuration(
+			config.integer("jetty.http-listen-port"),
 			config.string("db.name"),
 			config.string("db.host"),
 			config.integer("db.port"),

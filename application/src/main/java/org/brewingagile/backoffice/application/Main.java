@@ -61,11 +61,10 @@ public class Main {
 
 		Application application = new Application(config, ds);
 
-		int webPort = 9080;
-		Server server = new Server(webPort);
+		Server server = new Server(config.jettyHttpListenPort);
 		server.setHandler(context(config, application, contextPath, args));
 		server.start();
-		System.out.println("Application started on http://localhost:" + webPort + contextPath + "/");
+		System.out.println("Application started on http://localhost:" + config.jettyHttpListenPort + contextPath + "/");
 		return Either.right(server);
 	}
 

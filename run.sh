@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-if [ -f ../backend.conf ]; then
-	CONFIG=../backend.conf
-	SECRET=../backend.conf
+if [ -f local-config/backend.conf ]; then
+	CONFIG=local-config/backend.conf
+	SECRET=local-config/backend.conf
 else
 	CONFIG=./backend.conf
 	SECRET=./backend.conf

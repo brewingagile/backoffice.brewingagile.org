@@ -9,6 +9,10 @@ buildscript {
     }
 }
 
+plugins {
+    id "com.palantir.git-version" version "0.12.2"
+}
+
 subprojects {
     repositories {
         mavenCentral()
@@ -68,6 +72,7 @@ project(':application') {
     jar {
         manifest {
             attributes("Main-Class": "org.brewingagile.backoffice.application.Main")
+            attributes("Implementation-Version": gitVersion())
         }
     }
 

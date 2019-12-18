@@ -13,18 +13,18 @@ import org.brewingagile.backoffice.io.DismissRegistrationService;
 import org.brewingagile.backoffice.io.MarkAsCompleteService;
 import org.brewingagile.backoffice.io.MarkAsPaidService;
 import org.brewingagile.backoffice.io.SendInvoiceService;
-import org.brewingagile.backoffice.utils.GitPropertiesDescribeVersionNumberProvider;
+import org.brewingagile.backoffice.utils.ManifestVersionNumber;
 
 import javax.sql.DataSource;
 import javax.ws.rs.client.ClientBuilder;
 
 public class Application {
-	public final GitPropertiesDescribeVersionNumberProvider versionNumberProvider;
+	public final String version;
 	public final List<Object> apiRestServices;
 	public final List<Object> guiRestServices;
 
-	Application(Configuration config, DataSource dataSource) {
-		this.versionNumberProvider = new GitPropertiesDescribeVersionNumberProvider(Application.class, "/resources/git.properties");
+	Application(Configuration config, DataSource dataSource, String version) {
+		this.version = version;
 		AuthService authService = new AuthService(new SummerAuthenticatedUser());
 		OkHttpClient okHttpClient = new OkHttpClient();
 		OkHttpClient unsafe = OkHttpHelper.getUnsafeOkHttpClient();
@@ -62,7 +62,7 @@ public class Application {
 
 		this.guiRestServices = List.list(
 			new LoggedInJaxRs(authService),
-			new VersionNumberJaxRs(versionNumberProvider),
+			new VersionNumberJaxRs(this.version),
 			new AccountsJaxRs(dataSource, authService, accountsSql, accountIO, accountSignupSecretSql, outvoiceInvoiceClient, outvoiceAccountClient),
 			new RegistrationsJaxRs(dataSource, authService, registrationsSqlMapper, sendInvoiceService, dismissRegistrationService, markAsCompleteService, markAsPaidService, outvoicePaidClient),
 			new NameTagsJaxRs(dataSource, authService, registrationsSqlMapper),

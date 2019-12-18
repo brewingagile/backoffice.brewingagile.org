@@ -6,6 +6,7 @@ import fj.data.List;
 import org.brewingagile.backoffice.application.CmdArgumentParser.CmdArguments;
 import org.brewingagile.backoffice.auth.AuthenticationFilter;
 import org.brewingagile.backoffice.utils.EtcPropertyFile;
+import org.brewingagile.backoffice.utils.ManifestVersionNumber;
 import org.brewingagile.backoffice.utils.PostgresConnector;
 import org.brewingagile.backoffice.utils.jersey.NeverCacheBindingFeature;
 import org.eclipse.jetty.server.Server;
@@ -54,12 +55,15 @@ public class Main {
 		Configuration config = Configuration.from(configProperties, secretProperties);
 //				l -> new ExitCodeAndMessage(1, "Could not read/find application property file '" + args.propertiesFile + "': " + l.getMessage()),
 
+		ManifestVersionNumber manifestVersionNumber = new ManifestVersionNumber();
+		String version = manifestVersionNumber.version(ManifestVersionNumber.class);
+
 		PostgresConnector postgresConnector = new PostgresConnector(config.dbHost, config.dbPort, config.dbName, config.dbUsername, config.dbPassword);
 		PGPoolingDataSource ds = postgresConnector.poolingDatasource();
 		postgresConnector.testConnection(ds);
 		runDbUpgrades(ds);
 
-		Application application = new Application(config, ds);
+		Application application = new Application(config, ds, version);
 
 		Server server = new Server(config.jettyHttpListenPort);
 		server.setHandler(context(config, application, contextPath, args));
@@ -85,7 +89,7 @@ public class Main {
 		context.getSessionHandler().setMaxInactiveInterval(3600);
 		context.setBaseResource(resourceCollection(args));
 		context.addFilter(new FilterHolder(new AuthenticationFilter(configuration)), "/*", EnumSet.allOf(DispatcherType.class));
-		context.addFilter(new FilterHolder(new IndexHtmlVersionRewriteFilter(application.versionNumberProvider)), "/", EnumSet.allOf(DispatcherType.class));
+		context.addFilter(new FilterHolder(new IndexHtmlVersionRewriteFilter(application.version)), "/", EnumSet.allOf(DispatcherType.class));
 		context.addServlet(DefaultServlet.class, "/*");
 		addJerseyServlet("/api/*", context,
 			List.list(MultiPartFeature.class, NeverCacheBindingFeature.class),

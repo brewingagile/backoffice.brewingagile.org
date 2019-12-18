@@ -2,7 +2,6 @@ package org.brewingagile.backoffice.application;
 
 import com.hencjo.summer.migration.util.Charsets;
 import com.hencjo.summer.security.api.AbstractFilter;
-import org.brewingagile.backoffice.utils.GitPropertiesDescribeVersionNumberProvider;
 import org.brewingagile.backoffice.utils.URLEncoder;
 import org.eclipse.jetty.util.IO;
 
@@ -18,12 +17,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class IndexHtmlVersionRewriteFilter extends AbstractFilter {
-	private final GitPropertiesDescribeVersionNumberProvider versionNumberProvider;
+	private final String version;
 
-	public IndexHtmlVersionRewriteFilter(
-		GitPropertiesDescribeVersionNumberProvider versionNumberProvider
-	) {
-		this.versionNumberProvider = versionNumberProvider;
+	public IndexHtmlVersionRewriteFilter(String version) {
+		this.version = version;
 	}
 
 	@Override
@@ -39,7 +36,7 @@ public class IndexHtmlVersionRewriteFilter extends AbstractFilter {
 			html = IO.toString(br);
 		}
 
-		String updatedHtml = html.replaceAll("##version##", URLEncoder.encode(versionNumberProvider.softwareVersion()));
+		String updatedHtml = html.replaceAll("##version##", URLEncoder.encode(version));
 		res.addHeader("Content-Type", "text/html; charset=utf-8");
 		res.addHeader("Cache-Control", "no-cache, no-store");
 		res.setCharacterEncoding("UTF-8");

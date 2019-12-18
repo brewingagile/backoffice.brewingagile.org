@@ -36,7 +36,7 @@ function RegistrationController($scope, $http, $resource, $window, $timeout, $wi
 	};
 
     $scope.stripeData = null;
-	$scope.paymentMethod = 'CREDIT_CARD'; // valid: 'CREDIT_CARD', 'ACCOUNT', 'INVOICE'
+	$scope.paymentMethod = 'INVOICE'; // valid: 'CREDIT_CARD', 'ACCOUNT', 'INVOICE'
 
     $http.get('api/registration/1/account/' + $scope.accountSignupSecret)
         .success(function(d) {

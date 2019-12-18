@@ -268,7 +268,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 			}
 
 			Array<ConfirmationEmailSender.Attachment> map = receiptPdf.toArray()
-				.map(x -> new ConfirmationEmailSender.Attachment("Brewing Agile 2018 kvitto (" + rr.participantR.name.value + ").pdf", "application/pdf", x));
+				.map(x -> new ConfirmationEmailSender.Attachment("Brewing Agile 2019 kvitto (" + rr.participantR.name.value + ").pdf", "application/pdf", x));
 
 			Either<String, String> emailResult = confirmationEmailSender.email(rr.participantR.email, map);
 			if (emailResult.isLeft()) {

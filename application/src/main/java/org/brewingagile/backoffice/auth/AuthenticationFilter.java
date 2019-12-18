@@ -32,6 +32,7 @@ public class AuthenticationFilter extends AbstractFilter {
 			when(pathBeginsWith("/links/")).thenAllow(),
 			when(pathBeginsWith("/email/")).thenAllow(),
 			when(pathBeginsWith("/api/")).thenAllow(),
+			when(pathBeginsWith("/healthz")).thenAllow(),
 			when(pathEquals("/gui/versionnumber")).thenAllow(),
 			when(pathEquals("/login.html")).thenAllow(),
 			when(pathEquals("/login.js")).thenAllow(),

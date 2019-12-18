@@ -5,6 +5,7 @@ import fj.data.Either;
 import fj.data.List;
 import org.brewingagile.backoffice.application.CmdArgumentParser.CmdArguments;
 import org.brewingagile.backoffice.auth.AuthenticationFilter;
+import org.brewingagile.backoffice.rest.HealthzJaxRs;
 import org.brewingagile.backoffice.utils.EtcPropertyFile;
 import org.brewingagile.backoffice.utils.ManifestVersionNumber;
 import org.brewingagile.backoffice.utils.PostgresConnector;
@@ -99,6 +100,9 @@ public class Main {
 			List.list(MultiPartFeature.class, NeverCacheBindingFeature.class),
 			application.guiRestServices.toJavaList()
 		);
+		ResourceConfig resourceConfig = new ResourceConfig();
+		resourceConfig.registerInstances(new HealthzJaxRs());
+		context.addServlet(new ServletHolder(new ServletContainer(resourceConfig)), "/healthz/*");
 		return context;
 	}
 

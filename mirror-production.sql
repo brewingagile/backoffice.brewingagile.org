@@ -2,7 +2,7 @@
 set -e
 
 DB_HOST="${DB_HOST:-localhost}"
-DB_PORT="${DB_PORT:-5433}"
+DB_PORT="${DB_PORT:-5436}"
 echo "Using PostgreSQL at $DB_HOST:$DB_PORT"
 
 PSQL="psql -U brewingagile --host=$DB_HOST --port=$DB_PORT brewingagile"

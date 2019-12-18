@@ -45,7 +45,7 @@ public class ConfirmationEmailSender {
 	}
 
 	private void catchAll(String toEmail, Array<Attachment> attachments) throws EmailException, IOException {
-		String subject = "Brewing Agile 2019: Registration Received";
+		String subject = "Brewing Agile 2020: Registration Received";
 
 		HtmlEmail email = new HtmlEmail();
 		email.setCharset("UTF-8");

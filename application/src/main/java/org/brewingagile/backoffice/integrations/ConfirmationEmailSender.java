@@ -47,12 +47,14 @@ public class ConfirmationEmailSender {
 	private void catchAll(String toEmail, Array<Attachment> attachments) throws EmailException, IOException {
 		String subject = "Brewing Agile 2020: Registration Received";
 
+		Configuration.Smtp smtp = configuration.smtp;
+
 		HtmlEmail email = new HtmlEmail();
 		email.setCharset("UTF-8");
-		email.setHostName("smtp.gmail.com");
+		email.setHostName(smtp.server);
 		email.setSSLOnConnect(true);
-		email.setSslSmtpPort("465");
-		email.setAuthentication(configuration.gmailUser, configuration.gmailPassword);
+		email.setSslSmtpPort(Integer.toString(smtp.sslPort));
+		email.setAuthentication(smtp.username, smtp.password);
 		email.addTo(toEmail);
 		email.setFrom(configuration.emailFromEmail, configuration.emailFromName);
 		email.setSubject(subject);

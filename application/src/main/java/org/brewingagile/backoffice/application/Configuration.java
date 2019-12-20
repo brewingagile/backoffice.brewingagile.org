@@ -1,5 +1,6 @@
 package org.brewingagile.backoffice.application;
 
+import lombok.EqualsAndHashCode;
 import okhttp3.HttpUrl;
 import org.brewingagile.backoffice.integrations.MailchimpSubscribeClient;
 import org.brewingagile.backoffice.types.StripePrivateKey;
@@ -20,8 +21,7 @@ public class Configuration {
 	public final String emailFromEmail;
 	public final String emailFromName;
 	public final String emailsConfirmationSubject;
-	public final String gmailUser;
-	public final String gmailPassword;
+	public final Smtp smtp;
 	public final String mailchimpEndpoint;
 	public final String mailchimpApikey;
 	public final HttpUrl slackBotHookUrl;
@@ -45,8 +45,7 @@ public class Configuration {
 		String emailFromEmail,
 		String emailFromName,
 		String emailsConfirmationSubject,
-		String gmailUser,
-		String gmailPassword,
+		Smtp smtp,
 		String mailchimpEndpoint,
 		String mailchimpApikey,
 		HttpUrl slackBotHookUrl,
@@ -69,8 +68,7 @@ public class Configuration {
 		this.emailFromEmail = emailFromEmail;
 		this.emailFromName = emailFromName;
 		this.emailsConfirmationSubject = emailsConfirmationSubject;
-		this.gmailUser = gmailUser;
-		this.gmailPassword = gmailPassword;
+		this.smtp = smtp;
 		this.mailchimpEndpoint = mailchimpEndpoint;
 		this.mailchimpApikey = mailchimpApikey;
 		this.slackBotHookUrl = slackBotHookUrl;
@@ -96,8 +94,12 @@ public class Configuration {
 			config.string("email.from.email"),
 			config.string("email.from.name"),
 			config.string("emails.confirmation.subject"),
-			config.string("gmail.user"),
-			secret.string("gmail.password"),
+			new Smtp(
+				config.string("smtp.server"),
+				config.integer("smtp.ssl-port"),
+				config.string("smtp.username"),
+				secret.string("smtp.password")
+			),
 			config.string("mailchimp.endpoint"),
 			secret.string("mailchimp.apikey"),
 			HttpUrl.parse(secret.string("slackbot.hookurl")),
@@ -107,5 +109,31 @@ public class Configuration {
 			StripePrivateKey.stripePrivateKey(secret.string("stripe.key.secret")),
 			MailchimpSubscribeClient.ListUniqueId.listUniqueId(config.string("mailchimp.list"))
 		);
+	}
+
+	@EqualsAndHashCode
+	public static final class Smtp {
+		public final String server;
+		public final int sslPort;
+		public final String username;
+		public final String password;
+
+		public Smtp(String server, int sslPort, String username, String password) {
+			this.server = server;
+			this.sslPort = sslPort;
+			this.username = username;
+			this.password = password;
+		}
+
+
+		@Override
+		public String toString() {
+			return "Smtp{" +
+				"server='" + server + '\'' +
+				", port=" + sslPort +
+				", username='" + username + '\'' +
+				", password='" + "REDACTED" + '\'' +
+				'}';
+		}
 	}
 }

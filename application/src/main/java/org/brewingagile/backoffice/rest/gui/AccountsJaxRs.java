@@ -186,10 +186,10 @@ public class AccountsJaxRs {
 	}
 
 	@PUT
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("{account}")
 	public Response postBillingInfo(@Context HttpServletRequest request, @PathParam("account") String aAccount) {
 		authService.guardAuthenticatedUser(request);
-
 		try {
 			Account account = Account.account(aAccount);
 			AccountSignupSecret secret = AccountSignupSecret.accountSignupSecret(UUID.randomUUID());

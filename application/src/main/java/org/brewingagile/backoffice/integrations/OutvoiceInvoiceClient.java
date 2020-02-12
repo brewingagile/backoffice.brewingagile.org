@@ -36,6 +36,7 @@ public class OutvoiceInvoiceClient {
 
 	public Either<String, Unit> postInvoice(JsonNode jsonRequest) throws IOException {
 		HttpUrl url = HttpUrl.parse(endpoint).newBuilder()
+			.addPathSegment("2")
 			.addPathSegment("invoices")
 			.build();
 		Request httpRequest = new Request.Builder()

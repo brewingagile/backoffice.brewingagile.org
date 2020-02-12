@@ -32,6 +32,7 @@ public class OutvoiceReceiptClient {
 
 	public Either<String, ReceiptResponse> post(JsonNode jsonRequest) throws IOException, InvalidSyntaxException {
 		HttpUrl url = HttpUrl.parse(endpoint).newBuilder()
+			.addPathSegment("2")
 			.addPathSegment("receipts")
 			.build();
 		Request httpRequest = new Request.Builder()

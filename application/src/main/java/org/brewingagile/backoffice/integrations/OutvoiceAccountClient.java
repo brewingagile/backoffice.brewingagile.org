@@ -26,6 +26,7 @@ public class OutvoiceAccountClient {
 
 	public String get(String invoiceAccountKey) throws IOException {
 		HttpUrl url = HttpUrl.parse(endpoint).newBuilder()
+			.addEncodedPathSegment("2")
 			.addEncodedPathSegment("account")
 			.addEncodedPathSegment(invoiceAccountKey)
 			.build();

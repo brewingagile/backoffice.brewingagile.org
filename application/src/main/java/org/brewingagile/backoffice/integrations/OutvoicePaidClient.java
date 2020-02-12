@@ -25,6 +25,7 @@ public class OutvoicePaidClient {
 
 	public String get() throws IOException {
 		HttpUrl url = HttpUrl.parse(endpoint).newBuilder()
+			.addEncodedPathSegment("2")
 			.addEncodedPathSegment("invoices")
 			.addEncodedPathSegment("paid")
 			.build();

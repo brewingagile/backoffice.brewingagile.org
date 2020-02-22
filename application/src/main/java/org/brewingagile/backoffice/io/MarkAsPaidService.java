@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
+import org.brewingagile.backoffice.types.RegistrationId;
 
 public class MarkAsPaidService {
 	private final DataSource dataSource;
@@ -19,7 +20,7 @@ public class MarkAsPaidService {
 		this.registrationsSqlMapper = registrationsSqlMapper;
 	}
 
-	public void markAsPaid(UUID id) throws Exception {
+	public void markAsPaid(RegistrationId id) throws Exception {
 		Registration registration;
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);

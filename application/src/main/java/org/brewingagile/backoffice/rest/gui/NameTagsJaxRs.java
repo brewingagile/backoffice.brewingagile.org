@@ -9,6 +9,7 @@ import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
 import org.brewingagile.backoffice.rest.json.ToJson;
+import org.brewingagile.backoffice.types.RegistrationId;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
@@ -53,13 +54,13 @@ public class NameTagsJaxRs {
 	public Response all(@Context HttpServletRequest request) throws Exception {
 		authService.guardAuthenticatedUser(request);
 		try (Connection c = dataSource.getConnection()) {
-			List<UUID> registrationTuples = registrationsSqlMapper.unprintedNametags(c);
+			List<RegistrationId> registrationTuples = registrationsSqlMapper.unprintedNametags(c);
 			List<Registration> somes = Option.somes(registrationTuples.traverseIO(ioify(c)).run());
 			return Response.ok(ArgoUtils.format(array(somes.map(NameTagsJaxRs::json)))).build();
 		}
 	}
 
-	private F<UUID,IO<Option<Registration>>> ioify(Connection c) {
+	private F<RegistrationId,IO<Option<Registration>>> ioify(Connection c) {
 		return registrationId -> () -> {
 			try {
 				return registrationsSqlMapper.one(c, registrationId);
@@ -74,8 +75,9 @@ public class NameTagsJaxRs {
 	@GET
 	@Path("{registration_id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response one(@Context HttpServletRequest request, @PathParam("registration_id") UUID registrationId) throws Exception {
+	public Response one(@Context HttpServletRequest request, @PathParam("registration_id") UUID id) throws Exception {
 		authService.guardAuthenticatedUser(request);
+		RegistrationId registrationId = RegistrationId.registrationId(id);
 		try (Connection c = dataSource.getConnection()) {
 			return registrationsSqlMapper.one(c, registrationId)
 				.map(r -> Response.ok(ArgoUtils.format(array(json(r)))))

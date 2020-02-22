@@ -3,6 +3,8 @@ package org.brewingagile.backoffice.db.operations;
 import fj.Ord;
 import fj.data.List;
 import fj.data.Set;
+import org.brewingagile.backoffice.instances.PreparedStatements;
+import org.brewingagile.backoffice.types.RegistrationId;
 import org.brewingagile.backoffice.types.TicketName;
 
 import java.math.BigDecimal;
@@ -10,7 +12,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.UUID;
 
 import static java.util.Objects.requireNonNull;
 
@@ -75,10 +76,10 @@ public class TicketsSql {
 		}
 	}
 
-	public Set<Ticket> by(Connection c, UUID id) throws SQLException {
+	public Set<Ticket> by(Connection c, RegistrationId registrationId) throws SQLException {
 		String sql = "SELECT ticket.* FROM registration_ticket JOIN ticket USING (ticket) WHERE registration_id = ?";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
-			ps.setObject(1, id);
+			PreparedStatements.set(ps, 1, registrationId);
 			return SqlOps.set(ps, Ord.hashEqualsOrd(), TicketsSql::rsTicket);
 		}
 	}

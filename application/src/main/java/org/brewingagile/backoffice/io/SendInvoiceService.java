@@ -34,15 +34,14 @@ public class SendInvoiceService {
 		this.ticketsSql = ticketsSql;
 	}
 
-	public void sendInvoice(UUID id) throws Exception {
-		RegistrationId registrationId = RegistrationId.registrationId(id);
+	public void sendInvoice(RegistrationId registrationId) throws Exception {
 
 		System.out.println("1");
 		Registration registration;
 		RegistrationsSqlMapper.RegistrationInvoiceMethod registrationInvoiceMethod;
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
-			registration = registrationsSqlMapper.one(c, id).some();
+			registration = registrationsSqlMapper.one(c, registrationId).some();
 			registrationInvoiceMethod = registrationsSqlMapper.registrationInvoiceMethod(c, registrationId).some();
 			if (registration.tuple.state != RegistrationState.RECEIVED) throw new IllegalArgumentException("Registration is not in expected state.");
 		}
@@ -50,16 +49,16 @@ public class SendInvoiceService {
 		System.out.println("2");
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
-			if (!registrationsSqlMapper.invoiceReference(c, id).isSome()) {
-				Set<TicketsSql.Ticket> tickets = ticketsSql.by(c, id);
+			if (!registrationsSqlMapper.invoiceReference(c, registrationId).isSome()) {
+				Set<TicketsSql.Ticket> tickets = ticketsSql.by(c, registrationId);
 				RegistrationsSqlMapper.RegistrationTuple rt = registration.tuple;
-				JsonNode jsonRequest = OutvoiceInvoiceClient.mkParticipantRequest(registration.id, BillingMethod.EMAIL, rt.participantEmail, registrationInvoiceMethod.billingCompany, registrationInvoiceMethod.billingAddress, tickets, rt.participantName);
+				JsonNode jsonRequest = OutvoiceInvoiceClient.mkParticipantRequest(registrationId, BillingMethod.EMAIL, rt.participantEmail, registrationInvoiceMethod.billingCompany, registrationInvoiceMethod.billingAddress, tickets, rt.participantName);
 				Either<String, Unit> invoiceReferenceId = outvoiceInvoiceClient.postInvoice(jsonRequest);
 				if (invoiceReferenceId.isLeft()) {
 					System.err.println(invoiceReferenceId.left().value());
 					return;
 				}
-				registrationsSqlMapper.insertInvoiceReference(c, registration.id, registration.id);
+				registrationsSqlMapper.insertInvoiceReference(c, registrationId, registrationId);
 				c.commit();
 			}
 		}
@@ -67,7 +66,7 @@ public class SendInvoiceService {
 		System.out.println("3");
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
-			registrationsSqlMapper.updateRegistrationState(c, id, registration.tuple.state, NextStateHelper.nextState(registration.tuple));
+			registrationsSqlMapper.updateRegistrationState(c, registrationId, registration.tuple.state, NextStateHelper.nextState(registration.tuple));
 			c.commit();
 		}
 	}

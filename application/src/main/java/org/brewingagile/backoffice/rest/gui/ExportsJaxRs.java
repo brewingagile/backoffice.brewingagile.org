@@ -7,6 +7,7 @@ import fj.data.Option;
 import fj.function.Strings;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
+import org.brewingagile.backoffice.types.RegistrationId;
 import org.brewingagile.backoffice.types.TicketName;
 import org.brewingagile.backoffice.utils.jersey.NeverCache;
 
@@ -22,7 +23,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.UUID;
 
 @Path("/exports")
 @NeverCache
@@ -63,7 +63,7 @@ public class ExportsJaxRs {
 		authService.guardAuthenticatedUser(request);
 		Option<TicketName> ticket1 = Option.fromNull(ticket0).map(TicketName::ticketName);
 		try (Connection c = dataSource.getConnection()) {
-			List<UUID> all = registrationsSqlMapper.all(c).map(x -> x._1());
+			List<RegistrationId> all = registrationsSqlMapper.all(c).map(x -> x._1());
 			List<RegistrationsSqlMapper.Registration> somes = Option.somes(all.traverseIO(ioify(c)).run());
 			List<RegistrationsSqlMapper.Registration> filtered = somes.filter(x -> ticket1.map(t -> x.tickets.member(t)).orSome(true));
 			return Response.ok(Strings.unlines(
@@ -77,7 +77,7 @@ public class ExportsJaxRs {
 		}
 	}
 
-	private F<UUID,IO<Option<RegistrationsSqlMapper.Registration>>> ioify(Connection c) {
+	private F<RegistrationId,IO<Option<RegistrationsSqlMapper.Registration>>> ioify(Connection c) {
 		return registrationId -> () -> {
 			try {
 				return registrationsSqlMapper.one(c, registrationId);

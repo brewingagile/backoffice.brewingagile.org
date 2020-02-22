@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 import org.brewingagile.backoffice.db.operations.RegistrationState;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper;
 import org.brewingagile.backoffice.db.operations.RegistrationsSqlMapper.Registration;
+import org.brewingagile.backoffice.types.RegistrationId;
 
 public class DismissRegistrationService {
 	private final DataSource dataSource;
@@ -19,7 +20,7 @@ public class DismissRegistrationService {
 		this.registrationsSqlMapper = registrationsSqlMapper;
 	}
 
-	public void dismissRegistration(UUID id) throws Exception {
+	public void dismissRegistration(RegistrationId id) throws Exception {
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
 			Registration registration = registrationsSqlMapper.one(c, id).some();

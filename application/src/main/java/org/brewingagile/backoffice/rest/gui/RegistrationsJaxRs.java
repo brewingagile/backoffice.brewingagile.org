@@ -75,7 +75,7 @@ public class RegistrationsJaxRs {
 		authService.guardAuthenticatedUser(request);
 		
 		try (Connection c = dataSource.getConnection()) {
-			List<UUID> ids = registrationsSqlMapper.all(c).map(x -> x._1());
+			List<RegistrationId> ids = registrationsSqlMapper.all(c).map(x -> x._1());
 			List<P3<RegistrationsSqlMapper.Registration, Option<Account>, Option<RegistrationInvoiceMethod>>> all = Option.somes(ids.traverseIO(ioify(c)).run());
 			JsonNode overview = object(
 				field("received", array(all.filter(x -> x._1().tuple.state == RegistrationState.RECEIVED).map(r -> json(r._1(), r._2(), r._3())))),
@@ -86,14 +86,14 @@ public class RegistrationsJaxRs {
 		}
 	}
 
-	private F<UUID,IO<Option<P3<RegistrationsSqlMapper.Registration, Option<Account>, Option<RegistrationInvoiceMethod>>>>> ioify(Connection c) {
+	private F<RegistrationId,IO<Option<P3<RegistrationsSqlMapper.Registration, Option<Account>, Option<RegistrationInvoiceMethod>>>>> ioify(Connection c) {
 		return registrationId -> () -> {
 			try {
 				Option<RegistrationsSqlMapper.Registration> one = registrationsSqlMapper.one(c, registrationId);
 				if (one.isNone()) return Option.none();
 
 				Option<Account> account = registrationsSqlMapper.account(c, registrationId);
-				Option<RegistrationInvoiceMethod> registrationInvoiceMethod = registrationsSqlMapper.registrationInvoiceMethod(c, RegistrationId.registrationId(registrationId));
+				Option<RegistrationInvoiceMethod> registrationInvoiceMethod = registrationsSqlMapper.registrationInvoiceMethod(c, registrationId);
 				return Option.some(P.p(one.some(), account, registrationInvoiceMethod));
 			} catch (SQLException e) {
 				throw new IOException(e);
@@ -109,11 +109,11 @@ public class RegistrationsJaxRs {
 		authService.guardAuthenticatedUser(request);
 		try {
 			try (Connection c = dataSource.getConnection()) {
-				Option<RegistrationsSqlMapper.Registration> one = registrationsSqlMapper.one(c, id);
+				Option<RegistrationsSqlMapper.Registration> one = registrationsSqlMapper.one(c, registrationId);
 				if (one.isNone())
 					return Response.status(Status.NOT_FOUND).build();
 
-				Option<Account> account = registrationsSqlMapper.account(c, id);
+				Option<Account> account = registrationsSqlMapper.account(c, registrationId);
 				Option<RegistrationInvoiceMethod> registrationInvoiceMethod = registrationsSqlMapper.registrationInvoiceMethod(c, registrationId);
 				return one
 					.map(r -> json(r, account, registrationInvoiceMethod))
@@ -198,7 +198,7 @@ public class RegistrationsJaxRs {
 		
 		try (Connection c = dataSource.getConnection()) {
 			c.setAutoCommit(false);
-			if (!registrationsSqlMapper.one(c, id).isSome()) return Response.status(Status.NOT_FOUND).build();
+			if (!registrationsSqlMapper.one(c, registrationId).isSome()) return Response.status(Status.NOT_FOUND).build();
 			registrationsSqlMapper.update(c, registrationId, ru.badge, ru.dietaryRequirements, ru.account);
 			c.commit();
 		}
@@ -214,8 +214,8 @@ public class RegistrationsJaxRs {
 
 		try {
 			int invoicesSent = 0;
-			for (UUID uuid : registrationListRequest(body)) {
-				sendInvoiceService.sendInvoice(uuid);
+			for (RegistrationId registrationId : registrationListRequest(body)) {
+				sendInvoiceService.sendInvoice(registrationId);
 				invoicesSent++;
 			}
 			return Response.ok(ArgoUtils.format(Result.success(String.format("Skickade %s fakturor.", invoicesSent)))).build();
@@ -235,9 +235,9 @@ public class RegistrationsJaxRs {
 		authService.guardAuthenticatedUser(request);
 
 		int i = 0;
-		for (UUID uuid : registrationListRequest(body)) {
+		for (RegistrationId registrationId : registrationListRequest(body)) {
 			try (Connection c = dataSource.getConnection()) {
-				registrationsSqlMapper.replacePrintedNametag(c, uuid, Option.some(new PrintedNametag()));
+				registrationsSqlMapper.replacePrintedNametag(c, registrationId, Option.some(new PrintedNametag()));
 			}
 			i++;
 		}
@@ -253,9 +253,9 @@ public class RegistrationsJaxRs {
 		authService.guardAuthenticatedUser(request);
 
 		int i = 0;
-		for (UUID uuid : registrationListRequest(body)) {
+		for (RegistrationId registrationId : registrationListRequest(body)) {
 			try (Connection c = dataSource.getConnection()) {
-				registrationsSqlMapper.replacePrintedNametag(c, uuid, Option.none());
+				registrationsSqlMapper.replacePrintedNametag(c, registrationId, Option.none());
 			}
 			i++;
 		}
@@ -272,8 +272,8 @@ public class RegistrationsJaxRs {
 		authService.guardAuthenticatedUser(httpRequest);
 
 		int invoicesDismissed = 0;
-		for (UUID uuid : registrationListRequest(body)) {
-			dismissRegistrationService.dismissRegistration(uuid);
+		for (RegistrationId registrationId : registrationListRequest(body)) {
+			dismissRegistrationService.dismissRegistration(registrationId);
 			invoicesDismissed++;
 		}
 
@@ -288,8 +288,8 @@ public class RegistrationsJaxRs {
 		authService.guardAuthenticatedUser(httpRequest);
 
 		int i = 0;
-		for (UUID uuid : registrationListRequest(body)) {
-			markAsCompleteService.markAsComplete(uuid);
+		for (RegistrationId registrationId : registrationListRequest(body)) {
+			markAsCompleteService.markAsComplete(registrationId);
 			i++;
 		}
 
@@ -324,7 +324,7 @@ public class RegistrationsJaxRs {
 				Option<UUID> apiClientRef = p._2();
 				if (apiClientRef.isNone()) continue;
 
-				Option<UUID> registrationId = registrationsSqlMapper.invoiceReferenceToRegistrationId(c, apiClientRef.some());
+				Option<RegistrationId> registrationId = registrationsSqlMapper.invoiceReferenceToRegistrationId(c, apiClientRef.some());
 				if (registrationId.isNone()) continue;
 
 				registration = registrationsSqlMapper.one(c, registrationId.some()).some();
@@ -346,23 +346,23 @@ public class RegistrationsJaxRs {
 		authService.guardAuthenticatedUser(httpRequest);
 
 		int i = 0;
-		for (UUID uuid : registrationListRequest(body)) {
-			markAsPaidService.markAsPaid(uuid);
+		for (RegistrationId registrationId : registrationListRequest(body)) {
+			markAsPaidService.markAsPaid(registrationId);
 			i++;
 		}
 
 		return Response.ok(ArgoUtils.format(Result.success(String.format("%s registreringar markerade som betalda.", i)))).build();
 	}
 
-	private static List<UUID> registrationListRequest(String body) throws InvalidSyntaxException {
+	private static List<RegistrationId> registrationListRequest(String body) throws InvalidSyntaxException {
 		return ArgoUtils.parse(body)
 			.getArrayNode("registrations")
 			.stream()
-			.map(RegistrationsJaxRs::uuid)
+			.map(RegistrationsJaxRs::registrationId)
 			.collect(Collectors.toList());
 	}
 
-	private static UUID uuid(JsonNode jsonNode) {
-		return UUID.fromString(jsonNode.getStringValue());
+	private static RegistrationId registrationId(JsonNode jsonNode) {
+		return RegistrationId.registrationId(UUID.fromString(jsonNode.getStringValue()));
 	}
 }

@@ -208,7 +208,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 			try (Connection c = dataSource.getConnection()) {
 				c.setAutoCommit(false);
 
-				registrationsSqlMapper.insertRegistrationTuple(c, registrationId.value, new RegistrationsSqlMapper.RegistrationTuple(
+				registrationsSqlMapper.insertRegistrationTuple(c, registrationId, new RegistrationsSqlMapper.RegistrationTuple(
 					RegistrationState.RECEIVED,
 					rr.participantR.name,
 					rr.participantR.email,
@@ -217,7 +217,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 					rr.participantR.twitter,
 					rr.participantR.organisation
 				));
-				registrationsSqlMapper.insertTickets(c, registrationId.value, rr.participantR.tickets);
+				registrationsSqlMapper.insertTickets(c, registrationId, rr.participantR.tickets);
 
 				if (rr.accountSignupSecret.isSome()) {
 					account = accountSignupSecretSql.account(c, rr.accountSignupSecret.some());
@@ -276,7 +276,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 				Set<TicketsSql.Ticket> tickets;
 				try (Connection c = dataSource.getConnection()) {
 					c.setAutoCommit(false);
-					tickets = ticketsSql.by(c, registrationId.value);
+					tickets = ticketsSql.by(c, registrationId);
 				}
 				postInvoiceResponse = Option.some(outvoiceInvoice3Client.postInvoice(OutvoiceInvoice3Client.mkParticipantRequest(
 					registrationId,

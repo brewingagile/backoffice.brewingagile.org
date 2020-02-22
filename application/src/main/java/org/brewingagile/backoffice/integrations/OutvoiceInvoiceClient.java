@@ -15,6 +15,7 @@ import org.brewingagile.backoffice.rest.json.ToJson;
 import org.brewingagile.backoffice.types.BillingMethod;
 import org.brewingagile.backoffice.types.ParticipantEmail;
 import org.brewingagile.backoffice.types.ParticipantName;
+import org.brewingagile.backoffice.types.RegistrationId;
 import org.brewingagile.backoffice.utils.ArgoUtils;
 
 import java.io.IOException;
@@ -89,7 +90,7 @@ public class OutvoiceInvoiceClient {
 	}
 
 	public static JsonNode mkParticipantRequest(
-		UUID registrationId,
+		RegistrationId registrationId,
 		BillingMethod deliveryMethod,
 		ParticipantEmail recipientEmailAddress,
 		String recipient,
@@ -98,8 +99,8 @@ public class OutvoiceInvoiceClient {
 		ParticipantName participantName
 	) {
 		return object(
-			field("apiClientReference", string(registrationId.toString())),
-			field("accountKey", string("brewingagile-" + registrationId.toString())),
+			field("apiClientReference", string(registrationId.value.toString())),
+			field("accountKey", string("brewingagile-" + registrationId.value.toString())),
 			field("deliveryMethod", string(deliveryMethod.name())),
 			field("recipientEmailAddress", ToJson.participantEmail(recipientEmailAddress)),
 			field("recipient", string(recipient)),

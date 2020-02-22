@@ -90,6 +90,21 @@ public class RegistrationsSqlMapper {
 		}
 	}
 
+	public void insertRegistrationInvoice2(
+		Connection c,
+		RegistrationId registrationId,
+		String invoiceNumber,
+		byte[] pdf
+	) throws SQLException {
+		String sql = "INSERT INTO registration_invoice_2 (registration_id, invoice_number, pdf) VALUES (?, ?, ?)";
+		try (PreparedStatement ps = c.prepareStatement(sql)) {
+			set(ps, 1, registrationId);
+			ps.setString(2, invoiceNumber);
+			ps.setBytes(3, pdf);
+			ps.execute();
+		}
+	}
+
 	public final static class Registration {
 		public final RegistrationId id;
 		public final RegistrationTuple tuple;

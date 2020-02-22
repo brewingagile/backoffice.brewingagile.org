@@ -222,6 +222,7 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 				if (rr.accountSignupSecret.isSome()) {
 					account = accountSignupSecretSql.account(c, rr.accountSignupSecret.some());
 					registrationsSqlMapper.replaceAccount(c, registrationId.value, account);
+					registrationsSqlMapper.updateRegistrationState(c, registrationId, RegistrationState.RECEIVED, RegistrationState.PAID);
 				} else if (rr.invoicingR.isSome()) {
 					InvoicingR invoicingR = rr.invoicingR.some();
 					registrationsSqlMapper.insertRegistrationInvoiceMethod(c, registrationId, invoicingR.recipient, invoicingR.address);
@@ -285,6 +286,13 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 					tickets,
 					rr.participantR.name
 				)));
+				try (Connection c = dataSource.getConnection()) {
+					c.setAutoCommit(false);
+					OutvoiceInvoice3Client.PostInvoiceResponse por = postInvoiceResponse.some();
+					registrationsSqlMapper.insertRegistrationInvoice2(c, registrationId, por.invoiceNumber, por.pdf);
+					registrationsSqlMapper.updateRegistrationState(c, registrationId, RegistrationState.RECEIVED, RegistrationState.INVOICING);
+					c.commit();
+				}
 			}
 
 			Array<ConfirmationEmailSender.Attachment> attachments = Array.<ConfirmationEmailSender.Attachment>empty()

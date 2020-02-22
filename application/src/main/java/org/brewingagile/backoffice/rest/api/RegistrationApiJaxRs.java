@@ -49,6 +49,7 @@ public class RegistrationApiJaxRs {
 	private final RegistrationStripeChargeSql registrationStripeChargeSql;
 	private final MailchimpSubscribeClient.ListUniqueId newsletterList;
 	private final OutvoiceReceiptClient outvoiceReceiptClient;
+	private final OutvoiceInvoice3Client outvoiceInvoice3Client;
 
 	public RegistrationApiJaxRs(
 		DataSource dataSource,
@@ -63,7 +64,8 @@ public class RegistrationApiJaxRs {
 		StripeChargeClient stripeChargeClient,
 		RegistrationStripeChargeSql registrationStripeChargeSql,
 		MailchimpSubscribeClient.ListUniqueId newsletterList,
-		OutvoiceReceiptClient outvoiceReceiptClient
+		OutvoiceReceiptClient outvoiceReceiptClient,
+		OutvoiceInvoice3Client outvoiceInvoice3Client
 	) {
 		this.dataSource = dataSource;
 		this.registrationsSqlMapper = registrationsSqlMapper;
@@ -78,6 +80,7 @@ public class RegistrationApiJaxRs {
 		this.registrationStripeChargeSql = registrationStripeChargeSql;
 		this.newsletterList = newsletterList;
 		this.outvoiceReceiptClient = outvoiceReceiptClient;
+		this.outvoiceInvoice3Client = outvoiceInvoice3Client;
 	}
 
 	@EqualsAndHashCode
@@ -267,10 +270,30 @@ curl -X POST -H "Content-Type: application/json" 'http://localhost:9080/api/regi
 				}
 			}
 
-			Array<ConfirmationEmailSender.Attachment> map = receiptPdf.toArray()
-				.map(x -> new ConfirmationEmailSender.Attachment("Brewing Agile 2020 kvitto (" + rr.participantR.name.value + ").pdf", "application/pdf", x));
+			Option<OutvoiceInvoice3Client.PostInvoiceResponse> postInvoiceResponse = Option.none();
+			if (rr.invoicingR.isSome()) {
+				InvoicingR some = rr.invoicingR.some();
+				Set<TicketsSql.Ticket> tickets;
+				try (Connection c = dataSource.getConnection()) {
+					c.setAutoCommit(false);
+					tickets = ticketsSql.by(c, registrationId.value);
+				}
+				postInvoiceResponse = Option.some(outvoiceInvoice3Client.postInvoice(OutvoiceInvoice3Client.mkParticipantRequest(
+					registrationId,
+					some.recipient,
+					some.address,
+					tickets,
+					rr.participantR.name
+				)));
+			}
 
-			Either<String, String> emailResult = confirmationEmailSender.email(rr.participantR.email, map);
+			Array<ConfirmationEmailSender.Attachment> attachments = Array.<ConfirmationEmailSender.Attachment>empty()
+				.append(receiptPdf.toArray()
+					.map(x -> new ConfirmationEmailSender.Attachment("Brewing Agile 2020 kvitto (" + rr.participantR.name.value + ").pdf", "application/pdf", x)))
+				.append(postInvoiceResponse.toArray()
+					.map(x -> new ConfirmationEmailSender.Attachment("Brewing Agile 2020 faktura (" + x.invoiceNumber + ").pdf", "application/pdf", x.pdf)));
+
+			Either<String, String> emailResult = confirmationEmailSender.email(rr.participantR.email, attachments);
 			if (emailResult.isLeft()) {
 				System.err.println("We couldn't send an email to " + rr.participantR.name + "(" + rr.participantR.email + "). Cause: " + emailResult.left().value());
 			}

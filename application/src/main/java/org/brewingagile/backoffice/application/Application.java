@@ -33,6 +33,7 @@ public class Application {
 		OutvoicePaidClient outvoicePaidClient = new OutvoicePaidClient(okHttpClient, config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 		OutvoiceAccountClient outvoiceAccountClient = new OutvoiceAccountClient(okHttpClient, config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 		OutvoiceReceiptClient outvoiceReceiptClient = new OutvoiceReceiptClient(okHttpClient, config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
+		OutvoiceInvoice3Client outvoiceInvoice3Client = new OutvoiceInvoice3Client(unsafe, config.outvoiceInvoicesEndpoint, config.outvoiceInvoicesApikey);
 
 		AccountsSql accountsSql = new AccountsSql();
 		AccountSecretSql accountSecretSql = new AccountSecretSql();
@@ -57,7 +58,7 @@ public class Application {
 		AccountIO accountIO = new AccountIO(accountsSql, registrationsSqlMapper, ticketsSql);
 
 		this.apiRestServices = List.list(
-			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, slackBotHook, ticketsSql, accountIO, accountSignupSecretSql, config.stripePublishableKey, stripeChargeClient, registrationStripeChargeSql, config.mailchimpList, outvoiceReceiptClient)
+			new RegistrationApiJaxRs(dataSource, registrationsSqlMapper, confirmationEmailSender, mailchimpSubscribeClient, slackBotHook, ticketsSql, accountIO, accountSignupSecretSql, config.stripePublishableKey, stripeChargeClient, registrationStripeChargeSql, config.mailchimpList, outvoiceReceiptClient, outvoiceInvoice3Client)
 		);
 
 		this.guiRestServices = List.list(

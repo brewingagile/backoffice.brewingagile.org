@@ -6,14 +6,13 @@ import okhttp3.OkHttpClient;
 import org.brewingagile.backoffice.auth.AuthService;
 import org.brewingagile.backoffice.db.operations.*;
 import org.brewingagile.backoffice.integrations.*;
-import org.brewingagile.backoffice.pure.AccountIO;
-import org.brewingagile.backoffice.rest.api.RegistrationApiJaxRs;
-import org.brewingagile.backoffice.rest.gui.*;
 import org.brewingagile.backoffice.io.DismissRegistrationService;
 import org.brewingagile.backoffice.io.MarkAsCompleteService;
 import org.brewingagile.backoffice.io.MarkAsPaidService;
 import org.brewingagile.backoffice.io.SendInvoiceService;
-import org.brewingagile.backoffice.utils.ManifestVersionNumber;
+import org.brewingagile.backoffice.pure.AccountIO;
+import org.brewingagile.backoffice.rest.api.RegistrationApiJaxRs;
+import org.brewingagile.backoffice.rest.gui.*;
 
 import javax.sql.DataSource;
 import javax.ws.rs.client.ClientBuilder;

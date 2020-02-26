@@ -134,7 +134,7 @@ public class RegistrationsJaxRs {
 		Option<RegistrationInvoiceMethod> registrationInvoiceMethod
 	) {
 		return object(
-			field("id", string(r.id.toString())),
+			field("id", ToJson.registrationId(r.id)),
 			field("tuple", object(
 				field("participantName", ToJson.participantName(r.tuple.participantName)),
 				field("participantEmail", ToJson.participantEmail(r.tuple.participantEmail)),

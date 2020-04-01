@@ -157,6 +157,7 @@ public class AccountsJaxRs {
 
 	@POST
 	@Path("{account}/invoice")
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response postSendInvoices(@Context HttpServletRequest request, @PathParam("account") String aAccount) throws Exception {
 		authService.guardAuthenticatedUser(request);
